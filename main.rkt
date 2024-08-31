@@ -16,11 +16,10 @@
 (define (place-bot! world id location) (hash-set! (world-bots world) id location))
 (define (locate-bot world id) (hash-ref (world-bots world) id))
 
-(define start-location (location 10 10))
 (define new-id 101)
 
-(define (add-bot! world)
-  (let ([new-bot (bot new-id start-location)])
+(define (add-bot! world location)
+  (let ([new-bot (bot new-id location)])
     (place-bot! world (bot-id new-bot) (bot-location new-bot))
     new-bot))
 
@@ -33,12 +32,16 @@
 
 (module+ test
   (test-case
-   "bot is created at start location"
-   (check-equal? (bot-location (add-bot! (make-world))) start-location))
+   "bot is created at requested location"
+   (let* ([somewhere (location 1 2)]
+          [new-bot (add-bot! (make-world) somewhere)])
+     (check-equal? (bot-location new-bot) somewhere)))
   (test-case
    "bot is created with new id"
-   (check-equal? (bot-id (add-bot! (make-world))) new-id))
+   (let ([new-bot (add-bot! (make-world) (location 3 4))])
+     (check-equal? (bot-id new-bot) new-id)))
   (test-case
    "move bot changes location"
-   (let ([world (make-world)])
-     (check-equal? (move-bot! world (bot-id (add-bot! world)) -2 3) (location 8 13))))) 
+   (let* ([world (make-world)]
+          [new-bot (add-bot! world (location 5 6))])
+     (check-equal? (move-bot! world (bot-id new-bot) -2 3) (location 3 9))))) 
