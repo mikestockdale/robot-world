@@ -9,18 +9,17 @@
    (+ (location-y start) delta-y)))
 
 (struct bot (id location))
-(struct world (bots))
+(struct world ([next-id #:mutable] bots))
 
-(define (make-world) (world (make-hash)))
+(define (make-world) (world 101 (make-hash)))
 
 (define (place-bot! world id location) (hash-set! (world-bots world) id location))
 (define (locate-bot world id) (hash-ref (world-bots world) id))
 
-(define new-id 101)
-
 (define (add-bot! world location)
-  (let ([new-bot (bot new-id location)])
+  (let ([new-bot (bot (world-next-id world) location)])
     (place-bot! world (bot-id new-bot) (bot-location new-bot))
+    (set-world-next-id! world (+ 1 (world-next-id world)))
     new-bot))
 
 (define (move-bot! world id delta-x delta-y)
@@ -38,8 +37,11 @@
      (check-equal? (bot-location new-bot) somewhere)))
   (test-case
    "bot is created with new id"
-   (let ([new-bot (add-bot! (make-world) (location 3 4))])
-     (check-equal? (bot-id new-bot) new-id)))
+   (let* ([world (make-world)]
+          [first-bot (add-bot! world (location 3 4))]
+          [second-bot (add-bot! world (location 5 6))]
+          )
+     (check-not-equal? (bot-id first-bot) (bot-id second-bot))))
   (test-case
    "move bot changes location"
    (let* ([world (make-world)]
