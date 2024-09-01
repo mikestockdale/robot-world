@@ -3,10 +3,16 @@
 (module+ test (require rackunit))
 
 (struct location (x y) #:transparent)
-(define (move-location start delta-x delta-y)
+
+(define direction-north (location 0 1))
+(define direction-south (location 0 -1))
+(define direction-east (location 1 0))
+(define direction-west (location -1 0))
+
+(define (move-location start offset)
   (location
-   (+ (location-x start) delta-x)
-   (+ (location-y start) delta-y)))
+   (+ (location-x start) (location-x offset))
+   (+ (location-y start) (location-y offset))))
 
 (struct bot (id location))
 (struct world ([next-id #:mutable] bots))
@@ -22,10 +28,10 @@
     (set-world-next-id! world (+ 1 (world-next-id world)))
     new-bot))
 
-(define (move-bot! world id delta-x delta-y)
+(define (move-bot! world id direction)
   (let*
       ([old-location (locate-bot world id)]
-       [new-location (move-location old-location delta-x delta-y)])
+       [new-location (move-location old-location direction)])
     (place-bot! world id new-location)
     new-location))    
 
@@ -39,11 +45,13 @@
    "bot is created with new id"
    (let* ([world (make-world)]
           [first-bot (add-bot! world (location 3 4))]
-          [second-bot (add-bot! world (location 5 6))]
-          )
+          [second-bot (add-bot! world (location 5 6))]          )
      (check-not-equal? (bot-id first-bot) (bot-id second-bot))))
   (test-case
    "move bot changes location"
    (let* ([world (make-world)]
           [new-bot (add-bot! world (location 5 6))])
-     (check-equal? (move-bot! world (bot-id new-bot) -2 3) (location 3 9))))) 
+     (check-equal? (move-bot! world (bot-id new-bot) direction-north) (location 5 7))
+     (check-equal? (move-bot! world (bot-id new-bot) direction-east) (location 6 7))
+     (check-equal? (move-bot! world (bot-id new-bot) direction-south) (location 6 6))
+     (check-equal? (move-bot! world (bot-id new-bot) direction-west) (location 5 6))))) 
