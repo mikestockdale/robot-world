@@ -1,18 +1,7 @@
 #lang racket
 
+(require "location.rkt")
 (module+ test (require rackunit))
-
-(struct location (x y) #:transparent)
-
-(define direction-north (location 0 1))
-(define direction-south (location 0 -1))
-(define direction-east (location 1 0))
-(define direction-west (location -1 0))
-
-(define (move-location start offset)
-  (location
-   (+ (location-x start) (location-x offset))
-   (+ (location-y start) (location-y offset))))
 
 (struct bot (id location))
 (struct world ([next-id #:mutable] bots))
