@@ -1,5 +1,7 @@
 #lang racket
 
+(provide make-world add-bot! move-bot! draw-world
+         bot-id)
 (require "location.rkt")
 (module+ test (require rackunit))
 
@@ -22,7 +24,17 @@
       ([old-location (locate-bot world id)]
        [new-location (move-location old-location direction)])
     (place-bot! world id new-location)
-    new-location))    
+    new-location))
+
+(define (draw-world world size)
+  (let* ([lines (for/vector ([_ size]) (make-string size #\space))])
+    (define (draw-bot id location)
+      (string-set!
+       (vector-ref lines (- size (location-y location)))
+       (- (location-x location) 1)
+       #\O))
+    (hash-for-each (world-bots world) draw-bot)
+    lines))
 
 (module+ test
   (test-case
@@ -43,4 +55,11 @@
      (check-equal? (move-bot! world (bot-id new-bot) direction-north) (location 5 7))
      (check-equal? (move-bot! world (bot-id new-bot) direction-east) (location 6 7))
      (check-equal? (move-bot! world (bot-id new-bot) direction-south) (location 6 6))
-     (check-equal? (move-bot! world (bot-id new-bot) direction-west) (location 5 6))))) 
+     (check-equal? (move-bot! world (bot-id new-bot) direction-west) (location 5 6))))
+  (test-case
+   "world is drawn as strings"
+   (let ([world (make-world)])
+     (add-bot! world (location 1 3))
+     (add-bot! world (location 2 2))
+     (add-bot! world (location 3 2))
+     (check-equal? (draw-world world 3) #("O  " " OO" "   "))))) 

@@ -1,6 +1,6 @@
 #lang racket
 
-(provide location move-location
+(provide (struct-out location) move-location
          direction-north direction-south direction-east direction-west)
 
 (module+ test (require rackunit))
