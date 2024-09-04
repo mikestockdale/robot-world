@@ -1,23 +1,7 @@
 #lang racket
 
 (require racket/gui/base)
-(require "world.rkt" "location.rkt")
-
-(define (go-east! world bot-id) (move-bot! world bot-id direction-east))
-
-(struct actions (world list))
-(struct action (bot-id procedure))
-
-(define (make-actions world . setups)
-  (define (make-action setup)
-    (action (bot-id (add-bot! world (first setup))) (second setup)))
-  (actions world (map make-action setups)))
-
-(define (perform-actions actions)
-  (for-each
-   (λ (action)
-     ((action-procedure action) (actions-world actions) (action-bot-id action)))
-   (actions-list actions)))
+(require "actions.rkt" "world.rkt" "location.rkt")
 
 (define (run-viewer actions)
   (define run-actions #t)
@@ -51,6 +35,8 @@
                 (perform-actions actions)
                 (send canvas refresh-now #:flush? #t)))]))
     #t))
+
+(define (go-east! world bot-id) (move-bot! world bot-id direction-east))
 
 (let* ([world (make-world 50)]
        [actions
