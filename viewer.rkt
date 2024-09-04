@@ -5,6 +5,7 @@
 
 (define (run-viewer actions)
   (define run-actions #t)
+  (define to-do actions)
   (let* ([frame (new frame% [label "robots"] [width 500] [height 550])]
          [font (make-font #:face "Courier")]
          [my-canvas%
@@ -32,7 +33,7 @@
            [notify-callback
             (λ () 
               (when run-actions
-                (perform-actions actions)
+                (set! to-do (perform-actions to-do))
                 (send canvas refresh-now #:flush? #t)))]))
     #t))
 
@@ -41,7 +42,7 @@
 (let* ([world (make-world 50)]
        [actions
         (make-actions world
-                      (list (location 0 0) go-east!)
-                      (list (location 0 5) go-east!)
-                      (list (location 1 4) go-east!))])
+                      (list (location 0 0) (simple-action go-east!))
+                      (list (location 0 5) (simple-action go-east!))
+                      (list (location 1 4) (simple-action go-east!)))])
   (run-viewer actions))
