@@ -2,16 +2,38 @@
 
 (provide make-world add-bot! move-bot! locate-bot draw-world
          bot-id)
+
+(require threading)
 (require "location.rkt")
+
 (module+ test (require rackunit))
 
 (struct bot (id location))
-(struct world (size [next-id #:mutable] bots))
+(struct entity (id type location))
+(struct world (size [next-id #:mutable] bots entities))
 
-(define (make-world size) (world size 101 (make-hash)))
+(define type-bot 0)
+(define type-block 1)
+
+(define (make-world size) (world size 101 (make-hash) (make-hash)))
 
 (define (place-bot! world id location) (hash-set! (world-bots world) id location))
+(define (place-entity! world entity)
+  (hash-set! (world-entities world) (entity-id entity) entity))
 (define (locate-bot world id) (hash-ref (world-bots world) id))
+(define (entity-ref world id) (hash-ref (world-entities world) id))
+
+(define (entity-at world location)
+  (~>> world world-entities hash-values
+       (findf (λ (entity) (equal? (entity-location entity) location)))))
+
+(define (add-entity! world type location)
+  (if (is-valid-location? location (world-size world))
+      (let ([new-id (world-next-id world)])
+        (place-entity! world (entity new-id type location))
+        (set-world-next-id! world (+ 1 (world-next-id world)))
+        new-id)
+      #f))
 
 (define (add-bot! world location)
   (if (is-valid-location? location (world-size world))
@@ -47,6 +69,17 @@
    (let* ([somewhere (location 1 2)]
           [new-bot (add-bot! (make-world 10) somewhere)])
      (check-equal? (bot-location new-bot) somewhere)))
+
+  (test-case
+   "block is created at requested location"
+   (let* ([world (make-world 10)]
+          [somewhere (location 1 2)]
+          [id (add-entity! world type-block somewhere)]
+          [block (entity-at world somewhere)])
+     (check-equal? (entity-id block) id)  
+     (check-equal? (entity-type block) type-block)  
+     (check-equal? (entity-location block) somewhere)
+     (check-equal? (entity-ref world id) block)))  
 
   (test-case
    "bot is not created at invalid location"
