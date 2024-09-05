@@ -1,6 +1,8 @@
 #lang racket
 
-(provide (struct-out actions) perform-actions make-actions simple-action)
+(provide (struct-out actions) (struct-out action)
+         perform-actions make-actions simple-action)
+
 (require threading)
 (require "location.rkt" "world.rkt")
 (module+ test (require rackunit))

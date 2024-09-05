@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world add-bot! move-bot! draw-world
+(provide make-world add-bot! move-bot! locate-bot draw-world
          bot-id)
 (require "location.rkt")
 (module+ test (require rackunit))
