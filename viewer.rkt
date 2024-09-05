@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/gui/base)
-(require "actions.rkt" "world.rkt" "location.rkt")
+(require "actions.rkt" "world.rkt" "location.rkt" "wandering.rkt")
 
 (define (run-viewer actions)
   (define run-actions #t)
@@ -29,7 +29,7 @@
 
     (define timer
       (new timer%
-           [interval 500]
+           [interval 100]
            [notify-callback
             (λ () 
               (when run-actions
@@ -41,8 +41,12 @@
 
 (let* ([world (make-world 50)]
        [actions
-        (make-actions world
-                      (list (location 0 0) (simple-action go-east!))
-                      (list (location 0 5) (simple-action go-east!))
-                      (list (location 1 4) (simple-action go-east!)))])
+        (actions world
+                 (list
+                  (make-wandering world (location 20 20) direction-east)
+                  (make-wandering world (location 30 30) direction-west)))])
+;        (make-actions world
+;                      (list (location 0 0) (simple-action go-east!))
+;                      (list (location 0 5) (simple-action go-east!))
+;                      (list (location 1 4) (simple-action go-east!)))])
   (run-viewer actions))
