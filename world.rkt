@@ -1,6 +1,7 @@
 #lang racket
 
-(provide make-world add-bot! move-bot! locate-bot draw-world
+(provide make-world add-bot! add-entity! move-bot! locate-bot draw-world
+         type-block type-bot
          bot-id)
 
 (require threading)
@@ -10,17 +11,17 @@
 
 (struct bot (id location))
 (struct entity (id type location))
-(struct world (size [next-id #:mutable] bots entities))
+(struct world (size [next-id #:mutable] entities))
 
 (define type-bot 0)
 (define type-block 1)
+(define type-symbols #(#\O #\B))
 
-(define (make-world size) (world size 101 (make-hash) (make-hash)))
+(define (make-world size) (world size 101 (make-hash)))
 
-(define (place-bot! world id location) (hash-set! (world-bots world) id location))
 (define (place-entity! world entity)
   (hash-set! (world-entities world) (entity-id entity) entity))
-(define (locate-bot world id) (hash-ref (world-bots world) id))
+(define (locate-bot world id) (entity-location (entity-ref world id)))
 (define (entity-ref world id) (hash-ref (world-entities world) id))
 
 (define (entity-at world location)
@@ -36,31 +37,30 @@
       #f))
 
 (define (add-bot! world location)
-  (if (is-valid-location? location (world-size world))
-      (let ([new-bot (bot (world-next-id world) location)])
-        (place-bot! world (bot-id new-bot) (bot-location new-bot))
-        (set-world-next-id! world (+ 1 (world-next-id world)))
-        new-bot)
-      #f))
+  (let ([new-id (add-entity! world type-bot location)])
+    (if new-id (bot new-id location) #f)))
 
 (define (move-bot! world id direction)
   (let*
-      ([old-location (locate-bot world id)]
+      ([old-location (entity-location (entity-ref world id))]
        [new-location (move-location old-location direction)])
     (if (is-valid-location? new-location (world-size world))
-        (begin (place-bot! world id new-location)
+        (begin (place-entity! world (entity id type-bot new-location))
                new-location)
         old-location)))
 
 (define (draw-world world)
   (let* ([size (world-size world)]
          [lines (for/vector ([_ size]) (make-string size #\space))])
-    (define (draw-bot id location)
+    
+    (define (draw-entity id entity)
+      (let ([location (entity-location entity)])
       (string-set!
        (vector-ref lines (- size 1 (location-y location)))
        (location-x location)
-       #\O))
-    (hash-for-each (world-bots world) draw-bot)
+       (vector-ref type-symbols (entity-type entity)))))
+    
+    (hash-for-each (world-entities world) draw-entity)
     lines))
 
 (module+ test
@@ -112,7 +112,7 @@
   (test-case
    "world is drawn as strings"
    (let ([world (make-world 3)])
-     (add-bot! world (location 0 2))
-     (add-bot! world (location 1 1))
-     (add-bot! world (location 2 1))
-     (check-equal? (draw-world world) #("O  " " OO" "   "))))) 
+     (add-entity! world type-bot (location 0 2))
+     (add-entity! world type-bot(location 1 1))
+     (add-entity! world type-block(location 2 1))
+     (check-equal? (draw-world world) #("O  " " OB" "   "))))) 

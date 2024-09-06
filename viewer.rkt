@@ -37,16 +37,11 @@
                 (send canvas refresh-now #:flush? #t)))]))
     #t))
 
-(define (go-east! world bot-id) (move-bot! world bot-id direction-east))
-
 (let* ([world (make-world 50)]
        [actions
         (actions world
                  (list
                   (make-wandering world (location 20 20) direction-east)
                   (make-wandering world (location 30 30) direction-west)))])
-;        (make-actions world
-;                      (list (location 0 0) (simple-action go-east!))
-;                      (list (location 0 5) (simple-action go-east!))
-;                      (list (location 1 4) (simple-action go-east!)))])
+  (add-entity! world type-block (location 25 25))
   (run-viewer actions))
