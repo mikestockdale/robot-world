@@ -1,15 +1,14 @@
 #lang racket
 
-(provide make-world add-bot! add-entity! move-bot! locate-bot draw-world
-         type-block type-bot
-         bot-id)
+(provide (struct-out entity)
+         make-world add-entity! move-bot! draw-world entity-ref
+         type-block type-bot)
 
 (require threading)
 (require "location.rkt")
 
 (module+ test (require rackunit))
 
-(struct bot (id location))
 (struct entity (id type location))
 (struct world (size [next-id #:mutable] entities))
 
@@ -21,7 +20,7 @@
 
 (define (place-entity! world entity)
   (hash-set! (world-entities world) (entity-id entity) entity))
-(define (locate-bot world id) (entity-location (entity-ref world id)))
+
 (define (entity-ref world id) (hash-ref (world-entities world) id))
 
 (define (entity-at world location)
@@ -35,10 +34,6 @@
         (set-world-next-id! world (+ 1 (world-next-id world)))
         new-id)
       #f))
-
-(define (add-bot! world location)
-  (let ([new-id (add-entity! world type-bot location)])
-    (if new-id (bot new-id location) #f)))
 
 (define (move-bot! world id direction)
   (let*
@@ -55,10 +50,10 @@
     
     (define (draw-entity id entity)
       (let ([location (entity-location entity)])
-      (string-set!
-       (vector-ref lines (- size 1 (location-y location)))
-       (location-x location)
-       (vector-ref type-symbols (entity-type entity)))))
+        (string-set!
+         (vector-ref lines (- size 1 (location-y location)))
+         (location-x location)
+         (vector-ref type-symbols (entity-type entity)))))
     
     (hash-for-each (world-entities world) draw-entity)
     lines))
@@ -66,9 +61,10 @@
 (module+ test
   (test-case
    "bot is created at requested location"
-   (let* ([somewhere (location 1 2)]
-          [new-bot (add-bot! (make-world 10) somewhere)])
-     (check-equal? (bot-location new-bot) somewhere)))
+   (let* ([world (make-world 10)]
+          [somewhere (location 1 2)]
+          [new-id (add-entity! world type-bot somewhere)])
+     (check-equal? (entity-location (entity-ref world new-id)) somewhere)))
 
   (test-case
    "block is created at requested location"
@@ -84,30 +80,30 @@
   (test-case
    "bot is not created at invalid location"
    (let* ([somewhere (location -1 2)]
-          [new-bot (add-bot! (make-world 10) somewhere)])
-     (check-false new-bot)))
+          [new-id (add-entity! (make-world 10) type-bot somewhere)])
+     (check-false new-id)))
 
   (test-case
    "bot is created with new id"
    (let* ([world (make-world 10)]
-          [first-bot (add-bot! world (location 3 4))]
-          [second-bot (add-bot! world (location 5 6))]          )
-     (check-not-equal? (bot-id first-bot) (bot-id second-bot))))
+          [first-id (add-entity! world type-bot (location 3 4))]
+          [second-id (add-entity! world type-bot (location 5 6))]          )
+     (check-not-equal? first-id second-id)))
 
   (test-case
    "move bot changes location"
    (let* ([world (make-world 10)]
-          [new-bot (add-bot! world (location 5 6))])
-     (check-equal? (move-bot! world (bot-id new-bot) direction-north) (location 5 7))
-     (check-equal? (move-bot! world (bot-id new-bot) direction-east) (location 6 7))
-     (check-equal? (move-bot! world (bot-id new-bot) direction-south) (location 6 6))
-     (check-equal? (move-bot! world (bot-id new-bot) direction-west) (location 5 6))))
+          [new-id (add-entity! world type-bot (location 5 6))])
+     (check-equal? (move-bot! world new-id direction-north) (location 5 7))
+     (check-equal? (move-bot! world new-id direction-east) (location 6 7))
+     (check-equal? (move-bot! world new-id direction-south) (location 6 6))
+     (check-equal? (move-bot! world new-id direction-west) (location 5 6))))
 
   (test-case
    "invalid move leaves bot location unchanged"
    (let* ([world (make-world 10)]
-          [new-bot (add-bot! world (location 9 9))])
-     (check-equal? (move-bot! world (bot-id new-bot) direction-north) (location 9 9)))) 
+          [new-id (add-entity! world type-bot (location 9 9))])
+     (check-equal? (move-bot! world new-id direction-north) (location 9 9)))) 
 
   (test-case
    "world is drawn as strings"

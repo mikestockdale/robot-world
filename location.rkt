@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out location) move-location is-valid-location? new-direction
+(provide (struct-out location) move-location is-valid-location? change-direction
          direction-north direction-south direction-east direction-west)
 
 (module+ test (require rackunit))
@@ -26,7 +26,7 @@
        (< (location-x location) size)
        (< (location-y location) size)))
 
-(define (new-direction current) (modulo (+ current (random 1 4)) 4))
+(define (change-direction current) (modulo (+ current (random 1 4)) 4))
 
 (module+ test
   (test-case
@@ -47,5 +47,5 @@
 
   (test-case
    "new direction is different"
-   (let ([new (new-direction direction-west)])
+   (let ([new (change-direction direction-west)])
      (check-true (or (= new direction-north) (= new direction-south) (= new direction-east))))))

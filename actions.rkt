@@ -12,7 +12,7 @@
 
 (define (make-actions world . setups)
   (define (make-action setup)
-    (action (bot-id (add-bot! world (first setup))) (second setup)))
+    (action (add-entity! world type-bot (first setup)) (second setup)))
   (actions world (map make-action setups)))
 
 (define (perform-actions to-do)
