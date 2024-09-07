@@ -1,51 +1,47 @@
 #lang racket
 
 (provide (struct-out actions) (struct-out action)
-         perform-actions make-actions simple-action)
+         perform-actions)
 
 (require threading)
-(require "location.rkt" "world.rkt")
+(require "entity.rkt" "location.rkt" "server.rkt")
 (module+ test (require rackunit))
 
-(struct actions (world list))
-(struct action (bot-id procedure))
-
-(define (make-actions world . setups)
-  (define (make-action setup)
-    (action (add-entity! world type-bot (first setup)) (second setup)))
-  (actions world (map make-action setups)))
+(struct actions (server list))
+(struct action (bot procedure))
 
 (define (perform-actions to-do)
   (actions
-   (actions-world to-do)
+   (actions-server to-do)
    (map
     (λ (action)
-      ((action-procedure action) (actions-world to-do) action))
+      ((action-procedure action) (actions-server to-do) action))
     (actions-list to-do))))
 
-(define ((simple-action procedure) world action) (procedure world (action-bot-id action)) action)
-
 (module+ test
-  (define (go-north! world bot-id) (move-bot! world bot-id direction-north))
-  (define (go-northeast! world bot-id)
-    (go-north! world bot-id)
-    (move-bot! world bot-id direction-east))
-  (define (simple-actions world)
-    (make-actions world
-                  (list (location 1 1) (simple-action go-northeast!))
-                  (list (location 0 0) (simple-action go-north!))))
+  (define ((simple-action procedure) server input)
+    (let ([entity (procedure server (action-bot input))])
+      (struct-copy action input [bot entity])))
+  (define (go-north! server bot) (move-bot! server (entity-id bot) direction-north))
+  (define (go-northeast! server bot)
+    (go-north! server bot)
+    (move-bot! server (entity-id bot) direction-east))
+  (define (simple-actions server)
+    (actions server
+             (list
+              (action (add-bot! server (location 1 1)) (simple-action go-northeast!))
+              (action (add-bot! server (location 0 0)) (simple-action go-north!)))))
   
   (test-case
    "simple actions are performed"
-   (define world (make-world 3))
-   (perform-actions (simple-actions world))
-   (check-equal? (draw-world world)  #("  O" "O  " "   ")))
+   (let* ([server (make-server 3)]
+          [action-list (~> server simple-actions perform-actions actions-list)])
+     (check-equal? (~> action-list first action-bot entity-location) (location 2 2))
+     (check-equal? (~> action-list second action-bot entity-location) (location 0 1))))
 
   (test-case
    "simple actions are copied"
-   (define world (make-world 4))
-   (~>
-    (simple-actions world)
-    perform-actions
-    perform-actions)
-   (check-equal? (draw-world world)  #("   O" "O   " "    " "    "))))
+   (let* ([server (make-server 4)]
+          [action-list (~> server simple-actions perform-actions perform-actions actions-list)])
+     (check-equal? (~> action-list first action-bot entity-location) (location 3 3))
+     (check-equal? (~> action-list second action-bot entity-location) (location 0 2)))))

@@ -1,9 +1,9 @@
 #lang racket
 
 (require racket/gui/base)
-(require "actions.rkt" "world.rkt" "location.rkt" "wandering.rkt")
+(require "actions.rkt" "entity.rkt" "server.rkt" "world.rkt" "location.rkt" "wandering.rkt")
 
-(define (run-viewer actions)
+(define (run-viewer world actions)
   (define run-actions #t)
   (define to-do actions)
   (let* ([frame (new frame% [label "robots"] [width 500] [height 550])]
@@ -21,7 +21,7 @@
                 (λ (canvas dc)
                   (define row 0)
                   (send dc set-font font )
-                  (for ([line (draw-world (actions-world actions))])
+                  (for ([line (draw-world world)])
                     (send dc draw-text line 0 row)
                     (set! row (+ row 11))))])])
     (send frame show #t)
@@ -38,10 +38,11 @@
     #t))
 
 (let* ([world (make-world 50)]
+       [server (connect-server world)]
        [actions
-        (actions world
+        (actions server
                  (list
-                  (make-wandering world (location 20 20) direction-east)
-                  (make-wandering world (location 30 30) direction-west)))])
+                  (make-wandering server (location 20 20) direction-east)
+                  (make-wandering server (location 30 30) direction-west)))])
   (add-entity! world type-block (location 25 25))
-  (run-viewer actions))
+  (run-viewer world actions))
