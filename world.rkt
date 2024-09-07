@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world add-entity! move-entity! draw-world)
+(provide make-world add-entity! move-entity! neighbors draw-world)
 
 (require threading)
 (require "entity.rkt" "location.rkt")
@@ -38,6 +38,10 @@
           (place-entity! world new-entity)
           new-entity)
         old-entity)))
+
+(define (neighbors world entity)
+  (~>> world world-entities hash-values
+       (filter (λ (other) (= (distance (entity-location entity) (entity-location other) ) 1)))))
 
 (define (draw-world world)
   (let* ([size (world-size world)]
@@ -106,4 +110,14 @@
      (add-entity! world type-bot (location 0 2))
      (add-entity! world type-bot(location 1 1))
      (add-entity! world type-block(location 2 1))
-     (check-equal? (draw-world world) #("O  " " OB" "   "))))) 
+     (check-equal? (draw-world world) #("O  " " OB" "   "))))
+
+  (test-case
+   "neighbors are nearby"
+   (let* ([world (make-world 3)]
+         [subject (add-entity! world type-bot (location 1 1))])
+     (add-entity! world type-block (location 1 2))
+     (add-entity! world type-block (location 0 0))
+     (let ([nearby (neighbors world subject)])
+       (check-equal? (length nearby) 1)
+       (check-equal? (entity-location (first nearby)) (location 1 2))))))
