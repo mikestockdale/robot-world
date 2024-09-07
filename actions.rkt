@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out actions) (struct-out action)
+(provide (struct-out actions) (struct-out action) action-bot
          perform-actions)
 
 (require threading)
@@ -8,7 +8,9 @@
 (module+ test (require rackunit))
 
 (struct actions (server list))
-(struct action (bot procedure))
+(struct action (info procedure))
+
+(define (action-bot action) (info-bot (action-info action)))
 
 (define (perform-actions to-do)
   (actions
@@ -20,8 +22,8 @@
 
 (module+ test
   (define ((simple-action procedure) server input)
-    (let ([entity (procedure server (action-bot input))])
-      (struct-copy action input [bot entity])))
+    (let ([entity (info-bot (procedure server (action-bot input)))])
+      (struct-copy action input [info (info entity #f)])))
   (define (go-north! server bot) (move-bot! server (entity-id bot) direction-north))
   (define (go-northeast! server bot)
     (go-north! server bot)

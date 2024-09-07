@@ -17,11 +17,11 @@
               (change-direction old-direction)
               old-direction)]
          [old-location (entity-location (action-bot input))]
-         [new-bot (move-bot! server (entity-id (action-bot input)) move-direction)])
+         [new-info (move-bot! server (entity-id (action-bot input)) move-direction)])
     (if
-     (equal? (entity-location new-bot) old-location)
+     (equal? (entity-location (info-bot new-info)) old-location)
      (struct-copy wandering input [direction (change-direction old-direction)])
-     (struct-copy wandering input [bot #:parent action new-bot] [direction move-direction]))))
+     (struct-copy wandering input [info #:parent action new-info] [direction move-direction]))))
 
 (module+ test
   (test-case
