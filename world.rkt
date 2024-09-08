@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world add-entity! move-entity! neighbors draw-world)
+(provide make-world add-entity! move-entity! load-entity! neighbors draw-world)
 
 (require threading)
 (require "entity.rkt" "location.rkt")
@@ -14,7 +14,10 @@
 (define (place-entity! world entity)
   (hash-set! (world-entities world) (entity-id entity) entity))
 
-(define (entity-ref world id) (hash-ref (world-entities world) id))
+(define (entity-ref world id) (hash-ref (world-entities world) id #f))
+
+(define (remove-entity! world id)
+  (hash-remove! (world-entities world) id))
 
 (define (entity-at world location)
   (~>> world world-entities hash-values
@@ -23,7 +26,7 @@
 (define (add-entity! world type location)
   (if (is-valid-location? location (world-size world))
       (let* ([new-id (world-next-id world)]
-             [new-entity (entity new-id type location)])
+             [new-entity (make-entity new-id type location)])
         (place-entity! world new-entity)
         (set-world-next-id! world (+ 1 (world-next-id world)))
         new-entity)
@@ -34,10 +37,16 @@
       ([old-entity (entity-ref world id)]
        [new-location (move-location (entity-location old-entity) direction)])
     (if (is-valid-location? new-location (world-size world))
-        (let ([new-entity (entity id type-bot new-location)])
+        (let ([new-entity (struct-copy entity old-entity [location new-location])])
           (place-entity! world new-entity)
           new-entity)
         old-entity)))
+
+(define (load-entity! world id cargo-id)
+  (let ([new-entity (struct-copy entity (entity-ref world id) [cargo (entity-ref world cargo-id)])])
+    (place-entity! world new-entity)
+    (remove-entity! world cargo-id)
+    new-entity))
 
 (define (neighbors world entity)
   (~>> world world-entities hash-values
@@ -106,11 +115,12 @@
 
   (test-case
    "world is drawn as strings"
-   (let ([world (make-world 3)])
-     (add-entity! world type-bot (location 0 2))
+   (let* ([world (make-world 3)]
+         [bot (string (entity-symbol (add-entity! world type-bot (location 0 2))))]
+         [block (string (entity-symbol (add-entity! world type-block(location 2 1))))])
      (add-entity! world type-bot(location 1 1))
-     (add-entity! world type-block(location 2 1))
-     (check-equal? (draw-world world) #("O  " " OB" "   "))))
+     (check-equal? (draw-world world)
+                   (vector (string-append bot "  ") (string-append " " bot block) "   "))))
 
   (test-case
    "neighbors are nearby"
@@ -120,4 +130,13 @@
      (add-entity! world type-block (location 0 0))
      (let ([nearby (neighbors world subject)])
        (check-equal? (length nearby) 1)
-       (check-equal? (entity-location (first nearby)) (location 1 2))))))
+       (check-equal? (entity-location (first nearby)) (location 1 2)))))
+
+  (test-case
+   "block is loaded"
+   (let* ([world (make-world 3)]
+         [bot (add-entity! world type-bot (location 1 1))]
+         [block (add-entity! world type-block (location 2 1))]
+         [new-bot (load-entity! world (entity-id bot) (entity-id block))])
+     (check-equal? (entity-cargo new-bot) block)
+     (check-false (entity-ref world (entity-id block))))))

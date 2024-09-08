@@ -6,7 +6,7 @@
 (define (run-viewer world actions)
   (define run-actions #t)
   (define to-do actions)
-  (let* ([frame (new frame% [label "robots"] [width 500] [height 550])]
+  (let* ([frame (new frame% [label "robots"] [width 500] [height 555])]
          [font (make-font #:face "Courier")]
          [my-canvas%
           (class canvas%
@@ -22,7 +22,10 @@
                   (define row 0)
                   (send dc set-font font )
                   (for ([line (draw-world world)])
-                    (send dc draw-text line 0 row)
+                    (define col 0)
+                    (for ([char (string->list line)])
+                      (send dc draw-text (string char) col row)
+                      (set! col (+ col 10)))
                     (set! row (+ row 11))))])])
     (send frame show #t)
     (send canvas refresh-now #:flush? #t)
@@ -45,4 +48,12 @@
                   (make-wandering server (location 20 20) direction-east)
                   (make-wandering server (location 30 30) direction-west)))])
   (add-entity! world type-block (location 25 25))
+  (add-entity! world type-block (location 35 25))
+  (add-entity! world type-block (location 25 35))
+  (add-entity! world type-block (location 45 25))
+  (add-entity! world type-block (location 25 45))
+  (add-entity! world type-block (location 15 25))
+  (add-entity! world type-block (location 25 15))
+  (add-entity! world type-block (location 5 25))
+  (add-entity! world type-block (location 25 5))
   (run-viewer world actions))

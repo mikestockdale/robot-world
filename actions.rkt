@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out actions) (struct-out action) action-bot
+(provide (struct-out actions) (struct-out action) action-bot action-bot-id
          perform-actions)
 
 (require threading)
@@ -11,6 +11,7 @@
 (struct action (info procedure))
 
 (define (action-bot action) (info-bot (action-info action)))
+(define (action-bot-id action) (entity-id (action-bot action)))
 
 (define (perform-actions to-do)
   (actions

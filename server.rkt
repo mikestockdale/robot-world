@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out info)
-         make-server connect-server move-bot! add-bot!)
+         make-server connect-server move-bot! add-bot! load-block!)
 (require threading)
 (require "entity.rkt" "location.rkt" "world.rkt")
 (module+ test (require rackunit))
@@ -23,6 +23,9 @@
 
 (define (add-bot! server location)
   (make-response server (add-entity! (server-world server) type-bot location)))
+
+(define (load-block! server bot-id block-id)
+  (make-response server (load-entity! (server-world server) bot-id block-id)))
 
 (module+ test
   (test-case
