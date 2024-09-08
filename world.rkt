@@ -48,6 +48,15 @@
     (remove-entity! world cargo-id)
     new-entity))
 
+(define (drop-entity! world id direction)
+  (let* ([bot (entity-ref world id)]
+         [drop-location (move-location (entity-location bot) direction)])
+    (place-entity! world
+                   (struct-copy entity (entity-cargo bot) [location drop-location]))
+    (let ([new-bot (struct-copy entity (entity-ref world id) [cargo #f])])
+      (place-entity! world new-bot)
+      new-bot)))
+
 (define (neighbors world entity)
   (~>> world world-entities hash-values
        (filter (λ (other) (= (distance (entity-location entity) (entity-location other) ) 1)))))
@@ -116,8 +125,8 @@
   (test-case
    "world is drawn as strings"
    (let* ([world (make-world 3)]
-         [bot (string (entity-symbol (add-entity! world type-bot (location 0 2))))]
-         [block (string (entity-symbol (add-entity! world type-block(location 2 1))))])
+          [bot (string (entity-symbol (add-entity! world type-bot (location 0 2))))]
+          [block (string (entity-symbol (add-entity! world type-block(location 2 1))))])
      (add-entity! world type-bot(location 1 1))
      (check-equal? (draw-world world)
                    (vector (string-append bot "  ") (string-append " " bot block) "   "))))
@@ -125,7 +134,7 @@
   (test-case
    "neighbors are nearby"
    (let* ([world (make-world 3)]
-         [subject (add-entity! world type-bot (location 1 1))])
+          [subject (add-entity! world type-bot (location 1 1))])
      (add-entity! world type-block (location 1 2))
      (add-entity! world type-block (location 0 0))
      (let ([nearby (neighbors world subject)])
@@ -135,8 +144,18 @@
   (test-case
    "block is loaded"
    (let* ([world (make-world 3)]
-         [bot (add-entity! world type-bot (location 1 1))]
-         [block (add-entity! world type-block (location 2 1))]
-         [new-bot (load-entity! world (entity-id bot) (entity-id block))])
+          [bot (add-entity! world type-bot (location 1 1))]
+          [block (add-entity! world type-block (location 2 1))]
+          [new-bot (load-entity! world (entity-id bot) (entity-id block))])
      (check-equal? (entity-cargo new-bot) block)
-     (check-false (entity-ref world (entity-id block))))))
+     (check-false (entity-ref world (entity-id block)))))
+
+  (test-case
+   "block is dropped"
+   (let* ([world (make-world 3)]
+          [block (add-entity! world type-block (location 2 1))]
+          [bot (add-entity! world type-bot (location 1 1))])
+     (load-entity! world (entity-id bot) (entity-id block))
+     (drop-entity! world (entity-id bot) direction-north)
+     (check-false (entity-cargo (entity-ref world (entity-id bot))))
+     (check-equal? (entity-location (entity-ref world (entity-id block))) (location 1 2)))))
