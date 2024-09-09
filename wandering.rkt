@@ -15,11 +15,11 @@
     (filter (λ (entity) (= (entity-type entity) type-block))
             (info-neighbors (action-info input))))
 
-  (define (load-block block)
+  (define (take-block block)
     (struct-copy
      wandering input
      [info #:parent action
-           (load-block! server (action-bot-id input) (entity-id block))]))
+           (take-block! server (action-bot-id input) (entity-id block))]))
     
   (define (pick-direction old-direction)
     (if (> (wandering-direction-change-chance input) (random))
@@ -40,7 +40,7 @@
   
   (let ([blocks (find-nearby-blocks)])
     (if (> (length blocks) 0)
-        (load-block (first blocks))
+        (take-block (first blocks))
         (try-to-move-bot))))
 
 (module+ test

@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world add-entity! move-entity! load-entity! neighbors draw-world)
+(provide make-world add-entity! move-entity! take-entity! neighbors draw-world)
 
 (require threading)
 (require "entity.rkt" "location.rkt")
@@ -42,7 +42,7 @@
           new-entity)
         old-entity)))
 
-(define (load-entity! world id cargo-id)
+(define (take-entity! world id cargo-id)
   (let ([new-entity (struct-copy entity (entity-ref world id) [cargo (entity-ref world cargo-id)])])
     (place-entity! world new-entity)
     (remove-entity! world cargo-id)
@@ -146,7 +146,7 @@
    (let* ([world (make-world 3)]
           [bot (add-entity! world type-bot (location 1 1))]
           [block (add-entity! world type-block (location 2 1))]
-          [new-bot (load-entity! world (entity-id bot) (entity-id block))])
+          [new-bot (take-entity! world (entity-id bot) (entity-id block))])
      (check-equal? (entity-cargo new-bot) block)
      (check-false (entity-ref world (entity-id block)))))
 
@@ -155,7 +155,7 @@
    (let* ([world (make-world 3)]
           [block (add-entity! world type-block (location 2 1))]
           [bot (add-entity! world type-bot (location 1 1))])
-     (load-entity! world (entity-id bot) (entity-id block))
+     (take-entity! world (entity-id bot) (entity-id block))
      (drop-entity! world (entity-id bot) direction-north)
      (check-false (entity-cargo (entity-ref world (entity-id bot))))
      (check-equal? (entity-location (entity-ref world (entity-id block))) (location 1 2)))))
