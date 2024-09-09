@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out location) move-location is-valid-location? change-direction distance
-         direction-north direction-south direction-east direction-west)
+         direction-north direction-south direction-east direction-west all-directions)
 
 (module+ test (require rackunit))
 
@@ -11,6 +11,8 @@
 (define direction-east 1)
 (define direction-south 2)
 (define direction-west 3)
+
+(define all-directions (list direction-north direction-east direction-south direction-west))
 
 (define movement (vector (location 0 1) (location 1 0) (location 0 -1) (location -1 0)))
 

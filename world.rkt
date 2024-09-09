@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world add-entity! move-entity! take-entity! neighbors draw-world)
+(provide make-world add-entity! move-entity! take-entity! drop-entity! entity-ref neighbors draw-world)
 
 (require threading)
 (require "entity.rkt" "location.rkt")
