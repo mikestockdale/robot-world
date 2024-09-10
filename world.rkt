@@ -1,6 +1,7 @@
 #lang racket
 
-(provide make-world add-entity! move-entity! take-entity! drop-entity! entity-ref neighbors draw-world)
+(provide make-world  entity-ref neighbors draw-entities
+         add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
 (require "entity.rkt" "location.rkt")
@@ -61,19 +62,15 @@
   (~>> world world-entities hash-values
        (filter (λ (other) (= (distance (entity-location entity) (entity-location other) ) 1)))))
 
-(define (draw-world world)
-  (let* ([size (world-size world)]
-         [lines (for/vector ([_ size]) (make-string size #\space))])
-    
-    (define (draw-entity id entity)
-      (let ([location (entity-location entity)])
-        (string-set!
-         (vector-ref lines (- size 1 (location-y location)))
-         (location-x location)
-         (entity-symbol entity))))
-    
-    (hash-for-each (world-entities world) draw-entity)
-    lines))
+(define (draw-entities world procedure)
+
+  (define (draw-entity id entity)
+    (let ([location (entity-location entity)])
+      (procedure (entity-symbol entity)
+                 (location-x location)
+                 (- (world-size world) 1 (location-y location)))))
+  
+  (hash-for-each (world-entities world) draw-entity))
 
 (module+ test
   (test-case
@@ -123,13 +120,16 @@
                    (location 9 9)))) 
 
   (test-case
-   "world is drawn as strings"
+   "entities are drawn"
    (let* ([world (make-world 3)]
           [bot (string (entity-symbol (add-entity! world type-bot (location 0 2))))]
           [block (string (entity-symbol (add-entity! world type-block(location 2 1))))])
      (add-entity! world type-bot(location 1 1))
-     (check-equal? (draw-world world)
-                   (vector (string-append bot "  ") (string-append " " bot block) "   "))))
+     (define result "")
+     (define (draw symbol x y)
+       (set! result (string-join (list result (string symbol) (number->string x) (number->string y)))))
+     (draw-entities world draw)
+     (check-equal? result (string-append " " bot " 0 0 " block " 2 1 " bot " 1 1"))))
 
   (test-case
    "neighbors are nearby"

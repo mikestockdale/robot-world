@@ -19,14 +19,10 @@
                [parent frame]
                [paint-callback
                 (λ (canvas dc)
-                  (define row 0)
                   (send dc set-font font )
-                  (for ([line (draw-world world)])
-                    (define col 0)
-                    (for ([char (string->list line)])
-                      (send dc draw-text (string char) col row)
-                      (set! col (+ col 10)))
-                    (set! row (+ row 11))))])])
+                  (define (draw-entity symbol x y)
+                    (send dc draw-text (string symbol) (* 10 x) (* 11 y)))
+                  (draw-entities world draw-entity))])])
     (send frame show #t)
     (send canvas refresh-now #:flush? #t)
 
