@@ -4,8 +4,8 @@
          perform-actions)
 
 (require threading)
-(require "entity.rkt" "location.rkt" "server.rkt")
-(module+ test (require rackunit))
+(require "entity.rkt" "server.rkt")
+(module+ test (require rackunit "direction.rkt" "location.rkt"))
 
 (struct actions (server list))
 (struct action (info procedure))

@@ -4,7 +4,7 @@
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
-(require "entity.rkt" "location.rkt")
+(require "direction.rkt" "entity.rkt" "location.rkt")
 
 (module+ test (require rackunit))
 
@@ -36,7 +36,7 @@
 (define (move-entity! world id direction)
   (let*
       ([old-entity (entity-ref world id)]
-       [new-location (move-location (entity-location old-entity) direction)])
+       [new-location (move-direction direction (entity-location old-entity))])
     (if (is-valid-location? new-location (world-size world))
         (let ([new-entity (struct-copy entity old-entity [location new-location])])
           (place-entity! world new-entity)
@@ -51,7 +51,7 @@
 
 (define (drop-entity! world id direction)
   (let* ([bot (entity-ref world id)]
-         [drop-location (move-location (entity-location bot) direction)])
+         [drop-location (move-direction direction (entity-location bot))])
     (place-entity! world
                    (struct-copy entity (entity-cargo bot) [location drop-location]))
     (let ([new-bot (struct-copy entity (entity-ref world id) [cargo #f])])

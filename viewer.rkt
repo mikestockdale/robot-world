@@ -1,7 +1,8 @@
 #lang racket
 
 (require racket/gui/base)
-(require "actions.rkt" "entity.rkt" "server.rkt" "world.rkt" "location.rkt" "wandering.rkt")
+(require "actions.rkt" "direction.rkt" "entity.rkt" "server.rkt"
+         "world.rkt" "location.rkt" "wandering.rkt")
 
 (define (run-viewer world actions)
   (define run-actions #t)

@@ -1,8 +1,9 @@
 #lang racket
 
 (provide make-wandering)
-(require "actions.rkt" "entity.rkt" "location.rkt" "server.rkt")
-(module+ test (require rackunit "world.rkt"))
+
+(require "actions.rkt" "direction.rkt" "entity.rkt" "server.rkt")
+(module+ test (require rackunit "location.rkt" "world.rkt"))
 
 (struct wandering action (direction direction-change-chance take-delay))
 
@@ -30,14 +31,14 @@
     (struct-copy
      wandering input
      [info #:parent action
-           (drop-block! server (action-bot-id input) (find-direction blocks))]
+           (drop-block! server (action-bot-id input) (find-free-direction blocks))]
      [take-delay 10]))
 
-  (define (find-direction blocks)
-    (findf (λ (direction)
-             (is-free? (move-location (entity-location (action-bot input)) direction)
-                       blocks))
-           all-directions))
+  (define (find-free-direction blocks)
+    (find-direction
+     (λ (direction)
+       (is-free? (move-direction direction (entity-location (action-bot input)))
+                 blocks))))
 
   (define (is-free? location blocks)
     (not (findf (λ (block) (equal? location (entity-location block))) blocks)))
