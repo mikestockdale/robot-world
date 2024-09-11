@@ -1,13 +1,11 @@
 #lang racket
 
-(provide (struct-out info)
-         make-server connect-server move-bot! add-bot! take-block! drop-block!)
+(provide make-server connect-server move-bot! add-bot! take-block! drop-block!)
 (require threading)
-(require "entity.rkt" "location.rkt" "world.rkt")
+(require "bot-info.rkt" "entity.rkt" "location.rkt" "world.rkt")
 (module+ test (require rackunit))
 
 (struct server (world))
-(struct info (bot neighbors))
 
 (define (make-server size) (server (make-world size))) ; used for testing
 
@@ -15,7 +13,7 @@
 
 (define (make-response server bot)
   (if bot
-      (info bot (neighbors (server-world server) bot))
+      (bot-info bot (neighbors (server-world server) bot))
       #f))
 
 (define (move-bot! server bot-id location)
@@ -35,6 +33,6 @@
    "neighbors added to server response"
    (let ([server (make-server 3)])
      (add-entity! (server-world server) type-block (location 2 1))
-     (let ([neighbor (~> (add-bot! server (location 1 1)) info-neighbors first)])
+     (let ([neighbor (~> (add-bot! server (location 1 1)) bot-info-neighbors first)])
        (check-equal? (entity-type neighbor) type-block)
        (check-equal? (entity-location neighbor) (location 2 1))))))

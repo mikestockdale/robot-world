@@ -4,13 +4,13 @@
          perform-actions)
 
 (require threading)
-(require "entity.rkt" "server.rkt")
+(require "bot-info.rkt" "entity.rkt" "server.rkt")
 (module+ test (require rackunit "direction.rkt" "location.rkt"))
 
 (struct actions (server list))
 (struct action (info procedure))
 
-(define (action-bot action) (info-bot (action-info action)))
+(define (action-bot action) (bot-info-bot (action-info action)))
 (define (action-bot-id action) (entity-id (action-bot action)))
 
 (define (perform-actions to-do)
@@ -23,8 +23,8 @@
 
 (module+ test
   (define ((simple-action procedure) server input)
-    (let ([entity (info-bot (procedure server (action-bot input)))])
-      (struct-copy action input [info (info entity #f)])))
+    (let ([entity (bot-info-bot (procedure server (action-bot input)))])
+      (struct-copy action input [info (bot-info entity #f)])))
   (define (go-north! server bot) (move-bot! server (entity-id bot) direction-north))
   (define (go-northeast! server bot)
     (go-north! server bot)

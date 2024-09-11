@@ -2,7 +2,7 @@
 
 (provide make-wandering)
 
-(require "actions.rkt" "direction.rkt" "entity.rkt" "server.rkt")
+(require "actions.rkt" "bot-info.rkt" "direction.rkt" "entity.rkt" "server.rkt")
 (module+ test (require rackunit "location.rkt" "world.rkt"))
 
 (struct wandering action (direction direction-change-chance take-delay))
@@ -14,11 +14,11 @@
 
   (define (find-nearby-blocks)
     (filter (λ (entity) (= (entity-type entity) type-block))
-            (info-neighbors (action-info input))))
+            (bot-info-neighbors (action-info input))))
 
   (define (take-or-drop-block blocks)
     (if (entity-cargo (action-bot input))
-        (drop-block blocks)
+        (drop-block)
         (take-block (first blocks))))
   
   (define (take-block block)
@@ -27,22 +27,13 @@
      [info #:parent action
            (take-block! server (action-bot-id input) (entity-id block))]))
 
-  (define (drop-block blocks)
+  (define (drop-block)
     (struct-copy
      wandering input
      [info #:parent action
-           (drop-block! server (action-bot-id input) (find-free-direction blocks))]
+           (drop-block! server (action-bot-id input) (find-free-direction (action-info input)))]
      [take-delay 10]))
 
-  (define (find-free-direction blocks)
-    (find-direction
-     (λ (direction)
-       (is-free? (move-direction direction (entity-location (action-bot input)))
-                 blocks))))
-
-  (define (is-free? location blocks)
-    (not (findf (λ (block) (equal? location (entity-location block))) blocks)))
-    
   (define (try-to-move-bot) 
     (let* ([old-direction (wandering-direction input)]
            [move-direction (pick-direction old-direction)]
@@ -52,7 +43,7 @@
        wandering input
        [info #:parent action new-info]
        [take-delay (max (- (wandering-take-delay input) 1) 0)]
-       [direction (if (equal? (entity-location (info-bot new-info)) old-location)
+       [direction (if (equal? (entity-location (bot-info-bot new-info)) old-location)
                       (change-direction old-direction)
                       move-direction)])))
   
@@ -107,7 +98,7 @@
           [server (connect-server world)]
           [block (add-entity! world type-block (location 1 0))]
           [bot (add-entity! world type-block (location 1 1))]
-          [action (wandering (info bot (list block)) wander direction-east 0 1)]
+          [action (wandering (bot-info bot (list block)) wander direction-east 0 1)]
           [new-action (wander server action)])
      (check-equal? (entity-location (action-bot new-action)) (location 2 1) "bot moved")
      (check-equal? (wandering-take-delay new-action) 0 "delay decremented")
@@ -121,7 +112,7 @@
           [bot (add-entity! world type-bot (location 2 1))]
           [block2 (add-entity! world type-block (location 3 1))]
           [laden-bot (take-entity! world (entity-id bot) (entity-id block1))]
-          [action (wandering (info laden-bot (list block2)) wander direction-east 0 0)]
+          [action (wandering (bot-info laden-bot (list block2)) wander direction-east 0 0)]
           [new-action (wander server action)])
      (check-equal? (wandering-take-delay new-action) 10 "delay started")
      (check-equal? (entity-location (entity-ref world (entity-id block1)))
