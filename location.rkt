@@ -1,8 +1,8 @@
 #lang racket
 
-(provide (struct-out location) is-valid-location? distance)
+(provide (struct-out location) is-valid-location? distance location->list)
 
-(module+ test (require rackunit))
+(module+ test )
 
 (struct location (x y) #:transparent)
 
@@ -16,7 +16,11 @@
   (+ (abs (- (location-x a) (location-x b)))
      (abs (- (location-y a) (location-y b)))))
 
+(define (location->list location) (list (location-x location) (location-y location)))
+
 (module+ test
+  (require rackunit)
+  
   (test-case
    "valid locations"
    (check-true (is-valid-location? (location 0 0) 1))
@@ -31,4 +35,8 @@
    (check-equal? (distance (location 1 1) (location 1 1)) 0)
    (check-equal? (distance (location 1 1) (location 1 2)) 1)
    (check-equal? (distance (location 1 1) (location 2 1)) 1)
-   (check-equal? (distance (location 3 4) (location 2 1)) 4)))
+   (check-equal? (distance (location 3 4) (location 2 1)) 4))
+
+  (test-case
+   "convert to and from list"
+   (check-equal? (apply location (location->list (location 3 4))) (location 3 4))))
