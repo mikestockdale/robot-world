@@ -1,6 +1,5 @@
 #lang racket
 
-(require racket/gui/base)
 (require "actions.rkt" "direction.rkt" "entity.rkt" "server.rkt"
          "world.rkt" "location.rkt" "viewer.rkt" "wandering.rkt")
 

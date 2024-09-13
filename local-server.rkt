@@ -10,11 +10,11 @@
   [(define (add-bot! server location)
      (make-response server (add-entity! (local-server-world server) type-bot location)))
 
-   (define (drop-block! server bot-id block-id)
-     (make-response server (drop-entity! (local-server-world server) bot-id block-id)))
+   (define (drop-block! server bot-id direction)
+     (make-response server (drop-entity! (local-server-world server) bot-id direction)))
 
-   (define (move-bot! server bot-id location)
-     (make-response server (move-entity! (local-server-world server) bot-id location)))
+   (define (move-bot! server bot-id direction)
+     (make-response server (move-entity! (local-server-world server) bot-id direction)))
 
    (define (take-block! server bot-id block-id)
      (make-response server (take-entity! (local-server-world server) bot-id block-id)))])
