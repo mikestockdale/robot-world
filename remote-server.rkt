@@ -36,12 +36,12 @@
   (list->bot-info (with-input-from-string string read)))
 
 (define (make-request server path)
-  (make-bot-info ((remote-server-caller server) server path)))
+  (make-bot-info ((remote-server-caller server) path)))
 
 (module+ test
   (require rackunit "direction.rkt" "remote-world.rkt")
 
-  (define (test-call server path)
+  (define (test-call path)
     (let* ([pieces (string-split path "/")]
            [method (first pieces)]
            [parms (map string->number (rest pieces))]
