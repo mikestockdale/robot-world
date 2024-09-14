@@ -35,8 +35,8 @@
 
   (test-case
    "convert to and from list"
-   (let ([info (bot-info (entity 1 2 (location 3 4) 5)
+   (let ([info (bot-info (entity 1 2 (location 3 4) #f)
                          (list
-                          (entity 6 7 (location 8 9) 10)
-                          (entity 11 12 (location 13 14) 15)))])
+                          (entity 6 7 (location 8 9) #f)
+                          (entity 11 12 (location 13 14) #f)))])
      (check-equal? (list->bot-info (bot-info->list info)) info))))

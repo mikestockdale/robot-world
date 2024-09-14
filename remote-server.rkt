@@ -32,17 +32,22 @@
     (close-input-port in)
     return))
 
+(define (make-bot-info string)
+  (list->bot-info (with-input-from-string string read)))
+
 (define (make-request server path)
-  (list->bot-info (with-input-from-string ((remote-server-caller server) server path) read)))
+  (make-bot-info ((remote-server-caller server) server path)))
 
 (module+ test
-  (require rackunit "remote-world.rkt")
+  (require rackunit "direction.rkt" "remote-world.rkt")
 
   (define (test-call server path)
     (let* ([pieces (string-split path "/")]
            [method (first pieces)]
            [parms (map string->number (rest pieces))]
-           [dispatch (make-hash (list (cons "add" remote-add) (cons "move" remote-move)))])
+           [dispatch (make-hash
+                      (list (cons "add" remote-add) (cons "move" remote-move)
+                            (cons "drop" remote-drop) (cons "take" remote-take)))])
       (apply (hash-ref dispatch method) parms)))
 
   (test-case
@@ -50,4 +55,31 @@
    (let ([server (remote-server test-call)])
      (check-equal?
       (entity-location (bot-info-bot (add-bot! server (location 1 2))))
-      (location 1 2)))))
+      (location 1 2))))
+
+  (test-case
+   "move bot remote"
+   (let* ([server (remote-server test-call)]
+         [bot (bot-info-bot (add-bot! server (location 1 2)))])
+     (check-equal?
+      (entity-location (bot-info-bot (move-bot! server (entity-id bot) direction-east)))
+      (location 2 2))))
+  
+  (test-case
+   "take block remote"
+   (let* ([server (remote-server test-call)]
+         [bot (bot-info-bot (add-bot! server (location 1 2)))]
+         [block (bot-info-bot (make-bot-info (remote-add type-block 2 2)))]
+         [info (take-block! server (entity-id bot) (entity-id block))])
+     (check-equal?
+      (entity-id (entity-cargo (bot-info-bot info)))
+      (entity-id block))))
+  
+  (test-case
+   "drop block remote"
+   (let* ([server (remote-server test-call)]
+         [bot (bot-info-bot (add-bot! server (location 1 2)))]
+         [block (bot-info-bot (make-bot-info (remote-add type-block 2 2)))]
+         [info-1 (take-block! server (entity-id bot) (entity-id block))]
+         [info-2 (drop-block! server (entity-id bot) direction-west)])
+     (check-false (entity-cargo (bot-info-bot info-2))))))
