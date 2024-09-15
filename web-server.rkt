@@ -31,6 +31,7 @@
 
 (define (start request) (dispatch request))
 
+(populate-world)
 (serve/servlet start
                #:port 8080
                #:servlet-path "/"

@@ -1,7 +1,8 @@
 #lang racket
 
-(provide remote-add remote-draw remote-drop remote-move remote-take)
-(require "bot-info.rkt" "location.rkt" "world.rkt")
+(provide remote-add remote-draw remote-drop remote-move remote-take
+         populate-world)
+(require "bot-info.rkt" "entity.rkt" "location.rkt" "world.rkt")
 
 (define world (make-world 50))
 
@@ -29,3 +30,16 @@
     (set! response (cons (list symbol x y) response)))
   (draw-entities world draw-entity)
   (list->string response))
+
+(define (populate-world)
+  (add-entity! world type-block (location 25 25))
+  (add-entity! world type-block (location 35 25))
+  (add-entity! world type-block (location 25 35))
+  (add-entity! world type-block (location 45 25))
+  (add-entity! world type-block (location 25 45))
+  (add-entity! world type-block (location 15 25))
+  (add-entity! world type-block (location 25 15))
+  (add-entity! world type-block (location 5 25))
+  (add-entity! world type-block (location 25 5))
+  #t)
+

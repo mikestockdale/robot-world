@@ -18,4 +18,4 @@
 
 (define (do-actions) #t )
   
-(run-viewer draw-procedure do-actions)
+(run-viewer "robots - localhost:8080" draw-procedure do-actions)

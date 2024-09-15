@@ -26,4 +26,4 @@
   (define (do-actions)
     (set! to-do (perform-actions to-do)))
   
-  (run-viewer draw-procedure do-actions))
+  (run-viewer "robots - local" draw-procedure do-actions))
