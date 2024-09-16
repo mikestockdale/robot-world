@@ -1,10 +1,15 @@
 #lang racket
 
-(provide (struct-out bot-info) find-free-direction bot-info->list list->bot-info)
+(provide (struct-out bot-info) find-free-direction find-nearby-blocks
+         bot-info->list list->bot-info)
 
 (require "direction.rkt" "entity.rkt")
 
 (struct bot-info (bot neighbors) #:transparent)
+
+(define (find-nearby-blocks info)
+  (filter (λ (entity) (= (entity-type entity) type-block))
+          (bot-info-neighbors info)))
 
 (define (find-free-direction info)
   (find-direction
@@ -25,6 +30,16 @@
 
 (module+ test
   (require rackunit "location.rkt")
+  
+  (test-case
+   "nearby block found"
+   (let* ([bot1 (make-entity 101 type-bot (location 1 1))]
+          [block (make-entity 102 type-block (location 1 2))]
+          [bot2 (make-entity 103 type-bot (location 2 1))]
+          [info (bot-info bot1 (list bot2 block))]
+          [nearby (find-nearby-blocks info)])
+     (check-equal? (length nearby) 1)
+     (check-equal? (first nearby) block)))
   
   (test-case
    "free location found"
