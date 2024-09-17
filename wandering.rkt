@@ -93,7 +93,8 @@
     '(3 ("bot" 1 1) ("block" 1 0))
     (λ (world server ref)
       (let* ([action (wandering
-                      (bot-info (ref "bot") (list (ref "block"))) wander direction-east 0 1)]
+                      (bot-info (world-size world) (ref "bot") (list (ref "block")))
+                      wander direction-east 0 1)]
              [new-action (wander server action)])
         (check-equal? (entity-location (action-bot new-action)) (location 2 1) "bot moved")
         (check-equal? (wandering-take-delay new-action) 0 "delay decremented")
@@ -106,7 +107,7 @@
     (λ (world server ref)
       (let* ([laden-bot (take-entity! world (entity-id (ref "bot")) (entity-id (ref "block1")))]
              [action (wandering
-                      (bot-info laden-bot (list (ref "block2")))
+                      (bot-info (world-size world) laden-bot (list (ref "block2")))
                       wander direction-east 0 0)]
              [new-action (wander server action)])
         (check-equal? (wandering-take-delay new-action) 10 "delay started")

@@ -24,7 +24,9 @@
 
 (define (make-response server bot)
   (if bot
-      (bot-info bot (neighbors (local-server-world server) bot))
+      (bot-info (world-size (local-server-world server))
+                bot
+                (neighbors (local-server-world server) bot))
       #f))
 
 (module+ test

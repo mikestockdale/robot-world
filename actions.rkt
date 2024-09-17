@@ -24,7 +24,7 @@
 (module+ test
   (define ((simple-action procedure) server input)
     (let ([entity (bot-info-bot (procedure server (action-bot input)))])
-      (struct-copy action input [info (bot-info entity #f)])))
+      (struct-copy action input [info (bot-info 50 entity #f)])))
   (define (go-north! server bot) (move-bot! server (entity-id bot) direction-north))
   (define (go-northeast! server bot)
     (go-north! server bot)

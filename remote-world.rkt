@@ -10,7 +10,7 @@
   (with-output-to-string (λ () (write list))))
 
 (define (make-response entity)
-  (list->string (bot-info->list (bot-info entity (neighbors world entity)))))
+  (list->string (bot-info->list (bot-info (world-size world) entity (neighbors world entity)))))
 
 (define (remote-add type x y)
   (make-response (add-entity! world type (location x y))))

@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world  entity-ref neighbors draw-entities
+(provide make-world  entity-ref neighbors draw-entities world-size
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
