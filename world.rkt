@@ -41,8 +41,8 @@
              (not (entity-at world new-location)))
         (let ([new-entity (struct-copy entity old-entity [location new-location])])
           (place-entity! world new-entity)
-          new-entity)
-        old-entity)))
+          #t)
+        #f)))
 
 (define (take-entity! world id cargo-id)
   (let ([new-entity (struct-copy entity (entity-ref world id) [cargo (entity-ref world cargo-id)])])
@@ -106,27 +106,31 @@
   (test-case
    "move bot changes location"
    (let* ([world (make-world 10)]
-          [new-bot (add-entity! world type-bot (location 5 6))]
-          [new-id (entity-id new-bot)])
-     (check-equal? (entity-location (move-entity! world new-id direction-north)) (location 5 7))
-     (check-equal? (entity-location (move-entity! world new-id direction-east)) (location 6 7))
-     (check-equal? (entity-location (move-entity! world new-id direction-south)) (location 6 6))
-     (check-equal? (entity-location (move-entity! world new-id direction-west)) (location 5 6))))
+          [bot (add-entity! world type-bot (location 5 6))]
+          [id (entity-id bot)])
+     (move-entity! world id direction-north)
+     (check-equal? (entity-location (entity-ref world id)) (location 5 7))
+     (move-entity! world id direction-east)
+     (check-equal? (entity-location (entity-ref world id)) (location 6 7))
+     (move-entity! world id direction-south)
+     (check-equal? (entity-location (entity-ref world id)) (location 6 6))
+     (move-entity! world id direction-west)
+     (check-equal? (entity-location (entity-ref world id)) (location 5 6))))
 
   (test-case
    "invalid move leaves bot location unchanged"
    (let* ([world (make-world 10)]
-          [new-bot (add-entity! world type-bot (location 9 9))])
-     (check-equal? (entity-location (move-entity! world (entity-id new-bot) direction-north))
-                   (location 9 9)))) 
+          [bot (add-entity! world type-bot (location 9 9))])
+     (check-false (move-entity! world (entity-id bot) direction-north))
+     (check-equal? (entity-location bot) (location 9 9)))) 
 
   (test-case
    "can not move to occupied location"
    (let* ([world (make-world 3)]
-          [new-bot (add-entity! world type-bot (location 1 1))])
+          [bot (add-entity! world type-bot (location 1 1))])
      (add-entity! world type-block (location 1 2))
-     (check-equal? (entity-location (move-entity! world (entity-id new-bot) direction-north))
-                   (location 1 1)))) 
+     (check-false (move-entity! world (entity-id bot) direction-north))
+     (check-equal? (entity-location bot) (location 1 1)))) 
 
   (test-case
    "entities are drawn"

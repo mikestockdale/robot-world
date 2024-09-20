@@ -29,9 +29,9 @@
            [new-info (move-bot! server (action-bot-id input) move-direction)])
       (result new-info 
               #:take-delay (max (- (wandering-take-delay input) 1) 0)
-              #:direction (if (equal? (entity-location (bot-info-bot new-info)) old-location)
-                              (change-direction move-direction)
-                              move-direction))))
+              #:direction (if (bot-info-success? new-info)
+                              move-direction
+                              (change-direction move-direction)))))
   
   (define (pick-direction old-direction)
     (if (> (wandering-direction-change-chance input) (random))
@@ -93,7 +93,7 @@
     '(3 ("bot" 1 1) ("block" 1 0))
     (λ (world server ref)
       (let* ([action (wandering
-                      (bot-info (world-size world) (ref "bot") (list (ref "block")))
+                      (bot-info (world-size world) #t (ref "bot") (list (ref "block")))
                       wander direction-east 0 1)]
              [new-action (wander server action)])
         (check-equal? (entity-location (action-bot new-action)) (location 2 1) "bot moved")
@@ -107,7 +107,7 @@
     (λ (world server ref)
       (let* ([laden-bot (take-entity! world (entity-id (ref "bot")) (entity-id (ref "block1")))]
              [action (wandering
-                      (bot-info (world-size world) laden-bot (list (ref "block2")))
+                      (bot-info (world-size world) #t laden-bot (list (ref "block2")))
                       wander direction-east 0 0)]
              [new-action (wander server action)])
         (check-equal? (wandering-take-delay new-action) 10 "delay started")

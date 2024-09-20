@@ -7,7 +7,10 @@
   (with-output-to-string (λ () (write list))))
 
 (define (make-response entity world)
-  (list->string (bot-info->list (bot-info (world-size world) entity (neighbors world entity)))))
+  (make-response/x #t entity world))
+
+(define (make-response/x success? entity world)
+  (list->string (bot-info->list (bot-info (world-size world) success? entity (neighbors world entity)))))
 
 (define (remote-add world type x y)
   (make-response (add-entity! world type (location x y)) world))
@@ -16,7 +19,7 @@
   (make-response (drop-entity! world id direction) world))
 
 (define (remote-move world id direction)
-  (make-response (move-entity! world id direction) world))
+  (make-response/x (move-entity! world id direction) (entity-ref world id) world))
 
 (define (remote-take world bot-id block-id)
   (make-response (take-entity! world bot-id block-id) world))

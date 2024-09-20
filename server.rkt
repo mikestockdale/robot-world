@@ -64,10 +64,10 @@
   (test-case
    "move bot remote"
    (let* ([server (connect-local (make-world 3))]
-          [bot (bot-info-bot (add-bot! server (location 1 2)))])
-     (check-equal?
-      (entity-location (bot-info-bot (move-bot! server (entity-id bot) direction-east)))
-      (location 2 2))))
+          [bot (bot-info-bot (add-bot! server (location 1 2)))]
+          [info (move-bot! server (entity-id bot) direction-east)])
+     (check-true (bot-info-success? info))
+     (check-equal? (entity-location (bot-info-bot info)) (location 2 2))))
   
   (test-case
    "take block remote"
