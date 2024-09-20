@@ -1,7 +1,21 @@
 #lang racket
 
 (require web-server/servlet web-server/servlet-env)
-(require "remote-world.rkt")
+(require "entity.rkt" "location.rkt" "world.rkt" "remote-world.rkt")
+
+(define world (make-world 50))
+
+(define (populate-world)
+  (add-entity! world type-block (location 25 25))
+  (add-entity! world type-block (location 35 25))
+  (add-entity! world type-block (location 25 35))
+  (add-entity! world type-block (location 45 25))
+  (add-entity! world type-block (location 25 45))
+  (add-entity! world type-block (location 15 25))
+  (add-entity! world type-block (location 25 15))
+  (add-entity! world type-block (location 5 25))
+  (add-entity! world type-block (location 25 5))
+  #t)
 
 (define-values (dispatch url)
   (dispatch-rules
@@ -13,19 +27,19 @@
    (else error)))
 
 (define (add request type x y)
-  (response/xexpr (remote-add type x y)))
+  (response/xexpr (remote-add world type x y)))
 
 (define (drop request id direction)
-  (response/xexpr (remote-drop id direction)))
+  (response/xexpr (remote-drop world id direction)))
 
 (define (move request id direction)
-  (response/xexpr (remote-move id direction)))
+  (response/xexpr (remote-move world id direction)))
 
 (define (take request bot-id block-id)
-  (response/xexpr (remote-take bot-id block-id)))
+  (response/xexpr (remote-take world bot-id block-id)))
   
 (define (draw request)
-  (response/xexpr (remote-draw)))
+  (response/xexpr (remote-draw world)))
 
 (define (error request) (response/xexpr "error"))
 

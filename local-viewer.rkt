@@ -4,7 +4,7 @@
          "world.rkt" "location.rkt" "viewer.rkt" "wandering.rkt")
 
 (let* ([world (make-world 50)]
-       [server (connect-server world)]
+       [server (connect-local world)]
        [to-do
         (actions server
                  (list

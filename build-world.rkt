@@ -5,7 +5,7 @@
 
 (define (build-world spec procedure)
   (let* ([world (make-world (first spec))]
-         [server (connect-server world)]
+         [server (connect-local world)]
          [entities
           (for/hash ([entity-spec (rest spec)])
             (values
