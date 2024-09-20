@@ -37,7 +37,8 @@
   (let*
       ([old-entity (entity-ref world id)]
        [new-location (move-direction direction (entity-location old-entity))])
-    (if (is-valid-location? new-location (world-size world))
+    (if (and (is-valid-location? new-location (world-size world))
+             (not (entity-at world new-location)))
         (let ([new-entity (struct-copy entity old-entity [location new-location])])
           (place-entity! world new-entity)
           new-entity)
@@ -118,6 +119,14 @@
           [new-bot (add-entity! world type-bot (location 9 9))])
      (check-equal? (entity-location (move-entity! world (entity-id new-bot) direction-north))
                    (location 9 9)))) 
+
+  (test-case
+   "can not move to occupied location"
+   (let* ([world (make-world 3)]
+          [new-bot (add-entity! world type-bot (location 1 1))])
+     (add-entity! world type-block (location 1 2))
+     (check-equal? (entity-location (move-entity! world (entity-id new-bot) direction-north))
+                   (location 1 1)))) 
 
   (test-case
    "entities are drawn"
