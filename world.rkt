@@ -33,14 +33,17 @@
         new-entity)
       #f))
 
+(define (location-OK? world location)
+  (and (is-valid-location? location (world-size world))
+       (not (entity-at world location))))  
+
 (define (move-entity! world id direction)
   (let*
       ([old-entity (entity-ref world id)]
        [new-location (move-direction direction (entity-location old-entity))])
-    (if (and (is-valid-location? new-location (world-size world))
-             (not (entity-at world new-location)))
-        (let ([new-entity (struct-copy entity old-entity [location new-location])])
-          (place-entity! world new-entity)
+    (if (location-OK? world new-location)
+        (begin
+          (place-entity! world (struct-copy entity old-entity [location new-location]))
           #t)
         #f)))
 
@@ -53,11 +56,12 @@
 (define (drop-entity! world id direction)
   (let* ([bot (entity-ref world id)]
          [drop-location (move-direction direction (entity-location bot))])
-    (place-entity! world
-                   (struct-copy entity (entity-cargo bot) [location drop-location]))
-    (let ([new-bot (struct-copy entity (entity-ref world id) [cargo #f])])
-      (place-entity! world new-bot)
-      new-bot)))
+    (if (location-OK? world drop-location)
+        (begin
+          (place-entity! world (struct-copy entity (entity-cargo bot) [location drop-location]))
+          (place-entity! world (struct-copy entity (entity-ref world id) [cargo #f]))
+          #t)
+        #f)))
 
 (define (neighbors world entity)
   (~>> world world-entities hash-values
@@ -169,6 +173,16 @@
           [block (add-entity! world type-block (location 2 1))]
           [bot (add-entity! world type-bot (location 1 1))])
      (take-entity! world (entity-id bot) (entity-id block))
-     (drop-entity! world (entity-id bot) direction-north)
+     (check-true (drop-entity! world (entity-id bot) direction-north))
      (check-false (entity-cargo (entity-ref world (entity-id bot))))
-     (check-equal? (entity-location (entity-ref world (entity-id block))) (location 1 2)))))
+     (check-equal? (entity-location (entity-ref world (entity-id block))) (location 1 2))))
+
+  (test-case
+   "can not drop in occupied location"
+   (let* ([world (make-world 3)]
+          [block (add-entity! world type-block (location 2 1))]
+          [bot (add-entity! world type-bot (location 1 1))])
+     (take-entity! world (entity-id bot) (entity-id block))
+     (add-entity! world type-block (location 0 1))
+     (check-false (drop-entity! world (entity-id bot) direction-west))
+     (check-equal? (entity-cargo (entity-ref world (entity-id bot))) block))))

@@ -16,7 +16,7 @@
   (make-response (add-entity! world type (location x y)) world))
 
 (define (remote-drop world id direction)
-  (make-response (drop-entity! world id direction) world))
+  (make-response/x (drop-entity! world id direction) (entity-ref world id) world))
 
 (define (remote-move world id direction)
   (make-response/x (move-entity! world id direction) (entity-ref world id) world))
