@@ -22,7 +22,7 @@
   (make-response/x (move-entity! world id direction) (entity-ref world id) world))
 
 (define (remote-take world bot-id block-id)
-  (make-response (take-entity! world bot-id block-id) world))
+  (make-response/x (take-entity! world bot-id block-id) (entity-ref world bot-id) world))
 
 (define (remote-draw world)
   (define response '())

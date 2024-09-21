@@ -105,7 +105,8 @@
    (build-world
     '(4 ("bot" 2 1) ("block1" 1 0) ("block2" 3 1))
     (λ (world server ref)
-      (let* ([laden-bot (take-entity! world (entity-id (ref "bot")) (entity-id (ref "block1")))]
+      (take-entity! world (entity-id (ref "bot")) (entity-id (ref "block1")))
+      (let* ([laden-bot (entity-ref world (entity-id (ref "bot")))]
              [action (wandering
                       (bot-info (world-size world) #t laden-bot (list (ref "block2")))
                       wander direction-east 0 0)]

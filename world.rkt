@@ -48,10 +48,13 @@
         #f)))
 
 (define (take-entity! world id cargo-id)
-  (let ([new-entity (struct-copy entity (entity-ref world id) [cargo (entity-ref world cargo-id)])])
-    (place-entity! world new-entity)
-    (remove-entity! world cargo-id)
-    new-entity))
+  (let ([cargo (entity-ref world cargo-id)])
+    (if cargo
+        (begin
+          (place-entity! world (struct-copy entity (entity-ref world id) [cargo cargo]))
+          (remove-entity! world cargo-id)
+          #t)
+        #f)))
 
 (define (drop-entity! world id direction)
   (let* ([bot (entity-ref world id)]
@@ -159,13 +162,22 @@
        (check-equal? (entity-location (first nearby)) (location 1 2)))))
 
   (test-case
-   "block is loaded"
+   "block is taken"
    (let* ([world (make-world 3)]
           [bot (add-entity! world type-bot (location 1 1))]
-          [block (add-entity! world type-block (location 2 1))]
-          [new-bot (take-entity! world (entity-id bot) (entity-id block))])
-     (check-equal? (entity-cargo new-bot) block)
+          [block (add-entity! world type-block (location 2 1))])
+     (check-true (take-entity! world (entity-id bot) (entity-id block)))
+     (check-equal? (entity-cargo (entity-ref world (entity-id bot))) block)
      (check-false (entity-ref world (entity-id block)))))
+
+  (test-case
+   "can not take if block is removed"
+   (let* ([world (make-world 3)]
+          [bot (add-entity! world type-bot (location 1 1))]
+          [block (add-entity! world type-block (location 2 1))])
+     (remove-entity! world (entity-id block))
+     (check-false (take-entity! world (entity-id bot) (entity-id block)))
+     (check-false (entity-cargo (entity-ref world (entity-id bot))))))
 
   (test-case
    "block is dropped"
