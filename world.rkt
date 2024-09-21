@@ -25,7 +25,7 @@
        (findf (λ (entity) (equal? (entity-location entity) location)))))
 
 (define (add-entity! world type location)
-  (if (is-valid-location? location (world-size world))
+  (if (location-OK? world location)
       (let* ([new-id (world-next-id world)]
              [new-entity (make-entity new-id type location)])
         (place-entity! world new-entity)
