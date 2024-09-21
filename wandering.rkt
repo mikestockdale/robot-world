@@ -17,7 +17,9 @@
         (take-block (first blocks))))
   
   (define (take-block block)
-    (result (take-block! server (action-bot-id input) (entity-id block))))
+    (let ([take-direction (direction-from-entity (action-bot input) block)]) 
+    (result (take-block! server (action-bot-id input) (entity-id block))
+            #:direction take-direction)))
 
   (define (drop-block)
     (let ([drop-direction (find-free-direction (action-info input))])
@@ -86,7 +88,8 @@
       (let* ([action (make-wandering server (location 1 1) direction-east)]
              [new-action (wander server action)])
         (check-equal? (entity-location (action-bot new-action)) (location 1 1))
-        (check-equal? (entity-cargo (action-bot new-action)) (ref "block"))))))
+        (check-equal? (entity-cargo (action-bot new-action)) (ref "block"))
+        (check-equal? (wandering-direction new-action) direction-south)))))
 
   (test-case
    "wandering delays taking"

@@ -1,6 +1,6 @@
 #lang racket
 
-(provide change-direction move-direction
+(provide change-direction move-direction direction-from
          direction-north direction-south direction-east direction-west find-direction)
 
 (require "location.rkt")
@@ -27,6 +27,9 @@
 
 (define (find-direction filter) (findf filter all-directions))
 
+(define (direction-from from to)
+  (find-direction (λ (direction) (equal? (move-direction direction from) to))))
+
 (module+ test
   (test-case
    "location moves in all directions"
@@ -44,4 +47,9 @@
    "direction is found"
    (check-equal? (find-direction
                   (λ (direction) (equal? (move-direction direction (location 1 1)) (location 1 0))))
-                 direction-south)))
+                 direction-south))
+
+  (test-case
+   "direction from location to location"
+   (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
+   (check-false (direction-from (location 1 1) (location 2 2)))))

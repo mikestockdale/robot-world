@@ -1,9 +1,9 @@
 #lang racket
 
 (provide (struct-out entity)
-         entity-symbol make-entity entity->list list->entity
+         entity-symbol make-entity direction-from-entity entity->list list->entity
          type-block type-bot)
-(require "location.rkt")
+(require "direction.rkt" "location.rkt")
 
 (struct entity (id type location cargo)  #:transparent)
 
@@ -18,6 +18,9 @@
               (if (entity-cargo entity)
                   (add1 (entity-type entity))
                   (entity-type entity))))
+
+(define (direction-from-entity from to)
+  (direction-from (entity-location from) (entity-location to)))
 
 (define (entity->list entity)
   (list (entity-id entity)
