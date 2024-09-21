@@ -20,12 +20,13 @@
     (result (take-block! server (action-bot-id input) (entity-id block))))
 
   (define (drop-block)
-    (result (drop-block! server (action-bot-id input) (find-free-direction (action-info input)))
-            #:take-delay 10))
+    (let ([drop-direction (find-free-direction (action-info input))])
+      (result (drop-block! server (action-bot-id input) drop-direction)
+              #:direction (change-direction drop-direction)
+              #:take-delay 10)))
 
   (define (try-to-move-bot) 
     (let* ([move-direction (pick-direction (wandering-direction input))]
-           [old-location (entity-location (action-bot input))]
            [new-info (move-bot! server (action-bot-id input) move-direction)])
       (result new-info 
               #:take-delay (max (- (wandering-take-delay input) 1) 0)
@@ -109,8 +110,10 @@
       (let* ([laden-bot (entity-ref world (entity-id (ref "bot")))]
              [action (wandering
                       (bot-info (world-size world) #t laden-bot (list (ref "block2")))
-                      wander direction-east 0 0)]
+                      wander direction-north 0 0)]
              [new-action (wander server action)])
         (check-equal? (wandering-take-delay new-action) 10 "delay started")
         (check-equal? (entity-location (entity-ref world (entity-id (ref "block1"))))
-                      (location 2 2) "block dropped"))))))
+                      (location 2 2) "block dropped")
+        (check-not-equal? (wandering-direction new-action)
+                          direction-north "changed direction"))))))
