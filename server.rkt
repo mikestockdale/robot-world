@@ -1,7 +1,7 @@
 #lang racket
 
 (provide connect-local connect-remote make-server
-         add-bot! drop-block! move-bot! take-block!)
+         add-bot! execute!)
 (require net/http-client)
 (require "bot-info.rkt" "entity.rkt" "location.rkt" "remote-world.rkt" "world.rkt")
 
@@ -10,14 +10,9 @@
 (define (add-bot! server location)
   (make-request server (~a "add/" type-bot "/" (location-x location) "/" (location-y location))))
 
-(define (drop-block! server bot-id direction)
-  (make-request server (~a "drop/" bot-id "/" direction)))
-
-(define (move-bot! server bot-id direction)
-  (make-request server (~a "move/" bot-id "/" direction)))
-
-(define (take-block! server bot-id block-id)
-  (make-request server (~a "take/" bot-id "/" block-id)))
+(define (execute! server list)
+  (make-request server
+                (string-join (map number->string list) "/" #:before-first "exec/")))
 
 (define (connect-remote host port) (server (remote-call host port)))
 (define (connect-local world) (server (local-call world)))
@@ -41,8 +36,8 @@
          [method (first pieces)]
          [parms (cons world (map string->number (rest pieces)))]
          [dispatch (make-hash
-                    (list (cons "add" remote-add) (cons "move" remote-move)
-                          (cons "drop" remote-drop) (cons "take" remote-take)))])
+                    (list (cons "add" remote-add) 
+                          (cons "exec" remote-exec)))])
     (apply (hash-ref dispatch method) parms)))
 
 (define (make-bot-info string)
@@ -52,7 +47,7 @@
   (make-bot-info ((server-caller server) path)))
 
 (module+ test
-  (require rackunit threading "direction.rkt" "world.rkt")
+  (require rackunit threading "direction.rkt" "execute.rkt" "world.rkt")
 
   (test-case
    "add bot remote"
@@ -65,7 +60,7 @@
    "move bot remote"
    (let* ([server (connect-local (make-world 3))]
           [bot (bot-info-bot (add-bot! server (location 1 2)))]
-          [info (move-bot! server (entity-id bot) direction-east)])
+          [info (execute! server (list execute-move (entity-id bot) direction-east))])
      (check-true (bot-info-success? info))
      (check-equal? (entity-location (bot-info-bot info)) (location 2 2))))
   
@@ -75,7 +70,7 @@
           [server (connect-local world)]
           [bot (bot-info-bot (add-bot! server (location 1 2)))]
           [block (bot-info-bot (make-bot-info (remote-add world type-block 2 2)))]
-          [info (take-block! server (entity-id bot) (entity-id block))])
+          [info (execute! server (list execute-take (entity-id bot) (entity-id block)))])
      (check-equal?
       (entity-id (entity-cargo (bot-info-bot info)))
       (entity-id block))))
@@ -86,8 +81,8 @@
           [server (connect-local world)]
           [bot (bot-info-bot (add-bot! server (location 1 2)))]
           [block (bot-info-bot (make-bot-info (remote-add world type-block 2 2)))]
-          [info-1 (take-block! server (entity-id bot) (entity-id block))]
-          [info-2 (drop-block! server (entity-id bot) direction-west)])
+          [info-1 (execute! server (list execute-take (entity-id bot) (entity-id block)))]
+          [info-2 (execute! server (list execute-drop (entity-id bot) direction-west))])
      (check-false (entity-cargo (bot-info-bot info-2)))))
   
   (test-case

@@ -1,6 +1,6 @@
 #lang racket
 
-(provide remote-add remote-draw remote-drop remote-move remote-take)
+(provide remote-add remote-draw remote-exec)
 (require "bot-info.rkt" "entity.rkt" "location.rkt" "world.rkt")
 
 (define null-entity (make-entity 0 0 (location 0 0)))
@@ -20,14 +20,11 @@
         (make-response #t new-entity world)
         (make-info-response (bot-info (world-size world) #f null-entity '())))))
 
-(define (remote-drop world id direction)
-  (make-response (drop-entity! world id direction) (entity-ref world id) world))
+(define execute-procedures (vector drop-entity! move-entity! take-entity!))
 
-(define (remote-move world id direction)
-  (make-response (move-entity! world id direction) (entity-ref world id) world))
-
-(define (remote-take world bot-id block-id)
-  (make-response (take-entity! world bot-id block-id) (entity-ref world bot-id) world))
+(define (remote-exec world procedure . rest)
+  (make-response (apply (vector-ref execute-procedures procedure) (cons world rest))
+                 (entity-ref world (first rest)) world))
 
 (define (remote-draw world)
   (define response '())

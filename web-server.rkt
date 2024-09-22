@@ -20,24 +20,16 @@
 (define-values (dispatch url)
   (dispatch-rules
    (("add" (integer-arg) (integer-arg) (integer-arg)) add)
-   (("move" (integer-arg) (integer-arg)) move)
-   (("take" (integer-arg) (integer-arg)) take)
-   (("drop" (integer-arg) (integer-arg)) drop)
+   (("exec" (integer-arg) (integer-arg) (integer-arg)) exec)
    (("draw") draw)
    (else error)))
 
 (define (add request type x y)
   (response/xexpr (remote-add world type x y)))
 
-(define (drop request id direction)
-  (response/xexpr (remote-drop world id direction)))
+(define (exec request procedure id other)
+  (response/xexpr (remote-exec world procedure id other)))
 
-(define (move request id direction)
-  (response/xexpr (remote-move world id direction)))
-
-(define (take request bot-id block-id)
-  (response/xexpr (remote-take world bot-id block-id)))
-  
 (define (draw request)
   (response/xexpr (remote-draw world)))
 

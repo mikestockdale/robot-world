@@ -2,7 +2,7 @@
 
 (provide make-wandering)
 
-(require "actions.rkt" "bot-info.rkt" "direction.rkt" "entity.rkt" "server.rkt")
+(require "actions.rkt" "bot-info.rkt" "direction.rkt" "execute.rkt" "entity.rkt" "server.rkt")
 
 (struct wandering action (direction direction-change-chance take-delay))
 
@@ -18,18 +18,18 @@
   
   (define (take-block block)
     (let ([take-direction (direction-from-entity (action-bot input) block)]) 
-    (result (take-block! server (action-bot-id input) (entity-id block))
+    (result (execute! server (list execute-take (action-bot-id input) (entity-id block)))
             #:direction take-direction)))
 
   (define (drop-block)
     (let ([drop-direction (find-free-direction (action-info input))])
-      (result (drop-block! server (action-bot-id input) drop-direction)
+      (result (execute! server (list execute-drop (action-bot-id input) drop-direction))
               #:direction (change-direction drop-direction)
               #:take-delay 10)))
 
   (define (try-to-move-bot) 
     (let* ([move-direction (pick-direction (wandering-direction input))]
-           [new-info (move-bot! server (action-bot-id input) move-direction)])
+           [new-info (execute! server (list execute-move (action-bot-id input) move-direction))])
       (result new-info 
               #:take-delay (max (- (wandering-take-delay input) 1) 0)
               #:direction (if (bot-info-success? new-info)
