@@ -4,119 +4,113 @@
 
 (require "actions.rkt" "bot-info.rkt" "direction.rkt" "execute.rkt" "entity.rkt" "server.rkt")
 
-(struct wandering action (direction direction-change-chance take-delay))
+(struct wandering (direction direction-change-chance take-delay))
 
 (define (make-wandering server location direction [chance 0.2])
-  (wandering (add-bot! server location) wander direction chance 0))
+  (action #f #f (wander (wandering direction chance 0)) (add-bot! server location)))
 
-(define (wander server input)
+(define ((wander spec) input)
+  (let-values ([(execute parameter new-spec) ((choose spec) input)])
+    (values execute parameter (wander new-spec))))
 
-  (define (take-or-drop-block blocks)
-    (if (entity-cargo (action-bot input))
-        (drop-block)
-        (take-block (first blocks))))
+(define ((choose spec) input)
   
-  (define (take-block block)
-    (let ([take-direction (direction-from-entity (action-bot input) block)]) 
-    (result (execute! server (list execute-take (action-bot-id input) (entity-id block)))
-            #:direction take-direction)))
+  (define (pick-direction)
+    (let ([old-direction (wandering-direction spec)])
+      (if (or (and (equal? (action-execute input) execute-move)
+                   (not (bot-info-success? (action-info input)))) 
+              (> (wandering-direction-change-chance spec) (random)))
+          (change-direction old-direction)
+          old-direction)))
 
-  (define (drop-block)
+  (define (choose-drop)
     (let ([drop-direction (find-free-direction (action-info input))])
-      (result (execute! server (list execute-drop (action-bot-id input) drop-direction))
-              #:direction (change-direction drop-direction)
-              #:take-delay 10)))
-
-  (define (try-to-move-bot) 
-    (let* ([move-direction (pick-direction (wandering-direction input))]
-           [new-info (execute! server (list execute-move (action-bot-id input) move-direction))])
-      (result new-info 
-              #:take-delay (max (- (wandering-take-delay input) 1) 0)
-              #:direction (if (bot-info-success? new-info)
-                              move-direction
-                              (change-direction move-direction)))))
+      (values execute-drop drop-direction
+              (struct-copy wandering spec
+                           [direction (change-direction drop-direction)]
+                           [take-delay 10]))))
   
-  (define (pick-direction old-direction)
-    (if (> (wandering-direction-change-chance input) (random))
-        (change-direction old-direction)
-        old-direction))
+  (define (choose-move)
+    (let ([direction (pick-direction)])
+      (values execute-move direction
+              (struct-copy wandering spec
+                           [direction direction]
+                           [take-delay (max 0 (- (wandering-take-delay spec) 1))]))))
 
-  (define (result new-info
-                  #:take-delay [take-delay (wandering-take-delay input)]
-                  #:direction [direction (wandering-direction input)])
-    (struct-copy wandering input
-                 [info #:parent action new-info]
-                 [take-delay take-delay]
-                 [direction direction]))
- 
+  (define (choose-take block)
+    (let ([take-direction (direction-from-entity (action-bot input) block)]) 
+      (values execute-take (entity-id block)
+              (struct-copy wandering spec
+                           [direction take-direction])))) 
+  
   (let ([blocks (find-nearby-blocks (action-info input))])
-    (if (and (= (wandering-take-delay input) 0) (> (length blocks) 0))
-        (take-or-drop-block blocks)
-        (try-to-move-bot))))
+    (if (and (= (wandering-take-delay spec) 0) (> (length blocks) 0))
+        (if (entity-cargo (action-bot input))
+            (choose-drop)
+            (choose-take (first blocks)))
+        (choose-move))))
+
 
 (module+ test
   (require rackunit "build-world.rkt" "location.rkt" "world.rkt")
-  (test-case
-   "wandering moves in current direction"
-   (let* ([server (make-server 3)]
-          [action (make-wandering server (location 1 1) direction-east 0)])
-     (wander server action)
-     (check-equal? (entity-location (action-bot (wander server action))) (location 2 1))))
+
+  (define (choose-input
+           #:success [success #t]
+           #:cargo [cargo #f]
+           #:execute [execute #f]
+           #:neighbors [neighbors '()])
+    (action execute #f choose
+            (bot-info 3 success (entity 101 type-bot (location 1 1) cargo) neighbors)))
   
-  (test-case
-   "wandering moves in changed direction"
-   (let* ([server (make-server 3)]
-          [action (make-wandering server (location 1 1) direction-east 1)]
-          [new-action (wander server action)])
-     (check-not-equal? (entity-location (action-bot new-action)) (location 2 1))
-     (check-not-equal? (entity-location (action-bot new-action)) (location 1 1))
-     (check-not-equal? (wandering-direction new-action) direction-east)))
-  
-  (test-case
-   "wandering changes direction if can't move"
-   (let* ([server (make-server 3)]
-          [action (make-wandering server (location 2 2) direction-east 0)]
-          [new-action (wander server action)])
-     (check-equal? (entity-location (action-bot new-action)) (location 2 2))
-     (check-not-equal? (wandering-direction new-action) direction-east)))
-  
-  (test-case
-   "wandering takes nearby block"
-   (build-world
-    '(3 ("block" 1 0))
-    (λ (world server ref)
-      (let* ([action (make-wandering server (location 1 1) direction-east)]
-             [new-action (wander server action)])
-        (check-equal? (entity-location (action-bot new-action)) (location 1 1))
-        (check-equal? (entity-cargo (action-bot new-action)) (ref "block"))
-        (check-equal? (wandering-direction new-action) direction-south)))))
+  (define (wander-with
+           #:chance [chance 0]
+           #:take-delay [take-delay 0])
+    (choose (wandering direction-east chance take-delay)))
 
   (test-case
-   "wandering delays taking"
-   (build-world
-    '(3 ("bot" 1 1) ("block" 1 0))
-    (λ (world server ref)
-      (let* ([action (wandering
-                      (bot-info (world-size world) #t (ref "bot") (list (ref "block")))
-                      wander direction-east 0 1)]
-             [new-action (wander server action)])
-        (check-equal? (entity-location (action-bot new-action)) (location 2 1) "bot moved")
-        (check-equal? (wandering-take-delay new-action) 0 "delay decremented")
-        (check-false (entity-cargo (action-bot new-action)) "not taken")))))
+   "move in current direction"
+   (let-values ([(execute parameter spec) ((wander-with #:take-delay 5) (choose-input))])
+     (check-equal? execute execute-move)
+     (check-equal? parameter direction-east)
+     (check-equal? (wandering-take-delay spec) 4)))
   
   (test-case
-   "wandering drops nearby block"
-   (build-world
-    '(4 ("bot" 2 1) ("block1" 1 0) ("block2" 3 1))
-    (λ (world server ref)
-      (take-entity! world (entity-id (ref "bot")) (entity-id (ref "block1")))
-      (let* ([laden-bot (entity-ref world (entity-id (ref "bot")))]
-             [action (wandering
-                      (bot-info (world-size world) #t laden-bot (list (ref "block2")))
-                      wander direction-north 0 0)]
-             [new-action (wander server action)])
-        (check-equal? (wandering-take-delay new-action) 10 "delay started")
-        (check-equal? (entity-location (entity-ref world (entity-id (ref "block1"))))
-                      (location 2 2) "block dropped")
-        (check-not-equal? (wandering-direction new-action)
-                          direction-north "changed direction"))))))
+   "move in random direction"
+   (let-values ([(execute parameter spec)
+                 ((wander-with #:chance 1) (choose-input))])
+     (check-equal? execute execute-move)
+     (check-not-equal? parameter direction-east)))
+  
+  (test-case
+   "change direction if can't move"
+   (let-values ([(execute parameter spec)
+                 ((wander-with) (choose-input #:success #f #:execute execute-move))])
+     (check-equal? execute execute-move)
+     (check-not-equal? parameter direction-east)))
+  
+  (test-case
+   "take nearby block"
+   (let-values ([(execute parameter spec)
+                 ((wander-with)
+                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
+     (check-equal? execute execute-take)
+     (check-equal? parameter 102)
+     (check-equal? (wandering-direction spec) direction-south)))
+  
+  (test-case
+   "delay taking nearby block"
+   (let-values ([(execute parameter procedure)
+                 ((wander-with #:take-delay 1)
+                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
+     (check-equal? execute execute-move)))
+
+  (test-case
+   "drop nearby block"
+   (let-values ([(execute parameter spec)
+                 ((wander-with)
+                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))
+                                #:cargo (entity 103 type-block (location 0 0) #f)))])
+     (check-equal? execute execute-drop)
+     (check-equal? parameter direction-north)
+     (check-equal? (wandering-take-delay spec) 10)
+     (check-not-equal? (wandering-direction spec) direction-north))))
