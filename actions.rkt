@@ -14,15 +14,17 @@
 
 (define (perform-actions to-do)
   
-  (define (perform-action input)
-    (let-values ([(execute parameter procedure) ((action-procedure input) input)])
-      (action execute parameter procedure
-               (execute! (actions-server to-do)
-                         (list execute (~> input action-info bot-info-bot entity-id) parameter)))))
-    
-  (struct-copy
-   actions to-do
-   [list (map perform-action (actions-list to-do))]))
+  (define (prepare-request action)
+    (let-values ([(execute parameter procedure) ((action-procedure action) action)])
+      (list procedure execute (action-bot-id action) parameter)))
+  
+  (let* ([requests (map prepare-request (actions-list to-do))]
+         [bot-infos (execute-list! (actions-server to-do) (map rest requests))]
+         [new-actions
+          (map (λ (info request)
+                 (action (second request)(fourth request)(first request) info))
+               bot-infos requests)])
+    (struct-copy actions to-do [list new-actions])))
 
 (module+ test
   (require rackunit "direction.rkt" "execute.rkt" "location.rkt")

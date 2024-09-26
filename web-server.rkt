@@ -21,8 +21,12 @@
   (dispatch-rules
    (("add" (integer-arg) (integer-arg) (integer-arg)) add)
    (("exec" (integer-arg) (integer-arg) (integer-arg)) exec)
+   (("execs" (string-arg)) execs)
    (("draw") draw)
    (else error)))
+
+(define (execs request list)
+  (response/xexpr (remote-execs world list)))
 
 (define (add request type x y)
   (response/xexpr (remote-add world type x y)))

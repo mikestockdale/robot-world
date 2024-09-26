@@ -1,6 +1,6 @@
 #lang racket
 
-(provide remote-add remote-draw remote-exec)
+(provide remote-add remote-draw remote-exec remote-execs)
 (require "bot-info.rkt" "entity.rkt" "location.rkt" "world.rkt")
 
 (define null-entity (make-entity 0 0 (location 0 0)))
@@ -25,6 +25,16 @@
 (define (remote-exec world procedure . rest)
   (make-response (apply (vector-ref execute-procedures procedure) (cons world rest))
                  (entity-ref world (first rest)) world))
+
+(define (remote-execs world list)
+
+  (define (exec-request request)
+    (make-response
+     (apply (vector-ref execute-procedures (first request)) (cons world (rest request)))
+     (entity-ref world (second request))
+     world))
+
+  (string-append "(" (string-join (map exec-request (with-input-from-string list read))) ")"))
 
 (define (remote-draw world)
   (define response '())
