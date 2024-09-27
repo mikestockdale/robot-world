@@ -20,7 +20,6 @@
 (define-values (dispatch url)
   (dispatch-rules
    (("add" (integer-arg) (integer-arg) (integer-arg)) add)
-   (("exec" (integer-arg) (integer-arg) (integer-arg)) exec)
    (("execs" (string-arg)) execs)
    (("draw") draw)
    (else error)))
@@ -30,9 +29,6 @@
 
 (define (add request type x y)
   (response/xexpr (remote-add world type x y)))
-
-(define (exec request procedure id other)
-  (response/xexpr (remote-exec world procedure id other)))
 
 (define (draw request)
   (response/xexpr (remote-draw world)))

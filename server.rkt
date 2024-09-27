@@ -41,7 +41,6 @@
               (cons world (map string->number (rest pieces))))]
          [dispatch (make-hash
                     (list (cons "add" remote-add) 
-                          (cons "exec" remote-exec)
                           (cons "execs" remote-execs)))])
    (apply (hash-ref dispatch method) parms)))
 
