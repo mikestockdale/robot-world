@@ -52,7 +52,7 @@
 
 
 (module+ test
-  (require rackunit "build-world.rkt" "location.rkt" "world.rkt")
+  (require rackunit "location.rkt" "world.rkt")
 
   (define (choose-input
            #:success [success #t]
