@@ -1,15 +1,14 @@
 #lang racket
 
-(require "actions.rkt" "direction.rkt" "entity.rkt" "server.rkt"
+(require "action.rkt" "direction.rkt" "entity.rkt" "server.rkt"
          "world.rkt" "location.rkt" "viewer.rkt" "wandering.rkt")
 
 (let* ([world (make-world 50)]
        [server (connect-local world)]
        [to-do
-        (actions server
-                 (list
-                  (make-wandering server (location 20 20) direction-east)
-                  (make-wandering server (location 30 30) direction-west)))])
+        (list
+         (make-wandering server (location 20 20) direction-east)
+         (make-wandering server (location 30 30) direction-west))])
   (add-entity! world type-block (location 25 25))
   (add-entity! world type-block (location 35 25))
   (add-entity! world type-block (location 25 35))
@@ -24,6 +23,6 @@
     (draw-entities world draw-entity))
 
   (define (do-actions)
-    (set! to-do (perform-actions to-do)))
+    (set! to-do (perform-actions server to-do)))
   
   (run-viewer "robots - local" draw-procedure do-actions))
