@@ -20,9 +20,9 @@
      (difference location-y a b)))
 
 (define (nearby? a b)
-  (< (max (difference location-x a b)
+  (= (max (difference location-x a b)
           (difference location-y a b))
-     2))
+     1))
 
 (define (location->list location) (list (location-x location) (location-y location)))
 
@@ -47,7 +47,7 @@
 
   (test-case
    "nearby locations"
-   (check-true (nearby? (location 1 1) (location 1 1)))
+   (check-false (nearby? (location 1 1) (location 1 1)))
    (check-true (nearby? (location 1 1) (location 1 2)))
    (check-true (nearby? (location 1 1) (location 2 2)))
    (check-false (nearby? (location 3 4) (location 2 2))))

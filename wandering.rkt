@@ -41,15 +41,16 @@
     (let ([take-direction (direction-from-entity (action-bot input) block)]) 
       (values execute-take (entity-id block)
               (struct-copy wandering spec
-                           [direction take-direction])))) 
+                           [direction take-direction]))))
   
-  (let ([blocks (find-nearby-blocks (action-info input))])
-    (if (and (= (wandering-take-delay spec) 0) (> (length blocks) 0))
-        (if (entity-cargo (action-bot input))
-            (choose-drop)
-            (choose-take (first blocks)))
-        (choose-move))))
-
+  (if (and (entity-cargo (action-bot input))
+           (blocks-nearby? (action-info input)))
+      (choose-drop)
+      (let ([blocks (find-adjacent-blocks (action-info input))])
+        (if (and (= (wandering-take-delay spec) 0)
+                 (> (length blocks) 0))
+            (choose-take (first blocks))
+            (choose-move)))))
 
 (module+ test
   (require rackunit "location.rkt" "world.rkt")
@@ -108,7 +109,7 @@
    "drop nearby block"
    (let-values ([(execute parameter spec)
                  ((wander-with)
-                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))
+                  (choose-input #:neighbors (list (entity 102 type-block (location 2 2) #f))
                                 #:cargo (entity 103 type-block (location 0 0) #f)))])
      (check-equal? execute execute-drop)
      (check-equal? parameter direction-north)

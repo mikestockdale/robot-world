@@ -1,15 +1,23 @@
 #lang racket
 
-(provide (struct-out bot-info) find-free-direction find-nearby-blocks
+(provide (struct-out bot-info)
+         find-free-direction find-adjacent-blocks blocks-nearby?
          bot-info->list list->bot-info)
 
 (require "direction.rkt" "entity.rkt" "location.rkt")
 
 (struct bot-info (size success? bot neighbors) #:transparent)
 
-(define (find-nearby-blocks info)
-  (filter (λ (entity) (= (entity-type entity) type-block))
+(define (find-adjacent-blocks info)
+  (filter (λ (entity)
+            (and (= (entity-type entity) type-block)
+                 (= (entity-distance entity (bot-info-bot info)) 1)))
           (bot-info-neighbors info)))
+
+(define (blocks-nearby? info)
+  (ormap
+   (λ (entity) (= (entity-type entity) type-block))
+   (bot-info-neighbors info)))
 
 (define (find-free-direction info)
   (find-direction
@@ -36,14 +44,21 @@
   (require rackunit "location.rkt")
   
   (test-case
-   "nearby block found"
+   "adjacent block found"
    (let* ([bot1 (make-entity 101 type-bot (location 1 1))]
-          [block (make-entity 102 type-block (location 1 2))]
+          [block1 (make-entity 102 type-block (location 1 2))]
+          [block2 (make-entity 102 type-block (location 2 2))]
           [bot2 (make-entity 103 type-bot (location 2 1))]
-          [info (bot-info 50 #t bot1 (list bot2 block))]
-          [nearby (find-nearby-blocks info)])
-     (check-equal? (length nearby) 1)
-     (check-equal? (first nearby) block)))
+          [info (bot-info 50 #t bot1 (list bot2 block1 block2))]
+          [adjacent (find-adjacent-blocks info)])
+     (check-equal? (length adjacent) 1)
+     (check-equal? (first adjacent) block1)))
+
+  (test-case
+   "blocks nearby"
+   (check-true (blocks-nearby? (bot-info #f #f #f (list (make-entity 101 type-block #f)))))
+   (check-false (blocks-nearby? (bot-info #f #f #f (list (make-entity 101 type-bot #f)))))
+   (check-false (blocks-nearby? (bot-info #f #f #f '()))))
   
   (test-case
    "free location found"
