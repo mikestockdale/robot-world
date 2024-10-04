@@ -25,6 +25,9 @@
 
 (define (change-direction current) (modulo (+ current (random 1 4)) 4))
 
+(define (left-of direction) (modulo (+ direction 3) 4))
+(define (right-of direction) (modulo (+ direction 1) 4))
+
 (define (find-direction filter) (findf filter all-directions))
 
 (define (direction-from from to)
@@ -48,6 +51,20 @@
    (check-equal? (find-direction
                   (λ (direction) (equal? (move-direction direction (location 1 1)) (location 1 0))))
                  direction-south))
+
+  (test-case
+   "left of direction"
+   (check-equal? (left-of direction-north) direction-west)
+   (check-equal? (left-of direction-east) direction-north)
+   (check-equal? (left-of direction-south) direction-east)
+   (check-equal? (left-of direction-west) direction-south))
+
+  (test-case
+   "right of direction"
+   (check-equal? (right-of direction-north) direction-east)
+   (check-equal? (right-of direction-east) direction-south)
+   (check-equal? (right-of direction-south) direction-west)
+   (check-equal? (right-of direction-west) direction-north))
 
   (test-case
    "direction from location to location"
