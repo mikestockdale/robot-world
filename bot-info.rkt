@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out bot-info)
-         find-free-direction find-adjacent-blocks blocks-nearby?
+         best-drop-direction find-adjacent-blocks blocks-nearby?
          bot-info->list list->bot-info)
 
 (require "direction.rkt" "entity.rkt" "location.rkt")
@@ -19,16 +19,27 @@
    (λ (entity) (= (entity-type entity) type-block))
    (bot-info-neighbors info)))
 
-(define (find-free-direction info)
-  (find-direction
-   (λ (direction)
-     (let ([location (move-direction direction (entity-location (bot-info-bot info)))])
-       (and
-        (is-valid-location? location (bot-info-size info))
-        (is-free? location (bot-info-neighbors info)))))))
-
 (define (is-free? location neighbors)
   (not (findf (λ (neighbor) (equal? location (entity-location neighbor))) neighbors)))
+
+(define (best-drop-direction info)
+
+  (define (score direction)
+    (let ([location (move-direction direction (entity-location (bot-info-bot info)))])
+
+      (define (count-neighbor hand-of)
+        (if (is-free? (move-direction (hand-of direction) location)
+                      (bot-info-neighbors info))
+            0 1))
+      
+      (if (and
+        (is-valid-location? location (bot-info-size info))
+        (is-free? location (bot-info-neighbors info)))
+          (+ (count-neighbor left-of) (count-neighbor right-of))
+          -1)))
+  
+  (foldl (λ (a b) (if (> (score a) (score b)) a b))
+         (first all-directions) (rest all-directions))) 
 
 (define (bot-info->list info)
   (list (bot-info-size info) (bot-info-success? info)
@@ -65,14 +76,22 @@
    (let* ([bot (make-entity 101 type-bot (location 1 1))]
           [block (make-entity 102 type-block (location 1 2))]
           [info (bot-info 50 #t bot (list block))])
-     (check-equal? (find-free-direction info) direction-east)))
+     (check-equal? (best-drop-direction info) direction-east)))
+
+  (test-case
+   "best location found"
+   (let* ([bot (make-entity 101 type-bot (location 1 1))]
+          [block1 (make-entity 102 type-block (location 0 0))]
+          [block2 (make-entity 103 type-block (location 2 0))])
+     (check-equal? (best-drop-direction (bot-info 50 #t bot (list block1 block2)))
+                   direction-south)))
   
   (test-case
    "free location not outside world"
    (let* ([bot (make-entity 101 type-bot (location 49 49))]
           [block (make-entity 102 type-block (location 49 48))]
           [info (bot-info 50 #t bot (list block))])
-     (check-equal? (find-free-direction info) direction-west)))
+     (check-equal? (best-drop-direction info) direction-west)))
 
   (test-case
    "convert to and from list"

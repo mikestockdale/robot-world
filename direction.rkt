@@ -1,7 +1,8 @@
 #lang racket
 
-(provide change-direction move-direction direction-from
-         direction-north direction-south direction-east direction-west find-direction)
+(provide change-direction move-direction direction-from find-direction left-of right-of
+         direction-north direction-south direction-east direction-west
+         all-directions)
 
 (require "location.rkt")
 (module+ test (require rackunit))

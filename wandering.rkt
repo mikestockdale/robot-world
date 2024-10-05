@@ -24,7 +24,7 @@
           old-direction)))
 
   (define (choose-drop)
-    (let ([drop-direction (find-free-direction (action-info input))])
+    (let ([drop-direction (best-drop-direction (action-info input))])
       (values execute-drop drop-direction
               (struct-copy wandering spec
                            [direction (change-direction drop-direction)]
