@@ -18,7 +18,7 @@
   (define (pick-direction)
     (let ([old-direction (wandering-direction spec)])
       (if (or (and (equal? (action-execute input) execute-move)
-                   (not (bot-info-success? (action-info input)))) 
+                   (not (action-success? input))) 
               (> (wandering-direction-change-chance spec) (random)))
           (change-direction old-direction)
           old-direction)))
@@ -60,8 +60,8 @@
            #:cargo [cargo #f]
            #:execute [execute #f]
            #:neighbors [neighbors '()])
-    (action execute #f choose
-            (bot-info 3 success (entity 101 type-bot (location 1 1) cargo) neighbors)))
+    (action execute #f choose success
+            (bot-info 3 #f (entity 101 type-bot (location 1 1) cargo) neighbors)))
   
   (define (wander-with
            #:chance [chance 0]

@@ -1,7 +1,8 @@
 #lang racket
 
 (provide connect-local connect-remote make-server
-         add-bot! execute-list!)
+         add-bot! execute-list)
+
 (require net/http-client)
 (require "bot-info.rkt" "entity.rkt" "location.rkt" "remote-world.rkt" "world.rkt")
 
@@ -10,10 +11,12 @@
 (define (add-bot! server location)
   (make-request server (~a "add/" type-bot "/" (location-x location) "/" (location-y location))))
 
-(define (execute-list! server list)
-  (let* ([path (string-append "execs/" (with-output-to-string (λ () (write list))))]
-    [reply ((server-caller server) path)])
-    (map list->bot-info (with-input-from-string reply read))))
+(define (execute-list server request-list process-reply-list)
+  (let* ([path (string-append "execs/" (with-output-to-string (λ () (write request-list))))]
+         [reply (with-input-from-string ((server-caller server) path) read)])
+    (map (λ (info process-reply) (process-reply info))
+         (map list->bot-info reply)
+         process-reply-list)))
 
 (define (connect-remote host port) (server (remote-call host port)))
 (define (connect-local world) (server (local-call world)))
@@ -42,7 +45,7 @@
          [dispatch (make-hash
                     (list (cons "add" remote-add) 
                           (cons "execs" remote-execs)))])
-   (apply (hash-ref dispatch method) parms)))
+    (apply (hash-ref dispatch method) parms)))
 
 (define (make-bot-info string)
   (list->bot-info (with-input-from-string string read)))
@@ -52,6 +55,8 @@
 
 (module+ test
   (require rackunit threading "direction.rkt" "execute.rkt" "world.rkt")
+
+  (define (process-info info) info)
 
   (test-case
    "add bot remote"
@@ -68,7 +73,8 @@
            (list
             (list execute-move (entity-id bot) direction-east)
             (list execute-move (entity-id bot) direction-south))]
-          [infos (execute-list! server commands)])
+          [processes (list process-info process-info)]
+          [infos (execute-list server commands processes)])
      (check-equal? (entity-location (bot-info-bot (second infos))) (location 2 1))))
   
   (test-case
@@ -78,7 +84,9 @@
           [bot (bot-info-bot (add-bot! server (location 1 2)))]
           [block (bot-info-bot (make-bot-info (remote-add world type-block 2 2)))]
           [infos
-           (execute-list! server (list (list execute-take (entity-id bot) (entity-id block))))])
+           (execute-list server
+                          (list (list execute-take (entity-id bot) (entity-id block)))
+                          (list process-info))])
      (check-equal?
       (entity-id (entity-cargo (bot-info-bot (first infos))))
       (entity-id block))))
@@ -90,9 +98,13 @@
           [bot (bot-info-bot (add-bot! server (location 1 2)))]
           [block (bot-info-bot (make-bot-info (remote-add world type-block 2 2)))]
           [infos-1
-           (execute-list! server (list (list execute-take (entity-id bot) (entity-id block))))]
+           (execute-list server
+                         (list (list execute-take (entity-id bot) (entity-id block)))
+                         (list process-info))]
           [infos-2
-           (execute-list! server (list (list execute-drop (entity-id bot) direction-west)))])
+           (execute-list server
+                          (list (list execute-drop (entity-id bot) direction-west))
+                          (list process-info))])
      (check-false (entity-cargo (bot-info-bot (first infos-2))))))
   
   (test-case
