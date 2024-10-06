@@ -7,7 +7,7 @@
 (struct wandering (direction direction-change-chance take-delay))
 
 (define (make-wandering server location direction [chance 0.2])
-  (action #f #f (wander (wandering direction chance 0)) (add-bot! server location)))
+  (action #f #f (wander (wandering direction chance 0)) #f (add-bot! server location)))
 
 (define ((wander spec) input)
   (let-values ([(execute parameter new-spec) ((choose spec) input)])
@@ -61,7 +61,7 @@
            #:execute [execute #f]
            #:neighbors [neighbors '()])
     (action execute #f choose success
-            (bot-info 3 #f (entity 101 type-bot (location 1 1) cargo) neighbors)))
+            (bot-info 3 (entity 101 type-bot (location 1 1) cargo) neighbors)))
   
   (define (wander-with
            #:chance [chance 0]

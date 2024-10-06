@@ -17,8 +17,8 @@
     (let-values ([(execute parameter procedure) ((action-procedure action) action)])
       (list procedure execute (action-bot-id action) parameter)))
 
-  (define ((make-action execute parameter procedure) info)
-    (action execute parameter procedure (bot-info-success? info) info))
+  (define ((make-action execute parameter procedure) success? info)
+    (action execute parameter procedure success? info))
 
   (define (prepare-process-reply request)
     (make-action (second request) (fourth request) (first request))) 

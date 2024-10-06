@@ -13,9 +13,10 @@
 
 (define (execute-list server request-list process-reply-list)
   (let* ([path (string-append "execs/" (with-output-to-string (λ () (write request-list))))]
-         [reply (with-input-from-string ((server-caller server) path) read)])
-    (map (λ (info process-reply) (process-reply info))
-         (map list->bot-info reply)
+         [replies (with-input-from-string ((server-caller server) path) read)])
+    (map (λ (reply process-reply)
+           (process-reply (first reply) (list->bot-info (second reply))))
+         replies
          process-reply-list)))
 
 (define (connect-remote host port) (server (remote-call host port)))
@@ -48,7 +49,8 @@
     (apply (hash-ref dispatch method) parms)))
 
 (define (make-bot-info string)
-  (list->bot-info (with-input-from-string string read)))
+  (let ([result (with-input-from-string string read)])
+    (list->bot-info (second result))))
 
 (define (make-request server path)
   (make-bot-info ((server-caller server) path)))
@@ -56,7 +58,7 @@
 (module+ test
   (require rackunit threading "direction.rkt" "execute.rkt" "world.rkt")
 
-  (define (process-info info) info)
+  (define (process-info success? info) info)
 
   (test-case
    "add bot remote"
@@ -85,8 +87,8 @@
           [block (bot-info-bot (make-bot-info (remote-add world type-block 2 2)))]
           [infos
            (execute-list server
-                          (list (list execute-take (entity-id bot) (entity-id block)))
-                          (list process-info))])
+                         (list (list execute-take (entity-id bot) (entity-id block)))
+                         (list process-info))])
      (check-equal?
       (entity-id (entity-cargo (bot-info-bot (first infos))))
       (entity-id block))))
@@ -103,8 +105,8 @@
                          (list process-info))]
           [infos-2
            (execute-list server
-                          (list (list execute-drop (entity-id bot) direction-west))
-                          (list process-info))])
+                         (list (list execute-drop (entity-id bot) direction-west))
+                         (list process-info))])
      (check-false (entity-cargo (bot-info-bot (first infos-2))))))
   
   (test-case
