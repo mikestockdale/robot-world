@@ -13,31 +13,33 @@
 
 (define (perform-actions server to-do)
   
-  (define (prepare-request action)
-    (let-values ([(execute parameter procedure) ((action-procedure action) action)])
-      (list procedure execute (action-bot-id action) parameter)))
+  (define (perform-procedure action)
+    ((action-procedure action) action))
 
-  (define ((make-action execute parameter procedure) success? info)
-    (action execute parameter procedure success? info))
+  (define ((make-action input-action) success? info)
+    (struct-copy action input-action [success? success?] [info info]))
 
-  (define (prepare-process-reply request)
-    (make-action (second request) (fourth request) (first request))) 
+  (define (make-request action)
+    (list (action-execute action) (action-bot-id action) (action-parameter action)))
   
-  (let* ([requests (map prepare-request to-do)]
-         [process-replies (map prepare-process-reply requests)])
-    (execute-list server (map rest requests) process-replies)))
+  (let* ([requests (map perform-procedure to-do)]
+         [process-replies (map make-action requests)])
+    (execute-list server (map make-request requests) process-replies)))
 
 (module+ test
   (require rackunit "direction.rkt" "execute.rkt" "location.rkt")
   
-  (define (go-north! action)
-    (values execute-move direction-north go-east!))
-  (define (go-east! action)
-    (values execute-move direction-east go-north!))
+  (define (go-north input-action)
+    (struct-copy action input-action
+                 [execute execute-move] [parameter direction-north] [procedure go-east]))
+  (define (go-east input-action)
+    (struct-copy action input-action
+                 [execute execute-move] [parameter direction-east] [procedure go-north]))
+  
   (define (simple-actions server)
     (list
-     (action #f #f go-north! #f (add-bot! server (location 1 1)))
-     (action #f #f go-east! #f (add-bot! server (location 0 0)))))
+     (action #f #f go-north #f (add-bot! server (location 1 1)))
+     (action #f #f go-east #f (add-bot! server (location 0 0)))))
   
   (test-case
    "simple actions are performed"

@@ -9,9 +9,12 @@
 (define (make-wandering server location direction [chance 0.2])
   (action #f #f (wander (wandering direction chance 0)) #f (add-bot! server location)))
 
-(define ((wander spec) input)
-  (let-values ([(execute parameter new-spec) ((choose spec) input)])
-    (values execute parameter (wander new-spec))))
+(define ((wander spec) input-action)
+  (let-values ([(execute parameter new-spec) ((choose spec) input-action)])
+    (struct-copy action input-action
+                 [execute execute]
+                 [parameter parameter]
+                 [procedure (wander new-spec)])))
 
 (define ((choose spec) input)
   
