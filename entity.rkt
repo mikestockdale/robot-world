@@ -3,7 +3,7 @@
 (provide (struct-out entity)
          entity-symbol make-entity direction-from-entity entity-distance
          entity->list list->entity
-         type-block type-bot)
+         type-block type-bot type-edge)
 (require "direction.rkt" "location.rkt")
 
 (struct entity (id type location cargo)  #:transparent)
@@ -12,6 +12,8 @@
 
 (define type-bot 0)
 (define type-block 2)
+(define type-edge 3)
+
 (define type-symbols #(#\u25A1 #\u25A3 #\u25A0))
 
 (define (entity-symbol entity)

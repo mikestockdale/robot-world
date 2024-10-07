@@ -66,9 +66,20 @@
           #t)
         #f)))
 
+(define (edges size location)
+  (let ([result '()])
+    (for ([direction all-directions])
+      (let ([next-to (move-direction direction location)])
+        (unless (is-valid-location? next-to size)
+          (set! result
+                (cons (make-entity 0 type-edge next-to) result)))))
+    result))
+
 (define (neighbors world entity)
-  (~>> world world-entities hash-values
-       (filter (λ (other) (nearby? (entity-location entity) (entity-location other))))))
+  (append
+   (edges (world-size world) (entity-location entity))
+   (~>> world world-entities hash-values
+        (filter (λ (other) (nearby? (entity-location entity) (entity-location other)))))))
 
 (define (draw-entities world procedure)
 
@@ -152,6 +163,14 @@
      (check-equal? result (string-append " " bot " 0 0 " block " 2 1 " bot " 1 1"))))
 
   (test-case
+   "no edges in middle"
+   (check-equal? (length (edges 3 (location 1 1))) 0))
+
+  (test-case
+   "edges at limits"
+   (check-equal? (length (edges 1 (location 0 0))) 4))
+
+  (test-case
    "neighbors are nearby"
    (let* ([world (make-world 4)]
           [subject (add-entity! world type-bot (location 1 1))])
@@ -160,6 +179,15 @@
      (let ([nearby (neighbors world subject)])
        (check-equal? (length nearby) 1)
        (check-equal? (entity-location (first nearby)) (location 2 2)))))
+
+  (test-case
+   "neighbors include edges"
+   (let* ([world (make-world 3)]
+          [subject (add-entity! world type-bot (location 0 1))])
+     (let ([nearby (neighbors world subject)])
+       (check-equal? (length nearby) 1)
+       (check-equal? (entity-type (first nearby)) type-edge)
+       (check-equal? (entity-location (first nearby)) (location -1 1)))))
 
   (test-case
    "block is taken"

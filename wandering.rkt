@@ -64,7 +64,7 @@
            #:execute [execute #f]
            #:neighbors [neighbors '()])
     (action execute #f choose success
-            (bot-info 3 (entity 101 type-bot (location 1 1) cargo) neighbors)))
+            (bot-info (entity 101 type-bot (location 1 1) cargo) neighbors)))
   
   (define (wander-with
            #:chance [chance 0]
