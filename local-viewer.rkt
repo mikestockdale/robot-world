@@ -7,17 +7,14 @@
        [server (connect-local world)]
        [to-do
         (list
+         (make-wandering server (location 10 10) direction-north)
          (make-wandering server (location 20 20) direction-east)
-         (make-wandering server (location 30 30) direction-west))])
-  (add-entity! world type-block (location 25 25))
-  (add-entity! world type-block (location 35 25))
-  (add-entity! world type-block (location 25 35))
-  (add-entity! world type-block (location 45 25))
-  (add-entity! world type-block (location 25 45))
-  (add-entity! world type-block (location 15 25))
-  (add-entity! world type-block (location 25 15))
-  (add-entity! world type-block (location 5 25))
-  (add-entity! world type-block (location 25 5))
+         (make-wandering server (location 30 30) direction-south)
+         (make-wandering server (location 40 40) direction-west))])
+  (for ([x 5])
+    (for ([y 5])
+      (add-entity! world type-block
+                   (location (+ 5 (* x 10)) (+ 5 (* y 10))))))
 
   (define (draw-procedure draw-entity)
     (draw-entities world draw-entity))
