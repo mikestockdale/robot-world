@@ -4,10 +4,7 @@
 
 (define (run)
   (let* ([server (connect-remote "localhost" 8080)]
-         [to-do          
-          (list
-           (make-wandering server (location 20 20) direction-east)
-           (make-wandering server (location 30 30) direction-west))])
+         [to-do (map wandering-action (hello server))])
     (define (iterate)
       (sleep .1)
       (set! to-do (perform-actions server to-do))

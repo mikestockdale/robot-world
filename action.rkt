@@ -27,7 +27,7 @@
     (execute-list server (map make-request requests) process-replies)))
 
 (module+ test
-  (require rackunit "direction.rkt" "execute.rkt" "location.rkt")
+  (require rackunit "direction.rkt" "execute.rkt" "location.rkt" "world.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action
@@ -36,15 +36,18 @@
     (struct-copy action input-action
                  [execute execute-move] [parameter direction-east] [procedure go-north]))
   
-  (define (simple-actions server)
+  (define (simple-actions world)
+    (let ([bot1 (add-entity! world type-bot (location 1 1))]
+          [bot2 (add-entity! world type-bot (location 0 0))])
     (list
-     (action #f #f go-north #f (add-bot! server (location 1 1)))
-     (action #f #f go-east #f (add-bot! server (location 0 0)))))
+     (action #f #f go-north #f (bot-info bot1 '()))
+     (action #f #f go-east #f (bot-info bot2 '())))))
   
   (test-case
    "simple actions are performed"
-   (let* ([server (make-server 3)]
-          [action-list (perform-actions server (simple-actions server))])
+   (let* ([world (make-world 3)]
+          [server (connect-local world)]
+          [action-list (perform-actions server (simple-actions world))])
      (check-true (~> action-list first action-success?))
      (check-equal? (~> action-list first action-bot entity-location) (location 1 2))
      (check-true (~> action-list second action-success?))
@@ -52,8 +55,9 @@
   
   (test-case
    "simple actions are copied"
-   (let* ([server (make-server 4)]
+   (let* ([world (make-world 4)]
+          [server (connect-local world)]
           [action-list
-           (perform-actions server (perform-actions server (simple-actions server)))])
+           (perform-actions server (perform-actions server (simple-actions world)))])
      (check-equal? (~> action-list first action-bot entity-location) (location 2 2))
      (check-equal? (~> action-list second action-bot entity-location) (location 1 1)))))

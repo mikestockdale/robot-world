@@ -6,29 +6,24 @@
 (define world (make-world 50))
 
 (define (populate-world)
-  (add-entity! world type-block (location 25 25))
-  (add-entity! world type-block (location 35 25))
-  (add-entity! world type-block (location 25 35))
-  (add-entity! world type-block (location 45 25))
-  (add-entity! world type-block (location 25 45))
-  (add-entity! world type-block (location 15 25))
-  (add-entity! world type-block (location 25 15))
-  (add-entity! world type-block (location 5 25))
-  (add-entity! world type-block (location 25 5))
+  (for ([x 5])
+    (for ([y 5])
+      (add-entity! world type-block
+                   (location (+ 5 (* x 10)) (+ 5 (* y 10))))))
   #t)
 
 (define-values (dispatch url)
   (dispatch-rules
-   (("add" (integer-arg) (integer-arg) (integer-arg)) add)
    (("execs" (string-arg)) execs)
    (("draw") draw)
+   (("hello") connect)
    (else error)))
 
 (define (execs request list)
   (response/xexpr (remote-execs world list)))
 
-(define (add request type x y)
-  (response/xexpr (remote-add world type x y)))
+(define (connect request)
+  (response/xexpr (remote-connect world)))
 
 (define (draw request)
   (response/xexpr (remote-draw world)))

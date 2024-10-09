@@ -1,13 +1,13 @@
 #lang racket
 
-(provide make-wandering)
+(provide wandering-action)
 
 (require "action.rkt" "bot-info.rkt" "direction.rkt" "execute.rkt" "entity.rkt" "server.rkt")
 
 (struct wandering (direction direction-change-chance take-delay))
 
-(define (make-wandering server location direction [chance 0.2])
-  (action #f #f (wander (wandering direction chance 0)) #f (add-bot! server location)))
+(define (wandering-action bot-info)
+  (action #f #f (wander (wandering direction-east 0.2 0)) #t bot-info))
 
 (define ((wander spec) input-action)
   (let-values ([(execute parameter new-spec) ((choose spec) input-action)])
