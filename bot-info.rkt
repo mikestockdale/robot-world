@@ -1,12 +1,14 @@
 #lang racket
 
-(provide (struct-out bot-info)
+(provide (struct-out bot-info) bot-info-bot-id
          best-drop-direction find-adjacent-blocks blocks-nearby?
          bot-info->list list->bot-info)
 
-(require "direction.rkt" "entity.rkt" "location.rkt")
+(require "direction.rkt" "entity.rkt")
 
 (struct bot-info (bot neighbors) #:transparent)
+
+(define (bot-info-bot-id info) (entity-id (bot-info-bot info)))
 
 (define (find-adjacent-blocks info)
   (filter (λ (entity)

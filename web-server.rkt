@@ -1,16 +1,9 @@
 #lang racket
 
 (require web-server/servlet web-server/servlet-env)
-(require "command.rkt" "entity.rkt" "location.rkt" "world.rkt")
+(require "command.rkt" "setup.rkt")
 
-(define world (make-world 50))
-
-(define (populate-world)
-  (for ([x 5])
-    (for ([y 5])
-      (add-entity! world type-block
-                   (location (+ 5 (* x 10)) (+ 5 (* y 10))))))
-  #t)
+(define world (setup-world))
 
 (define-values (dispatch url)
   (dispatch-rules
@@ -32,7 +25,7 @@
 
 (define (start request) (dispatch request))
 
-(populate-world)
+(setup-blocks world)
 (serve/servlet start
                #:port 8080
                #:servlet-path "/"

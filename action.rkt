@@ -1,15 +1,15 @@
 #lang racket
 
-(provide (struct-out action) action-bot action-bot-id
+(provide (struct-out action) action-bot 
          perform-actions)
 
 (require threading)
-(require "bot-info.rkt" "connection.rkt" "entity.rkt")
+(require "bot-info.rkt" "connection.rkt")
 
 (struct action (command parameter procedure success? info))
 
 (define (action-bot action) (bot-info-bot (action-info action)))
-(define (action-bot-id action) (entity-id (action-bot action)))
+(define (action-bot-id action) (bot-info-bot-id (action-info action)))
 
 (define (perform-actions connection to-do)
   
@@ -27,7 +27,7 @@
     (send-commands connection (map make-request requests) process-replies)))
 
 (module+ test
-  (require rackunit "direction.rkt" "command.rkt" "location.rkt" "world.rkt")
+  (require rackunit "direction.rkt" "command.rkt" "entity.rkt" "location.rkt" "world.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action

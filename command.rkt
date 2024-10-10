@@ -1,6 +1,6 @@
 #lang racket
 
-(require "bot-info.rkt" "entity.rkt" "location.rkt" "world.rkt")
+(require "bot-info.rkt" "setup.rkt" "world.rkt")
 
 (provide drop-command move-command take-command
          execute-command-list execute-draw execute-hello)
@@ -42,11 +42,10 @@
 (define (execute-hello world)
   (strings->string
    (map (λ (bot) (make-response #t bot world))
-        (for/list ([i 4])
-          (add-entity! world type-bot (location (+ 10 (* i 10)) (+ 10 (* i 10))))))))
+        (setup-bots world))))
 
 (module+ test
-  (require rackunit)
+  (require rackunit "entity.rkt" "location.rkt" )
 
   (test-case
    "connect creates bots"
