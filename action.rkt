@@ -6,7 +6,7 @@
 (require threading)
 (require "bot-info.rkt" "connection.rkt" "entity.rkt")
 
-(struct action (execute parameter procedure success? info))
+(struct action (command parameter procedure success? info))
 
 (define (action-bot action) (bot-info-bot (action-info action)))
 (define (action-bot-id action) (entity-id (action-bot action)))
@@ -20,21 +20,21 @@
     (struct-copy action input-action [success? success?] [info info]))
 
   (define (make-request action)
-    (list (action-execute action) (action-bot-id action) (action-parameter action)))
+    (list (action-command action) (action-bot-id action) (action-parameter action)))
   
   (let* ([requests (map perform-procedure to-do)]
          [process-replies (map make-action requests)])
     (send-commands connection (map make-request requests) process-replies)))
 
 (module+ test
-  (require rackunit "direction.rkt" "execute.rkt" "location.rkt" "world.rkt")
+  (require rackunit "direction.rkt" "command.rkt" "location.rkt" "world.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action
-                 [execute execute-move] [parameter direction-north] [procedure go-east]))
+                 [command move-command] [parameter direction-north] [procedure go-east]))
   (define (go-east input-action)
     (struct-copy action input-action
-                 [execute execute-move] [parameter direction-east] [procedure go-north]))
+                 [command move-command] [parameter direction-east] [procedure go-north]))
   
   (define (simple-actions world)
     (let ([bot1 (add-entity! world type-bot (location 1 1))]

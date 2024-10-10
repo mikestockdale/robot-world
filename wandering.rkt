@@ -2,7 +2,7 @@
 
 (provide wandering-action)
 
-(require "action.rkt" "bot-info.rkt" "direction.rkt" "execute.rkt" "entity.rkt")
+(require "action.rkt" "bot-info.rkt" "command.rkt" "direction.rkt" "entity.rkt")
 
 (struct wandering (direction direction-change-chance take-delay))
 
@@ -10,9 +10,9 @@
   (action #f #f (wander (wandering direction-east 0.2 0)) #t bot-info))
 
 (define ((wander spec) input-action)
-  (let-values ([(execute parameter new-spec) ((choose spec) input-action)])
+  (let-values ([(command parameter new-spec) ((choose spec) input-action)])
     (struct-copy action input-action
-                 [execute execute]
+                 [command command]
                  [parameter parameter]
                  [procedure (wander new-spec)])))
 
@@ -20,7 +20,7 @@
   
   (define (pick-direction)
     (let ([old-direction (wandering-direction spec)])
-      (if (or (and (equal? (action-execute input) execute-move)
+      (if (or (and (equal? (action-command input) move-command)
                    (not (action-success? input))) 
               (> (wandering-direction-change-chance spec) (random)))
           (change-direction old-direction)
@@ -28,21 +28,21 @@
 
   (define (choose-drop)
     (let ([drop-direction (best-drop-direction (action-info input))])
-      (values execute-drop drop-direction
+      (values drop-command drop-direction
               (struct-copy wandering spec
                            [direction (change-direction drop-direction)]
                            [take-delay 10]))))
   
   (define (choose-move)
     (let ([direction (pick-direction)])
-      (values execute-move direction
+      (values move-command direction
               (struct-copy wandering spec
                            [direction direction]
                            [take-delay (max 0 (- (wandering-take-delay spec) 1))]))))
 
   (define (choose-take block)
     (let ([take-direction (direction-from-entity (action-bot input) block)]) 
-      (values execute-take (entity-id block)
+      (values take-command (entity-id block)
               (struct-copy wandering spec
                            [direction take-direction]))))
   
@@ -61,9 +61,9 @@
   (define (choose-input
            #:success [success #t]
            #:cargo [cargo #f]
-           #:execute [execute #f]
+           #:command [command #f]
            #:neighbors [neighbors '()])
-    (action execute #f choose success
+    (action command #f choose success
             (bot-info (entity 101 type-bot (location 1 1) cargo) neighbors)))
   
   (define (wander-with
@@ -73,48 +73,48 @@
 
   (test-case
    "move in current direction"
-   (let-values ([(execute parameter spec) ((wander-with #:take-delay 5) (choose-input))])
-     (check-equal? execute execute-move)
+   (let-values ([(command parameter spec) ((wander-with #:take-delay 5) (choose-input))])
+     (check-equal? command move-command)
      (check-equal? parameter direction-east)
      (check-equal? (wandering-take-delay spec) 4)))
   
   (test-case
    "move in random direction"
-   (let-values ([(execute parameter spec)
+   (let-values ([(command parameter spec)
                  ((wander-with #:chance 1) (choose-input))])
-     (check-equal? execute execute-move)
+     (check-equal? command move-command)
      (check-not-equal? parameter direction-east)))
   
   (test-case
    "change direction if can't move"
-   (let-values ([(execute parameter spec)
-                 ((wander-with) (choose-input #:success #f #:execute execute-move))])
-     (check-equal? execute execute-move)
+   (let-values ([(command parameter spec)
+                 ((wander-with) (choose-input #:success #f #:command move-command))])
+     (check-equal? command move-command)
      (check-not-equal? parameter direction-east)))
   
   (test-case
    "take nearby block"
-   (let-values ([(execute parameter spec)
+   (let-values ([(command parameter spec)
                  ((wander-with)
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
-     (check-equal? execute execute-take)
+     (check-equal? command take-command)
      (check-equal? parameter 102)
      (check-equal? (wandering-direction spec) direction-south)))
   
   (test-case
    "delay taking nearby block"
-   (let-values ([(execute parameter procedure)
+   (let-values ([(command parameter procedure)
                  ((wander-with #:take-delay 1)
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
-     (check-equal? execute execute-move)))
+     (check-equal? command move-command)))
 
   (test-case
    "drop nearby block"
-   (let-values ([(execute parameter spec)
+   (let-values ([(command parameter spec)
                  ((wander-with)
                   (choose-input #:neighbors (list (entity 102 type-block (location 2 2) #f))
                                 #:cargo (entity 103 type-block (location 0 0) #f)))])
-     (check-equal? execute execute-drop)
+     (check-equal? command drop-command)
      (check-equal? parameter direction-north)
      (check-equal? (wandering-take-delay spec) 10)
      (check-not-equal? (wandering-direction spec) direction-north))))

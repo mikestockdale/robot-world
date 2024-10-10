@@ -47,7 +47,7 @@
 
 (module+ test
   (require rackunit threading
-           "direction.rkt" "entity.rkt" "execute.rkt" "location.rkt" "world.rkt")
+           "direction.rkt" "entity.rkt" "command.rkt" "location.rkt" "world.rkt")
 
   (define (process-info success? info) info)
 
@@ -58,8 +58,8 @@
           [bot (add-entity!  world type-bot (location 1 2))]
           [commands
            (list
-            (list execute-move (entity-id bot) direction-east)
-            (list execute-move (entity-id bot) direction-south))]
+            (list move-command (entity-id bot) direction-east)
+            (list move-command (entity-id bot) direction-south))]
           [processes (list process-info process-info)]
           [infos (send-commands connection commands processes)])
      (check-equal? (entity-location (bot-info-bot (second infos))) (location 2 1))))
@@ -72,7 +72,7 @@
           [block (add-entity! world type-block (location 2 2))]
           [infos
            (send-commands connection
-                          (list (list execute-take (entity-id bot) (entity-id block)))
+                          (list (list take-command (entity-id bot) (entity-id block)))
                           (list process-info))])
      (check-equal?
       (entity-id (entity-cargo (bot-info-bot (first infos))))
@@ -86,11 +86,11 @@
           [block (add-entity! world type-block (location 2 2))]
           [infos-1
            (send-commands connection
-                          (list (list execute-take (entity-id bot) (entity-id block)))
+                          (list (list take-command (entity-id bot) (entity-id block)))
                           (list process-info))]
           [infos-2
            (send-commands connection
-                          (list (list execute-drop (entity-id bot) direction-west))
+                          (list (list drop-command (entity-id bot) direction-west))
                           (list process-info))])
      (check-false (entity-cargo (bot-info-bot (first infos-2))))))
   
@@ -102,7 +102,7 @@
      (add-entity! world type-block (location 2 1))
      (let ([neighbor
             (~> (send-commands connection
-                               (list (list execute-move (entity-id bot) direction-east))
+                               (list (list move-command (entity-id bot) direction-east))
                                (list process-info))
                 first bot-info-neighbors first)])
        (check-equal? (entity-type neighbor) type-block)
