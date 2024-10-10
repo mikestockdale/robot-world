@@ -2,7 +2,7 @@
 
 (provide wandering-action)
 
-(require "action.rkt" "bot-info.rkt" "direction.rkt" "execute.rkt" "entity.rkt" "server.rkt")
+(require "action.rkt" "bot-info.rkt" "direction.rkt" "execute.rkt" "entity.rkt")
 
 (struct wandering (direction direction-change-chance take-delay))
 

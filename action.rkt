@@ -4,14 +4,14 @@
          perform-actions)
 
 (require threading)
-(require "bot-info.rkt" "entity.rkt" "server.rkt")
+(require "bot-info.rkt" "connection.rkt" "entity.rkt")
 
 (struct action (execute parameter procedure success? info))
 
 (define (action-bot action) (bot-info-bot (action-info action)))
 (define (action-bot-id action) (entity-id (action-bot action)))
 
-(define (perform-actions server to-do)
+(define (perform-actions connection to-do)
   
   (define (perform-procedure action)
     ((action-procedure action) action))
@@ -24,7 +24,7 @@
   
   (let* ([requests (map perform-procedure to-do)]
          [process-replies (map make-action requests)])
-    (execute-list server (map make-request requests) process-replies)))
+    (send-commands connection (map make-request requests) process-replies)))
 
 (module+ test
   (require rackunit "direction.rkt" "execute.rkt" "location.rkt" "world.rkt")

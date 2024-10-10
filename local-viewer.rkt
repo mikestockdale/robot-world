@@ -1,11 +1,11 @@
 #lang racket
 
-(require "action.rkt" "entity.rkt" "server.rkt"
-         "world.rkt" "location.rkt" "viewer.rkt" "wandering.rkt")
+(require "action.rkt" "connection.rkt" "entity.rkt"
+         "location.rkt" "viewer.rkt" "wandering.rkt" "world.rkt")
 
 (let* ([world (make-world 50)]
-       [server (connect-local world)]
-       [to-do (map wandering-action (hello server))])
+       [connection (connect-local world)]
+       [to-do (map wandering-action (send-hello connection))])
   (for ([x 5])
     (for ([y 5])
       (add-entity! world type-block
@@ -15,6 +15,6 @@
     (draw-entities world draw-entity))
 
   (define (do-actions)
-    (set! to-do (perform-actions server to-do)))
+    (set! to-do (perform-actions connection to-do)))
   
   (run-viewer "robots - local" draw-procedure do-actions))
