@@ -1,7 +1,7 @@
 #lang racket
 
 (require web-server/servlet web-server/servlet-env)
-(require "entity.rkt" "location.rkt" "world.rkt" "remote-world.rkt")
+(require "command.rkt" "entity.rkt" "location.rkt" "world.rkt")
 
 (define world (make-world 50))
 
@@ -16,17 +16,17 @@
   (dispatch-rules
    (("execs" (string-arg)) execs)
    (("draw") draw)
-   (("hello") connect)
+   (("hello") hello)
    (else error)))
 
 (define (execs request list)
-  (response/xexpr (remote-execs world list)))
+  (response/xexpr (execute-command-list world list)))
 
-(define (connect request)
-  (response/xexpr (remote-connect world)))
+(define (hello request)
+  (response/xexpr (execute-hello world)))
 
 (define (draw request)
-  (response/xexpr (remote-draw world)))
+  (response/xexpr (execute-draw world)))
 
 (define (error request) (response/xexpr "error"))
 

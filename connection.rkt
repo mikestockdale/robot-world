@@ -3,7 +3,7 @@
 (provide connect-local connect-remote send-commands send-hello)
 
 (require net/http-client)
-(require "bot-info.rkt" "remote-world.rkt")
+(require "bot-info.rkt" "command.rkt")
 
 (define (send-commands connection request-list process-reply-list)
   (let* ([path (string-append "execs/" (with-output-to-string (λ () (write request-list))))]
@@ -41,13 +41,13 @@
               (cons world (rest pieces))
               (cons world (map string->number (rest pieces))))]
          [dispatch (make-hash
-                    (list (cons "execs" remote-execs)
-                          (cons "hello" remote-connect)))])
+                    (list (cons "execs" execute-command-list)
+                          (cons "hello" execute-hello)))])
     (apply (hash-ref dispatch method) parms)))
 
 (module+ test
   (require rackunit threading
-           "direction.rkt" "entity.rkt" "command.rkt" "location.rkt" "world.rkt")
+           "direction.rkt" "entity.rkt" "location.rkt" "world.rkt")
 
   (define (process-info success? info) info)
 
