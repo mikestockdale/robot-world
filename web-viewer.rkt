@@ -1,20 +1,12 @@
 #lang racket
 
 (require net/http-client)
-(require "viewer.rkt")
+(require "connection.rkt" "viewer.rkt")
 
 (define (draw-procedure draw-entity)
-
-  (define-values (status headers in)
-    (http-sendrecv "localhost"
-                   "/draw"
-                   #:port 8080
-                   #:version "1.1"
-                   #:method "GET"
-                   #:data ""))
-  (let ([entities (with-input-from-string (port->string in) read)])
-    (for ([entity entities]) (apply draw-entity entity)))
-  (close-input-port in))
+  (let ([connection (connect-remote "localhost" 8080)])
+    (for ([entity (send-draw connection)])
+      (apply draw-entity entity))))
 
 (define (do-actions) #t )
   

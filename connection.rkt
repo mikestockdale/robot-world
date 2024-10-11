@@ -1,6 +1,6 @@
 #lang racket
 
-(provide connect-local connect-remote send-commands send-hello)
+(provide connect-local connect-remote send-commands send-draw send-hello)
 
 (require net/http-client)
 (require "bot-info.rkt" "command.rkt")
@@ -12,6 +12,9 @@
            (process-reply (first reply) (list->bot-info (second reply))))
          replies
          process-reply-list)))
+
+(define (send-draw connection)
+  (with-input-from-string (connection "draw") read))
 
 (define (send-hello connection)
   (let ([replies (with-input-from-string (connection "hello") read)])
@@ -42,6 +45,7 @@
               (cons world (map string->number (rest pieces))))]
          [dispatch (make-hash
                     (list (cons "execs" execute-command-list)
+                          (cons "draw" execute-draw)
                           (cons "hello" execute-hello)))])
     (apply (hash-ref dispatch method) parms)))
 
