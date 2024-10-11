@@ -6,7 +6,7 @@
 (require threading)
 (require "bot-info.rkt" "connection.rkt")
 
-(struct action (command parameter procedure success? info))
+(struct action (command parameter strategy success? info))
 
 (define (action-bot action) (bot-info-bot (action-info action)))
 (define (action-bot-id action) (bot-info-bot-id (action-info action)))
@@ -14,7 +14,7 @@
 (define (perform-actions connection to-do)
   
   (define (perform-procedure action)
-    ((action-procedure action) action))
+    ((action-strategy action) action))
 
   (define ((make-action input-action) success? info)
     (struct-copy action input-action [success? success?] [info info]))
@@ -31,10 +31,10 @@
   
   (define (go-north input-action)
     (struct-copy action input-action
-                 [command move-command] [parameter direction-north] [procedure go-east]))
+                 [command move-command] [parameter direction-north] [strategy go-east]))
   (define (go-east input-action)
     (struct-copy action input-action
-                 [command move-command] [parameter direction-east] [procedure go-north]))
+                 [command move-command] [parameter direction-east] [strategy go-north]))
   
   (define (simple-actions world)
     (let ([bot1 (add-entity! world type-bot (location 1 1))]

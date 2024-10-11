@@ -14,7 +14,7 @@
     (struct-copy action input-action
                  [command command]
                  [parameter parameter]
-                 [procedure (wander new-spec)])))
+                 [strategy (wander new-spec)])))
 
 (define ((choose spec) input)
   
