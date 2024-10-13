@@ -4,7 +4,7 @@
 
 (require "action.rkt" "bot-info.rkt" "command.rkt" "direction.rkt" "entity.rkt")
 
-(struct wandering (direction direction-change-chance take-delay))
+(struct wandering (direction direction-change-chance cargo-delay))
 
 (define (wandering-action bot-info)
   (action #f #f (wander (wandering direction-east 0.2 0)) #t bot-info))
@@ -31,26 +31,28 @@
       (values drop-command drop-direction
               (struct-copy wandering spec
                            [direction (change-direction drop-direction)]
-                           [take-delay 10]))))
+                           [cargo-delay 5]))))
   
   (define (choose-move)
     (let ([direction (pick-direction)])
       (values move-command direction
               (struct-copy wandering spec
                            [direction direction]
-                           [take-delay (max 0 (- (wandering-take-delay spec) 1))]))))
+                           [cargo-delay (max 0 (- (wandering-cargo-delay spec) 1))]))))
 
   (define (choose-take block)
     (let ([take-direction (direction-from-entity (action-bot input) block)]) 
       (values take-command (entity-id block)
               (struct-copy wandering spec
-                           [direction take-direction]))))
+                           [direction take-direction]
+                           [cargo-delay 5]))))
   
-  (if (and (entity-cargo (action-bot input))
+  (if (and (= (wandering-cargo-delay spec) 0)
+           (entity-cargo (action-bot input))
            (blocks-nearby? (action-info input)))
       (choose-drop)
       (let ([blocks (find-adjacent-blocks (action-info input))])
-        (if (and (= (wandering-take-delay spec) 0)
+        (if (and (= (wandering-cargo-delay spec) 0)
                  (> (length blocks) 0))
             (choose-take (first blocks))
             (choose-move)))))
@@ -68,15 +70,15 @@
   
   (define (wander-with
            #:chance [chance 0]
-           #:take-delay [take-delay 0])
-    (choose (wandering direction-east chance take-delay)))
+           #:cargo-delay [cargo-delay 0])
+    (choose (wandering direction-east chance cargo-delay)))
 
   (test-case
    "move in current direction"
-   (let-values ([(command parameter spec) ((wander-with #:take-delay 5) (choose-input))])
+   (let-values ([(command parameter spec) ((wander-with #:cargo-delay 5) (choose-input))])
      (check-equal? command move-command)
      (check-equal? parameter direction-east)
-     (check-equal? (wandering-take-delay spec) 4)))
+     (check-equal? (wandering-cargo-delay spec) 4)))
   
   (test-case
    "move in random direction"
@@ -99,12 +101,13 @@
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
      (check-equal? command take-command)
      (check-equal? parameter 102)
-     (check-equal? (wandering-direction spec) direction-south)))
+     (check-equal? (wandering-direction spec) direction-south)
+     (check-equal? (wandering-cargo-delay spec) 5)))
   
   (test-case
    "delay taking nearby block"
    (let-values ([(command parameter procedure)
-                 ((wander-with #:take-delay 1)
+                 ((wander-with #:cargo-delay 1)
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
      (check-equal? command move-command)))
 
@@ -116,5 +119,13 @@
                                 #:cargo (entity 103 type-block (location 0 0) #f)))])
      (check-equal? command drop-command)
      (check-equal? parameter direction-north)
-     (check-equal? (wandering-take-delay spec) 10)
-     (check-not-equal? (wandering-direction spec) direction-north))))
+     (check-equal? (wandering-cargo-delay spec) 5)
+     (check-not-equal? (wandering-direction spec) direction-north)))
+
+  (test-case
+   "delay dropping nearby block"
+   (let-values ([(command parameter spec)
+                 ((wander-with #:cargo-delay 1)
+                  (choose-input #:neighbors (list (entity 102 type-block (location 2 2) #f))
+                                #:cargo (entity 103 type-block (location 0 0) #f)))])
+     (check-equal? command move-command))))
