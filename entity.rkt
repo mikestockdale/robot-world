@@ -1,7 +1,8 @@
 #lang racket
 
 (provide (struct-out entity)
-         entity-symbol make-entity direction-from-entity entity-distance
+         entity-symbol make-entity
+         direction-from-entity entity-distance entity-location-distance
          entity->list list->entity
          type-block type-bot type-edge)
 (require "direction.rkt" "location.rkt")
@@ -26,7 +27,10 @@
   (direction-from (entity-location from) (entity-location to)))
 
 (define (entity-distance a b)
-  (distance (entity-location a) (entity-location b)))
+  (entity-location-distance a (entity-location b)))
+
+(define (entity-location-distance entity location)
+  (distance (entity-location entity) location))
 
 (define (entity->list entity)
   (list (entity-id entity)

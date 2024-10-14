@@ -14,11 +14,7 @@
   (filter (λ (entity)
             (and (= (entity-type entity) type-block)
                  (= (entity-distance entity (bot-info-bot info)) 1)
-                 (< (count-adjacent
-                     info (entity-location entity)
-                     (direction-from (entity-location (bot-info-bot info))
-                                     (entity-location entity)))
-                    2)))
+                 (< (count-adjacent (entity-location entity) info) 2)))
           (bot-info-neighbors info)))
 
 (define (blocks-nearby? info)
@@ -29,21 +25,19 @@
 (define (is-free? location neighbors)
   (not (findf (λ (neighbor) (equal? location (entity-location neighbor))) neighbors)))
 
-(define (count-adjacent info location direction)
-;maybe just count neighbors with type=block and distance = 1
-  (define (count-neighbor hand-of)
-    (if (is-free? (move-direction (hand-of direction) location)
-                  (bot-info-neighbors info))
-        0 1))
-      
-  (+ (count-neighbor left-of) (count-neighbor right-of)))
+(define (count-adjacent location info)
+  (count
+   (λ (entity) (and
+                (= (entity-type entity) type-block)
+                (= (entity-location-distance entity location) 1)))
+   (bot-info-neighbors info)))
 
 (define (best-drop-direction info)
 
   (define (score direction)
     (let ([location (move-direction direction (entity-location (bot-info-bot info)))])
       (if (is-free? location (bot-info-neighbors info))
-          (count-adjacent info location direction)
+          (count-adjacent location info)
           -1)))
   
   (foldl (λ (a b) (if (> (score a) (score b)) a b))
