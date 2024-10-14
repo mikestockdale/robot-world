@@ -51,7 +51,7 @@
            (entity-cargo (action-bot input))
            (blocks-nearby? (action-info input)))
       (choose-drop)
-      (let ([blocks (find-adjacent-blocks (action-info input))])
+      (let ([blocks (find-removable-blocks (action-info input))])
         (if (and (= (wandering-cargo-delay spec) 0)
                  (> (length blocks) 0))
             (choose-take (first blocks))

@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out bot-info) bot-info-bot-id
-         best-drop-direction find-adjacent-blocks blocks-nearby?
+         best-drop-direction find-removable-blocks blocks-nearby?
          bot-info->list list->bot-info)
 
 (require "direction.rkt" "entity.rkt")
@@ -10,10 +10,15 @@
 
 (define (bot-info-bot-id info) (entity-id (bot-info-bot info)))
 
-(define (find-adjacent-blocks info)
+(define (find-removable-blocks info)
   (filter (λ (entity)
             (and (= (entity-type entity) type-block)
-                 (= (entity-distance entity (bot-info-bot info)) 1)))
+                 (= (entity-distance entity (bot-info-bot info)) 1)
+                 (< (count-adjacent
+                     info (entity-location entity)
+                     (direction-from (entity-location (bot-info-bot info))
+                                     (entity-location entity)))
+                    2)))
           (bot-info-neighbors info)))
 
 (define (blocks-nearby? info)
@@ -24,18 +29,21 @@
 (define (is-free? location neighbors)
   (not (findf (λ (neighbor) (equal? location (entity-location neighbor))) neighbors)))
 
+(define (count-adjacent info location direction)
+;maybe just count neighbors with type=block and distance = 1
+  (define (count-neighbor hand-of)
+    (if (is-free? (move-direction (hand-of direction) location)
+                  (bot-info-neighbors info))
+        0 1))
+      
+  (+ (count-neighbor left-of) (count-neighbor right-of)))
+
 (define (best-drop-direction info)
 
   (define (score direction)
     (let ([location (move-direction direction (entity-location (bot-info-bot info)))])
-
-      (define (count-neighbor hand-of)
-        (if (is-free? (move-direction (hand-of direction) location)
-                      (bot-info-neighbors info))
-            0 1))
-      
       (if (is-free? location (bot-info-neighbors info))
-          (+ (count-neighbor left-of) (count-neighbor right-of))
+          (count-adjacent info location direction)
           -1)))
   
   (foldl (λ (a b) (if (> (score a) (score b)) a b))
@@ -53,15 +61,25 @@
   (require rackunit "location.rkt")
   
   (test-case
-   "adjacent block found"
+   "removable block found"
    (let* ([bot1 (make-entity 101 type-bot (location 1 1))]
           [block1 (make-entity 102 type-block (location 1 2))]
           [block2 (make-entity 102 type-block (location 2 2))]
           [bot2 (make-entity 103 type-bot (location 2 1))]
           [info (bot-info bot1 (list bot2 block1 block2))]
-          [adjacent (find-adjacent-blocks info)])
-     (check-equal? (length adjacent) 1)
-     (check-equal? (first adjacent) block1)))
+          [removable (find-removable-blocks info)])
+     (check-equal? (length removable) 1)
+     (check-equal? (first removable) block1)))
+  
+  (test-case
+   "block not removable"
+   (let* ([bot1 (make-entity 101 type-bot (location 1 1))]
+          [block1 (make-entity 102 type-block (location 1 2))]
+          [block2 (make-entity 102 type-block (location 2 2))]
+          [block3 (make-entity 103 type-block (location 0 2))]
+          [info (bot-info bot1 (list block1 block2 block3))]
+          [removable (find-removable-blocks info)])
+     (check-equal? (length removable) 0)))
 
   (test-case
    "blocks nearby"
