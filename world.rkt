@@ -67,13 +67,12 @@
         #f)))
 
 (define (edges size location)
-  (let ([result '()])
-    (for ([direction all-directions])
-      (let ([next-to (move-direction direction location)])
-        (unless (is-valid-location? next-to size)
-          (set! result
-                (cons (make-entity 0 type-edge next-to) result)))))
-    result))
+  (filter-map-directions
+   (λ (direction)
+     (let ([next-to (move-direction direction location)])
+       (if (is-valid-location? next-to size)
+           #f
+           (make-entity 0 type-edge next-to))))))
 
 (define (neighbors world entity)
   (append

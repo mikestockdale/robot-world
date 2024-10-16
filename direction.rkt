@@ -1,8 +1,8 @@
 #lang racket
 
-(provide change-direction move-direction direction-from find-direction left-of right-of
+(provide change-direction move-direction direction-from
          direction-north direction-south direction-east direction-west
-         all-directions)
+         all-directions filter-map-directions)
 
 (require "location.rkt")
 (module+ test (require rackunit))
@@ -26,13 +26,18 @@
 
 (define (change-direction current) (modulo (+ current (random 1 4)) 4))
 
-(define (left-of direction) (modulo (+ direction 3) 4))
-(define (right-of direction) (modulo (+ direction 1) 4))
-
-(define (find-direction filter) (findf filter all-directions))
-
 (define (direction-from from to)
-  (find-direction (λ (direction) (equal? (move-direction direction from) to))))
+  (findf (λ (direction) (equal? (move-direction direction from) to)) all-directions))
+
+(define (direction-towards from to)
+  (let ([difference (offset
+                     (- (location-x from) (location-x to))
+                     (- (location-y from) (location-y to)))])
+    (if (> (abs (offset-delta-x difference)) (abs (offset-delta-y difference)))
+        (if (positive? (offset-delta-x difference)) direction-west direction-east)
+        (if (positive? (offset-delta-y difference)) direction-south direction-north))))
+
+(define (filter-map-directions proc) (filter-map proc all-directions))
 
 (module+ test
   (test-case
@@ -48,26 +53,13 @@
      (check-true (or (= new direction-north) (= new direction-south) (= new direction-east)))))
 
   (test-case
-   "direction is found"
-   (check-equal? (find-direction
-                  (λ (direction) (equal? (move-direction direction (location 1 1)) (location 1 0))))
-                 direction-south))
-
-  (test-case
-   "left of direction"
-   (check-equal? (left-of direction-north) direction-west)
-   (check-equal? (left-of direction-east) direction-north)
-   (check-equal? (left-of direction-south) direction-east)
-   (check-equal? (left-of direction-west) direction-south))
-
-  (test-case
-   "right of direction"
-   (check-equal? (right-of direction-north) direction-east)
-   (check-equal? (right-of direction-east) direction-south)
-   (check-equal? (right-of direction-south) direction-west)
-   (check-equal? (right-of direction-west) direction-north))
-
-  (test-case
    "direction from location to location"
    (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
-   (check-false (direction-from (location 1 1) (location 2 2)))))
+   (check-false (direction-from (location 1 1) (location 2 2))))
+
+  (test-case
+   "direction towards"
+   (check-equal? (direction-towards (location 1 1) (location 3 4)) direction-north)
+   (check-equal? (direction-towards (location 1 1) (location 4 3)) direction-east)
+   (check-equal? (direction-towards (location 1 4) (location 3 1)) direction-south)
+   (check-equal? (direction-towards (location 4 1) (location 1 3)) direction-west)))
