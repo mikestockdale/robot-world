@@ -33,8 +33,15 @@
         new-entity)
       #f))
 
+(define (is-valid-location? world location)
+  (let-values ([( x y) (location-coordinates location)])
+    (and (>= x 0)
+         (>= y 0)
+         (< x (world-size world))
+         (< y (world-size world)))))
+
 (define (location-OK? world location)
-  (and (is-valid-location? location (world-size world))
+  (and (is-valid-location? world location)
        (not (entity-at world location))))  
 
 (define (move-entity! world id direction)
@@ -66,27 +73,27 @@
           #t)
         #f)))
 
-(define (edges size location)
+(define (edges world location)
   (filter-map-directions
    (λ (direction)
      (let ([next-to (move-direction direction location)])
-       (if (is-valid-location? next-to size)
+       (if (is-valid-location? world next-to)
            #f
            (make-entity 0 type-edge next-to))))))
 
 (define (neighbors world entity)
   (append
-   (edges (world-size world) (entity-location entity))
+   (edges world (entity-location entity))
    (~>> world world-entities hash-values
         (filter (λ (other) (nearby? (entity-location entity) (entity-location other)))))))
 
 (define (draw-entities world procedure)
 
   (define (draw-entity id entity)
-    (let ([location (entity-location entity)])
+    (let-values ([(x y) (location-coordinates (entity-location entity))])
       (procedure (entity-symbol entity)
-                 (location-x location)
-                 (- (world-size world) 1 (location-y location)))))
+                 x
+                 (- (world-size world) 1 y))))
   
   (hash-for-each (world-entities world) draw-entity))
 
@@ -162,12 +169,21 @@
      (check-equal? result (string-append " " bot " 0 0 " block " 2 1 " bot " 1 1"))))
 
   (test-case
+   "valid locations"
+   (check-true (is-valid-location? (make-world 1) (location 0 0)))
+   (check-true (is-valid-location? (make-world 10) (location 9 9)))
+   (check-false (is-valid-location? (make-world 1) (location 0 -1)))
+   (check-false (is-valid-location? (make-world 1) (location -1 0)))
+   (check-false (is-valid-location? (make-world 10) (location 10 9)))
+   (check-false (is-valid-location? (make-world 10) (location 9 10))))
+  
+  (test-case
    "no edges in middle"
-   (check-equal? (length (edges 3 (location 1 1))) 0))
+   (check-equal? (length (edges (make-world 3) (location 1 1))) 0))
 
   (test-case
    "edges at limits"
-   (check-equal? (length (edges 1 (location 0 0))) 4))
+   (check-equal? (length (edges (make-world 1) (location 0 0))) 4))
 
   (test-case
    "neighbors are nearby"

@@ -13,7 +13,7 @@
 (define (find-removable-blocks info)
   (filter (λ (entity)
             (and (= (entity-type entity) type-block)
-                 (= (entity-distance entity (bot-info-bot info)) 1)
+                 (entity-adjacent? entity (bot-info-bot info))
                  (< (count-adjacent (entity-location entity) info) 2)))
           (bot-info-neighbors info)))
 
@@ -29,7 +29,7 @@
   (count
    (λ (entity) (and
                 (= (entity-type entity) type-block)
-                (= (entity-location-distance entity location) 1)))
+                (entity-location-adjacent? entity location)))
    (bot-info-neighbors info)))
 
 (define (best-drop-direction info)
