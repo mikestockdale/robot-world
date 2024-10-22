@@ -1,10 +1,10 @@
 #lang racket
 
-(require "action.rkt" "connection.rkt" "setup.rkt" "viewer.rkt" "wandering.rkt")
+(require "action.rkt" "connection.rkt" "setup.rkt" "viewer.rkt" "gathering.rkt")
 
 (let* ([world (setup-world)]
        [connection (connect-local world)]
-       [to-do (map wandering-action (send-hello connection))])
+       [to-do (gathering-actions (send-hello connection))])
   (setup-blocks world)
 
   (define (draw-procedure draw-entity)

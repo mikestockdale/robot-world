@@ -1,6 +1,6 @@
 #lang racket
 
-(provide change-direction move-direction direction-from
+(provide change-direction move-direction direction-from direction-towards
          direction-north direction-south direction-east direction-west
          all-directions filter-map-directions)
 
@@ -19,10 +19,11 @@
 (define movement (vector (offset 0 1) (offset 1 0) (offset 0 -1) (offset -1 0)))
 
 (define (move-direction direction from)
-  (let ([offset (vector-ref movement direction)])
-    (location
-     (+ (location-x from) (offset-delta-x offset))
-     (+ (location-y from) (offset-delta-y offset)))))
+  (let-values ([(x y) (location-coordinates from)])
+    (let ([offset (vector-ref movement direction)])
+      (location
+       (+ x (offset-delta-x offset))
+       (+ y (offset-delta-y offset))))))
 
 (define (change-direction current) (modulo (+ current (random 1 4)) 4))
 
@@ -30,12 +31,10 @@
   (findf (λ (direction) (equal? (move-direction direction from) to)) all-directions))
 
 (define (direction-towards from to)
-  (let ([difference (offset
-                     (- (location-x from) (location-x to))
-                     (- (location-y from) (location-y to)))])
-    (if (> (abs (offset-delta-x difference)) (abs (offset-delta-y difference)))
-        (if (positive? (offset-delta-x difference)) direction-west direction-east)
-        (if (positive? (offset-delta-y difference)) direction-south direction-north))))
+  (let-values ([(difference-x difference-y) (location-offset from to)])
+    (if (> (abs difference-x) (abs difference-y))
+        (if (positive? difference-x) direction-west direction-east)
+        (if (positive? difference-y) direction-south direction-north))))
 
 (define (filter-map-directions proc) (filter-map proc all-directions))
 

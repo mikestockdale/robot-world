@@ -1,60 +1,64 @@
 #lang racket
 
-(provide wandering-actions)
+(provide gathering-actions)
 
-(require "action.rkt" "bot-info.rkt" "command.rkt" "direction.rkt" "entity.rkt")
+(require "action.rkt" "bot-info.rkt" "command.rkt" "direction.rkt" "entity.rkt" "location.rkt")
 
-(struct wandering (direction direction-change-chance cargo-delay))
+(struct gathering (direction direction-change-chance cargo-delay location))
 
-(define (wandering-actions bot-infos)
+(define (gathering-actions bot-infos)
   (map
-   (λ (bot-info) (action #f #f (wander (wandering direction-east 0.2 0)) #t bot-info))
+   (λ (bot-info)
+     (action #f #f (gather (gathering direction-east 0.2 0 (location 25 25))) #t bot-info))
    bot-infos))
 
-(define ((wander spec) input-action)
+(define ((gather spec) input-action)
   (let-values ([(command parameter new-spec) ((choose spec) input-action)])
     (struct-copy action input-action
                  [command command]
                  [parameter parameter]
-                 [strategy (wander new-spec)])))
+                 [strategy (gather new-spec)])))
 
 (define ((choose spec) input)
-  
+
   (define (pick-direction)
-    (let ([old-direction (wandering-direction spec)])
+    (if (entity-cargo (action-bot input))
+        (direction-towards
+         (entity-location (action-bot input)) (gathering-location spec))
+    (let ([old-direction (gathering-direction spec)])
       (if (or (and (equal? (action-command input) move-command)
                    (not (action-success? input))) 
-              (> (wandering-direction-change-chance spec) (random)))
+              (> (gathering-direction-change-chance spec) (random)))
           (change-direction old-direction)
-          old-direction)))
+          old-direction))))
 
   (define (choose-drop)
     (let ([drop-direction (best-drop-direction (action-info input))])
       (values drop-command drop-direction
-              (struct-copy wandering spec
+              (struct-copy gathering spec
                            [direction (change-direction drop-direction)]
                            [cargo-delay 5]))))
   
   (define (choose-move)
     (let ([direction (pick-direction)])
       (values move-command direction
-              (struct-copy wandering spec
+              (struct-copy gathering spec
                            [direction direction]
-                           [cargo-delay (max 0 (- (wandering-cargo-delay spec) 1))]))))
+                           [cargo-delay (max 0 (- (gathering-cargo-delay spec) 1))]))))
 
   (define (choose-take block)
     (let ([take-direction (direction-from-entity (action-bot input) block)]) 
       (values take-command (entity-id block)
-              (struct-copy wandering spec
+              (struct-copy gathering spec
                            [direction take-direction]
                            [cargo-delay 5]))))
   
-  (if (and (= (wandering-cargo-delay spec) 0)
+  (if (and (= (gathering-cargo-delay spec) 0)
            (entity-cargo (action-bot input))
            (blocks-nearby? (action-info input)))
       (choose-drop)
       (let ([blocks (find-removable-blocks (action-info input))])
-        (if (and (= (wandering-cargo-delay spec) 0)
+        (if (and (= (gathering-cargo-delay spec) 0)
                  (> (length blocks) 0))
             (choose-take (first blocks))
             (choose-move)))))
@@ -73,14 +77,14 @@
   (define (wander-with
            #:chance [chance 0]
            #:cargo-delay [cargo-delay 0])
-    (choose (wandering direction-east chance cargo-delay)))
+    (choose (gathering direction-east chance cargo-delay (location 1 1))))
 
   (test-case
    "move in current direction"
    (let-values ([(command parameter spec) ((wander-with #:cargo-delay 5) (choose-input))])
      (check-equal? command move-command)
      (check-equal? parameter direction-east)
-     (check-equal? (wandering-cargo-delay spec) 4)))
+     (check-equal? (gathering-cargo-delay spec) 4)))
   
   (test-case
    "move in random direction"
@@ -103,8 +107,8 @@
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
      (check-equal? command take-command)
      (check-equal? parameter 102)
-     (check-equal? (wandering-direction spec) direction-south)
-     (check-equal? (wandering-cargo-delay spec) 5)))
+     (check-equal? (gathering-direction spec) direction-south)
+     (check-equal? (gathering-cargo-delay spec) 5)))
   
   (test-case
    "delay taking nearby block"
@@ -121,8 +125,8 @@
                                 #:cargo (entity 103 type-block (location 0 0) #f)))])
      (check-equal? command drop-command)
      (check-equal? parameter direction-north)
-     (check-equal? (wandering-cargo-delay spec) 5)
-     (check-not-equal? (wandering-direction spec) direction-north)))
+     (check-equal? (gathering-cargo-delay spec) 5)
+     (check-not-equal? (gathering-direction spec) direction-north)))
 
   (test-case
    "delay dropping nearby block"
