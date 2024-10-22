@@ -35,7 +35,7 @@
 (define (entity->list entity)
   (list (entity-id entity)
         (entity-type entity)
-        (location->list (entity-location entity))
+        (call-with-values (λ () (location-coordinates (entity-location entity))) list)
         (if (entity-cargo entity) (entity->list (entity-cargo entity)) #f)))
 
 (define (list->entity list)

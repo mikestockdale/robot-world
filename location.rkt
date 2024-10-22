@@ -1,6 +1,6 @@
 #lang racket
 
-(provide location adjacent? nearby? location-offset location-coordinates location->list)
+(provide location adjacent? nearby? location-offset location-coordinates)
 
 (struct location (x y) #:transparent)
 
@@ -40,8 +40,4 @@
    (check-false (nearby? (location 1 1) (location 1 1)))
    (check-true (nearby? (location 1 1) (location 1 2)))
    (check-true (nearby? (location 1 1) (location 2 2)))
-   (check-false (nearby? (location 3 4) (location 2 2))))
-
-  (test-case
-   "convert to and from list"
-   (check-equal? (apply location (location->list (location 3 4))) (location 3 4))))
+   (check-false (nearby? (location 3 4) (location 2 2)))))
