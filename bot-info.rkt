@@ -6,7 +6,7 @@
 
 (require "direction.rkt" "entity.rkt")
 
-(struct bot-info (bot neighbors) #:transparent)
+(struct bot-info (bot neighbors) #:prefab)
 
 (define (bot-info-bot-id info) (entity-id (bot-info-bot info)))
 

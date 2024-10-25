@@ -7,7 +7,7 @@
          type-block type-bot type-edge)
 (require "direction.rkt" "location.rkt")
 
-(struct entity (id type location cargo)  #:transparent)
+(struct entity (id type location cargo)  #:prefab)
 
 (define (make-entity id type location) (entity id type location #f))
 

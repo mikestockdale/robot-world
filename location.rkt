@@ -2,7 +2,7 @@
 
 (provide location adjacent? nearby? location-offset location-coordinates)
 
-(struct location (x y) #:transparent)
+(struct location (x y) #:prefab)
 
 (define (difference field a b)
   (abs (- (field a) (field b))))

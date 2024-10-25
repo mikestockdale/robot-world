@@ -6,7 +6,7 @@
 (require "bot-info.rkt" "command.rkt")
 
 (define (send-commands connection request-list process-reply-list)
-  (let* ([path (string-append "execs/" (with-output-to-string (λ () (write request-list))))]
+  (let* ([path (list "execs" request-list)]
          [replies (with-input-from-string (connection path) read)])
     (map (λ (reply process-reply)
            (process-reply (first reply) (list->bot-info (second reply))))
@@ -14,40 +14,27 @@
          process-reply-list)))
 
 (define (send-draw connection)
-  (with-input-from-string (connection "draw") read))
+  (connection '("draw")))
 
 (define (send-hello connection)
-  (let ([replies (with-input-from-string (connection "hello") read)])
-    (map (λ (reply) (list->bot-info (second reply)))
-         replies)))
+  (map (λ (reply) (second reply)) (connection '("hello"))))
 
 (define (connect-remote host port) (remote-call host port))
 (define (connect-local world) (local-call world))
 
-(define ((remote-call host port) path)
-  (define-values (status headers in)
-    (http-sendrecv host
-                   path
-                   #:port port
-                   #:version "1.1"
-                   #:method "GET"
-                   #:data ""))
-  (let ([return (port->string in)])
-    (close-input-port in)
-    return))
+(define (remote-call host port)
+  (let-values ([(in out) (tcp-connect host port)])
+    (file-stream-buffer-mode in 'none)
+    (file-stream-buffer-mode out 'none)
+    (λ (request-list)
+      (write request-list out)
+      (read in))))
 
-(define ((local-call world) path)
-  (let* ([pieces (string-split path "/")]
-         [method (first pieces)]
-         [parms
-          (if (= (length pieces) 2)
-              (cons world (rest pieces))
-              (cons world (map string->number (rest pieces))))]
-         [dispatch (make-hash
-                    (list (cons "execs" execute-command-list)
-                          (cons "draw" execute-draw)
-                          (cons "hello" execute-hello)))])
-    (apply (hash-ref dispatch method) parms)))
+(define ((local-call world) request-list)
+  (define (fake-network item)
+    (with-input-from-string
+        (with-output-to-string (λ () (write item))) read))
+  (fake-network (dispatch-request world (fake-network request-list))))
 
 (module+ test
   (require rackunit threading

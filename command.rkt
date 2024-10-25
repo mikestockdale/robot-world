@@ -3,7 +3,16 @@
 (require "bot-info.rkt" "setup.rkt" "world.rkt")
 
 (provide drop-command move-command take-command
-         execute-command-list execute-draw execute-hello)
+         dispatch-request execute-command-list execute-draw execute-hello)
+
+(define (dispatch-request world request-list)
+  (let* ([method (first request-list)]
+         [parms (cons world (rest request-list))]
+         [dispatch (make-hash
+                    (list (cons "execs" execute-command-list)
+                          (cons "draw" execute-draw)
+                          (cons "hello" execute-hello)))])
+    (apply (hash-ref dispatch method) parms)))
 
 (define drop-command 0)
 (define move-command 1)
@@ -22,6 +31,9 @@
    (list success?
          (bot-info->list (bot-info entity (neighbors world entity))))))
 
+(define (make-response-list success? entity world)
+  (list success? (bot-info entity (neighbors world entity))))
+
 (define (execute-command-list world list)
 
   (define (exec-request request)
@@ -30,19 +42,18 @@
      (entity-ref world (second request))
      world))
 
-  (strings->string (map exec-request (with-input-from-string list read))))
+  (strings->string (map exec-request list)))
 
 (define (execute-draw world)
   (define response '())
   (define (draw-entity symbol x y)
     (set! response (cons (list symbol x y) response)))
   (draw-entities world draw-entity)
-  (write-list->string response))
+  response)
 
 (define (execute-hello world)
-  (strings->string
-   (map (λ (bot) (make-response #t bot world))
-        (setup-bots world))))
+  (map (λ (bot) (make-response-list #t bot world))
+       (setup-bots world)))
 
 (module+ test
   (require rackunit "entity.rkt" "location.rkt" )
@@ -51,15 +62,15 @@
    "connect creates bots"
    (check-equal?
     (execute-hello (make-world 50))
-    "((#t ((101 0 (10 10) #f) ()))\
- (#t ((102 0 (20 20) #f) ()))\
- (#t ((103 0 (30 30) #f) ()))\
- (#t ((104 0 (40 40) #f) ())))"))
+    '((#t #s(bot-info #s(entity 101 0 #s(location 10 10) #f) ()))
+      (#t #s(bot-info #s(entity 102 0 #s(location 20 20) #f) ()))
+      (#t #s(bot-info #s(entity 103 0 #s(location 30 30) #f) ()))
+      (#t #s(bot-info #s(entity 104 0 #s(location 40 40) #f) ())))))
 
   (test-case
    "execute performs commands"
    (let* ([world (make-world 3)]
           [bot (add-entity! world type-bot (location 1 1))])
      (check-equal?
-      (execute-command-list world "((1 101 1))")
+      (execute-command-list world '((1 101 1)))
       "((#t ((101 0 (2 1) #f) ((0 3 (3 1) #f)))))"))))
