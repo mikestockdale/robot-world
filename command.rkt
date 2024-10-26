@@ -20,29 +20,18 @@
 
 (define command-procedures (vector drop-entity! move-entity! take-entity!))
 
-(define (strings->string strings)
-  (string-append "(" (string-join strings) ")") )
-
-(define (write-list->string list)
-  (with-output-to-string (λ () (write list))))
-
-(define (make-response success? entity world)
-  (write-list->string
-   (list success?
-         (bot-info->list (bot-info entity (neighbors world entity))))))
-
 (define (make-response-list success? entity world)
   (list success? (bot-info entity (neighbors world entity))))
 
 (define (execute-command-list world list)
 
   (define (exec-request request)
-    (make-response
+    (make-response-list
      (apply (vector-ref command-procedures (first request)) (cons world (rest request)))
      (entity-ref world (second request))
      world))
 
-  (strings->string (map exec-request list)))
+  (map exec-request list))
 
 (define (execute-draw world)
   (define response '())
@@ -73,4 +62,7 @@
           [bot (add-entity! world type-bot (location 1 1))])
      (check-equal?
       (execute-command-list world '((1 101 1)))
-      "((#t ((101 0 (2 1) #f) ((0 3 (3 1) #f)))))"))))
+      '((#t
+         #s(bot-info
+            #s(entity 101 0 #s(location 2 1) #f)
+            (#s(entity 0 3 #s(location 3 1) #f)))))))))

@@ -34,7 +34,8 @@
       #f))
 
 (define (is-valid-location? world location)
-  (let-values ([( x y) (location-coordinates location)])
+  (let ([x (location-x location)]
+        [y (location-y location)])
     (and (>= x 0)
          (>= y 0)
          (< x (world-size world))
@@ -90,10 +91,10 @@
 (define (draw-entities world procedure)
 
   (define (draw-entity id entity)
-    (let-values ([(x y) (location-coordinates (entity-location entity))])
+    (let ([location (entity-location entity)])
       (procedure (entity-symbol entity)
-                 x
-                 (- (world-size world) 1 y))))
+                 (location-x location)
+                 (- (world-size world) 1 (location-y location)))))
   
   (hash-for-each (world-entities world) draw-entity))
 

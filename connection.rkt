@@ -3,13 +3,13 @@
 (provide connect-local connect-remote send-commands send-draw send-hello)
 
 (require net/http-client)
-(require "bot-info.rkt" "command.rkt")
+(require "command.rkt")
 
 (define (send-commands connection request-list process-reply-list)
-  (let* ([path (list "execs" request-list)]
-         [replies (with-input-from-string (connection path) read)])
+  (let* ([requests (list "execs" request-list)]
+         [replies (connection requests)])
     (map (λ (reply process-reply)
-           (process-reply (first reply) (list->bot-info (second reply))))
+           (process-reply (first reply) (second reply)))
          replies
          process-reply-list)))
 
@@ -38,7 +38,7 @@
 
 (module+ test
   (require rackunit threading
-           "direction.rkt" "entity.rkt" "location.rkt" "world.rkt")
+           "bot-info.rkt" "direction.rkt" "entity.rkt" "location.rkt" "world.rkt")
 
   (define (process-info success? info) info)
 

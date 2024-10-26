@@ -19,11 +19,10 @@
 (define movement (vector (offset 0 1) (offset 1 0) (offset 0 -1) (offset -1 0)))
 
 (define (move-direction direction from)
-  (let-values ([(x y) (location-coordinates from)])
-    (let ([offset (vector-ref movement direction)])
-      (location
-       (+ x (offset-delta-x offset))
-       (+ y (offset-delta-y offset))))))
+  (let ([offset (vector-ref movement direction)])
+    (location
+     (+ (location-x from) (offset-delta-x offset))
+     (+ (location-y from) (offset-delta-y offset)))))
 
 (define (change-direction current) (modulo (+ current (random 1 4)) 4))
 

@@ -3,7 +3,6 @@
 (provide (struct-out entity)
          entity-symbol make-entity
          direction-from-entity entity-adjacent? entity-location-adjacent?
-         entity->list list->entity
          type-block type-bot type-edge)
 (require "direction.rkt" "location.rkt")
 
@@ -32,18 +31,6 @@
 (define (entity-location-adjacent? entity location)
   (adjacent? (entity-location entity) location))
 
-(define (entity->list entity)
-  (list (entity-id entity)
-        (entity-type entity)
-        (call-with-values (λ () (location-coordinates (entity-location entity))) list)
-        (if (entity-cargo entity) (entity->list (entity-cargo entity)) #f)))
-
-(define (list->entity list)
-  (entity (first list)
-          (second list)
-          (apply location (third list))
-          (if (fourth list) (list->entity (fourth list)) #f)))
-
 (module+ test
   (require rackunit)
 
@@ -52,14 +39,4 @@
    (check-true (entity-adjacent? (make-entity 101 type-bot (location 1 1))
                                   (make-entity 102 type-bot (location 1 2))))
    (check-false (entity-adjacent? (make-entity 101 type-bot (location 1 1))
-                                  (make-entity 102 type-bot (location 2 2)))))
-
-  (test-case
-   "convert to and from list"
-   (let ([entity (entity 1 2 (location 3 4) #f)])
-   (check-equal? (list->entity (entity->list entity)) entity)))
-
-  (test-case
-   "convert with cargo"
-   (let ([entity (entity 1 2 (location 3 4) (entity 5 6 (location 7 8) #f))])
-   (check-equal? (list->entity (entity->list entity)) entity))))
+                                  (make-entity 102 type-bot (location 2 2))))))

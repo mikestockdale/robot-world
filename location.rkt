@@ -1,6 +1,6 @@
 #lang racket
 
-(provide location adjacent? nearby? location-offset location-coordinates)
+(provide (struct-out location) adjacent? nearby? location-offset)
 
 (struct location (x y) #:prefab)
 
@@ -19,11 +19,6 @@
 (define (location-offset from to)
   (values (- (location-x from) (location-x to))
           (- (location-y from) (location-y to))))
-
-(define (location-coordinates location)
-  (values (location-x location) (location-y location))) 
-
-(define (location->list location) (list (location-x location) (location-y location)))
 
 (module+ test
   (require rackunit)

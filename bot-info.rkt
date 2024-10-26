@@ -1,8 +1,7 @@
 #lang racket
 
 (provide (struct-out bot-info) bot-info-bot-id
-         best-drop-direction find-removable-blocks blocks-nearby?
-         bot-info->list list->bot-info)
+         best-drop-direction find-removable-blocks blocks-nearby?)
 
 (require "direction.rkt" "entity.rkt")
 
@@ -42,14 +41,6 @@
   
   (foldl (λ (a b) (if (> (score a) (score b)) a b))
          (first all-directions) (rest all-directions))) 
-
-(define (bot-info->list info)
-  (list (entity->list (bot-info-bot info))
-        (map entity->list (bot-info-neighbors info))))
-
-(define (list->bot-info list)
-  (bot-info (list->entity (first list))
-            (map list->entity (second list))))
 
 (module+ test
   (require rackunit "location.rkt")
@@ -103,12 +94,4 @@
           [edge2 (make-entity 0 type-edge (location 49 50))]
           [block (make-entity 102 type-block (location 49 48))]
           [info (bot-info bot (list edge1 edge2 block))])
-     (check-equal? (best-drop-direction info) direction-west)))
-
-  (test-case
-   "convert to and from list"
-   (let ([info (bot-info (entity 1 2 (location 3 4) #f)
-                         (list
-                          (entity 6 7 (location 8 9) #f)
-                          (entity 11 12 (location 13 14) #f)))])
-     (check-equal? (list->bot-info (bot-info->list info)) info))))
+     (check-equal? (best-drop-direction info) direction-west))))
