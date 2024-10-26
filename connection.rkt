@@ -25,9 +25,9 @@
 (define (remote-call host port)
   (let-values ([(in out) (tcp-connect host port)])
     (file-stream-buffer-mode in 'none)
-    (file-stream-buffer-mode out 'none)
     (λ (request-list)
       (write request-list out)
+      (flush-output out)
       (read in))))
 
 (define ((local-call world) request-list)
