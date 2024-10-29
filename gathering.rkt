@@ -23,7 +23,7 @@
 
   (define (pick-direction)
     (if (entity-cargo (action-bot input))
-        (direction-towards
+        (direction-from
          (entity-location (action-bot input)) (gathering-location spec))
     (let ([old-direction (gathering-direction spec)])
       (if (or (and (equal? (action-command input) move-command)
