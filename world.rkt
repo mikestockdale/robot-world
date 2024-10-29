@@ -75,12 +75,9 @@
         #f)))
 
 (define (edges world location)
-  (filter-map-directions
-   (λ (direction)
-     (let ([next-to (move-direction direction location)])
-       (if (is-valid-location? world next-to)
-           #f
-           (make-entity 0 type-edge next-to))))))
+  (for/list ([direction all-directions]
+             #:unless (is-valid-location? world (move-direction direction location)))
+    (make-entity 0 type-edge (move-direction direction location))))
 
 (define (neighbors world entity)
   (append

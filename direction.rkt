@@ -1,43 +1,43 @@
 #lang racket
 
 (provide change-direction move-direction direction-from direction-towards
-         direction-north direction-south direction-east direction-west
-         all-directions filter-map-directions)
+         direction-north direction-east direction-south direction-west
+         all-directions)
 
 (require "location.rkt")
-(module+ test (require rackunit))
-
-(struct offset (delta-x delta-y))
 
 (define direction-north 0)
 (define direction-east 1)
 (define direction-south 2)
 (define direction-west 3)
 
-(define all-directions (list direction-north direction-east direction-south direction-west))
+(define all-directions (in-range 4))
 
-(define movement (vector (offset 0 1) (offset 1 0) (offset 0 -1) (offset -1 0)))
+(define ((move delta-x delta-y) from)
+  (location (+ (location-x from) delta-x)
+            (+ (location-y from) delta-y)))
+
+(define movement (vector (move 0 1) (move 1 0) (move 0 -1) (move -1 0)))
 
 (define (move-direction direction from)
-  (let ([offset (vector-ref movement direction)])
-    (location
-     (+ (location-x from) (offset-delta-x offset))
-     (+ (location-y from) (offset-delta-y offset)))))
+  ((vector-ref movement direction) from))
 
 (define (change-direction current) (modulo (+ current (random 1 4)) 4))
 
 (define (direction-from from to)
-  (findf (λ (direction) (equal? (move-direction direction from) to)) all-directions))
+  (for/first ([direction all-directions]
+              #:when (equal? (move-direction direction from) to))
+    direction))
 
-(define (direction-towards from to)
-  (let-values ([(difference-x difference-y) (location-offset from to)])
+(define (direction-towards to from)
+  (let-values ([(difference-x difference-y) (location-offset to from)])
     (if (> (abs difference-x) (abs difference-y))
         (if (positive? difference-x) direction-west direction-east)
         (if (positive? difference-y) direction-south direction-north))))
 
-(define (filter-map-directions proc) (filter-map proc all-directions))
-
 (module+ test
+  (require rackunit)
+
   (test-case
    "location moves in all directions"
    (check-equal? (move-direction direction-north (location 5 6)) (location 5 7))

@@ -38,10 +38,16 @@
       (if (is-free? location (bot-info-neighbors info))
           (count-adjacent location info)
           -1)))
-  
-  (foldl (λ (a b) (if (> (score a) (score b)) a b))
-         (first all-directions) (rest all-directions))) 
 
+  (for/fold ([best-direction 0]
+             [best-score -1]
+             #:result best-direction)
+            ([direction all-directions])
+    (let ([score (score direction)])
+      (if (> score best-score)
+          (values direction score)
+          (values best-direction best-score)))))
+  
 (module+ test
   (require rackunit "location.rkt")
   
