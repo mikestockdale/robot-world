@@ -1,6 +1,6 @@
 #lang racket
 
-(require "bot-info.rkt" "setup.rkt" "world.rkt")
+(require "shared.rkt" "setup.rkt" "world.rkt")
 
 (provide drop-command move-command take-command
          dispatch-request execute-command-list execute-draw execute-hello)
@@ -45,7 +45,7 @@
        (setup-bots world)))
 
 (module+ test
-  (require rackunit "entity.rkt" "location.rkt" )
+  (require rackunit)
 
   (test-case
    "connect creates bots"
@@ -65,4 +65,4 @@
       '((#t
          #s(bot-info
             #s(entity 101 0 #s(location 2 1) #f)
-            (#s(entity 0 3 #s(location 3 1) #f)))))))))
+            (#s(entity 0 2 #s(location 3 1) #f)))))))))

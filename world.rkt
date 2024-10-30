@@ -4,9 +4,7 @@
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
-(require "direction.rkt" "entity.rkt" "location.rkt")
-
-(module+ test (require rackunit))
+(require "shared.rkt")
 
 (struct world (size [next-id #:mutable] entities))
 
@@ -96,6 +94,7 @@
   (hash-for-each (world-entities world) draw-entity))
 
 (module+ test
+  (require rackunit)
   (test-case
    "bot is created at requested location"
    (let* ([world (make-world 10)]

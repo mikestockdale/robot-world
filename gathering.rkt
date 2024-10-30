@@ -2,7 +2,7 @@
 
 (provide gathering-actions)
 
-(require "action.rkt" "bot-info.rkt" "command.rkt" "direction.rkt" "entity.rkt" "location.rkt")
+(require "shared.rkt" "action.rkt" "command.rkt" "strategy.rkt")
 
 (struct gathering (direction direction-change-chance cargo-delay location))
 
@@ -64,7 +64,7 @@
             (choose-move)))))
 
 (module+ test
-  (require rackunit "location.rkt" "world.rkt")
+  (require rackunit "world.rkt")
 
   (define (choose-input
            #:success [success #t]

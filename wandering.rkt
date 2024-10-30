@@ -2,7 +2,7 @@
 
 (provide wandering-actions)
 
-(require "action.rkt" "bot-info.rkt" "command.rkt" "direction.rkt" "entity.rkt")
+(require "action.rkt" "command.rkt" "shared.rkt" "strategy.rkt")
 
 (struct wandering (direction direction-change-chance cargo-delay))
 
@@ -60,7 +60,7 @@
             (choose-move)))))
 
 (module+ test
-  (require rackunit "location.rkt" "world.rkt")
+  (require rackunit "world.rkt")
 
   (define (choose-input
            #:success [success #t]

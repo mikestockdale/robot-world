@@ -4,7 +4,7 @@
          perform-actions)
 
 (require threading)
-(require "bot-info.rkt" "connection.rkt")
+(require "shared.rkt" "connection.rkt")
 
 (struct action (command parameter strategy success? info))
 
@@ -27,7 +27,7 @@
     (send-commands connection (map make-request requests) process-replies)))
 
 (module+ test
-  (require rackunit "direction.rkt" "command.rkt" "entity.rkt" "location.rkt" "world.rkt")
+  (require rackunit "command.rkt" "world.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action

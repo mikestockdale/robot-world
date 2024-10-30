@@ -38,7 +38,7 @@
 
 (module+ test
   (require rackunit threading
-           "bot-info.rkt" "direction.rkt" "entity.rkt" "location.rkt" "world.rkt")
+           "shared.rkt" "world.rkt")
 
   (define (process-info success? info) info)
 

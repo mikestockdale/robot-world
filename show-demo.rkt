@@ -1,6 +1,6 @@
 #lang racket
 
-(require "entity.rkt" "viewer.rkt")
+(require "shared.rkt" "viewer.rkt")
 
 (define (timer) #f)
 

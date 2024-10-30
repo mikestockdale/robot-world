@@ -1,7 +1,7 @@
 #lang racket
 
 (provide setup-blocks setup-bots setup-world)
-(require "entity.rkt" "location.rkt" "world.rkt")
+(require "shared.rkt" "world.rkt")
 
 (define (setup-world)
   (make-world 50))
