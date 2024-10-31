@@ -1,6 +1,7 @@
 #lang racket
 
-(provide best-drop-direction blocks-nearby? find-removable-blocks)
+(provide best-drop-direction blocks-nearby? find-removable-blocks
+         direction-from direction-from-entity)
 
 (require "shared.rkt")
 
@@ -9,6 +10,15 @@
 
 (define (entity-location-adjacent? entity location)
   (adjacent? (entity-location entity) location))
+
+(define (direction-from from to)
+  (let-values ([(difference-x difference-y) (location-offset from to)])
+    (if (> (abs difference-x) (abs difference-y))
+        (if (positive? difference-x) direction-west direction-east)
+        (if (positive? difference-y) direction-south direction-north))))
+
+(define (direction-from-entity from to)
+  (direction-from (entity-location from) (entity-location to)))
 
 (define (count-adjacent location info)
   (count
@@ -58,6 +68,14 @@
                                  (make-entity 102 type-bot (location 1 2))))
    (check-false (entity-adjacent? (make-entity 101 type-bot (location 1 1))
                                   (make-entity 102 type-bot (location 2 2)))))  
+  (test-case
+   "direction from location to location"
+   (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
+   (check-equal? (direction-from (location 1 1) (location 3 4)) direction-north)
+   (check-equal? (direction-from (location 1 1) (location 4 3)) direction-east)
+   (check-equal? (direction-from (location 1 4) (location 3 1)) direction-south)
+   (check-equal? (direction-from (location 4 1) (location 1 3)) direction-west))
+  
   (test-case
    "removable block found"
    (let* ([bot1 (make-entity 101 type-bot (location 1 1))]

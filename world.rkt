@@ -49,7 +49,7 @@
        [new-location (move-direction direction (entity-location old-entity))])
     (if (location-OK? world new-location)
         (begin
-          (place-entity! world (struct-copy entity old-entity [location new-location]))
+          (place-entity! world (relocate-entity old-entity new-location))
           #t)
         #f)))
 
@@ -57,7 +57,7 @@
   (let ([cargo (entity-ref world cargo-id)])
     (if cargo
         (begin
-          (place-entity! world (struct-copy entity (entity-ref world id) [cargo cargo]))
+          (place-entity! world (load-entity (entity-ref world id) cargo))
           (remove-entity! world cargo-id)
           #t)
         #f)))
@@ -67,8 +67,8 @@
          [drop-location (move-direction direction (entity-location bot))])
     (if (location-OK? world drop-location)
         (begin
-          (place-entity! world (struct-copy entity (entity-cargo bot) [location drop-location]))
-          (place-entity! world (struct-copy entity (entity-ref world id) [cargo #f]))
+          (place-entity! world (relocate-entity (entity-cargo bot) drop-location))
+          (place-entity! world (load-entity (entity-ref world id) #f))
           #t)
         #f)))
 

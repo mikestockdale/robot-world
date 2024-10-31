@@ -1,6 +1,6 @@
 #lang racket
 
-(provide change-direction move-direction direction-from
+(provide change-direction move-direction
          direction-north direction-east direction-south direction-west
          all-directions)
 
@@ -22,12 +22,6 @@
 (define (move-direction direction from)
   ((vector-ref movement direction) from))
 
-(define (direction-from from to)
-  (let-values ([(difference-x difference-y) (location-offset from to)])
-    (if (> (abs difference-x) (abs difference-y))
-        (if (positive? difference-x) direction-west direction-east)
-        (if (positive? difference-y) direction-south direction-north))))
-
 (define (change-direction current) (modulo (+ current (random 1 4)) 4))
 
 (module+ test
@@ -39,14 +33,6 @@
    (check-equal? (move-direction direction-south (location 5 6)) (location 5 5))
    (check-equal? (move-direction direction-east (location 5 6)) (location 6 6))
    (check-equal? (move-direction direction-west (location 5 6)) (location 4 6)))
-
-  (test-case
-   "direction from location to location"
-   (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
-   (check-equal? (direction-from (location 1 1) (location 3 4)) direction-north)
-   (check-equal? (direction-from (location 1 1) (location 4 3)) direction-east)
-   (check-equal? (direction-from (location 1 4) (location 3 1)) direction-south)
-   (check-equal? (direction-from (location 4 1) (location 1 3)) direction-west))
   
   (test-case
    "new direction is different"
