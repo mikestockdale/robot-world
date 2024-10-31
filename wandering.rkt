@@ -50,7 +50,7 @@
                            [cargo-delay 5]))))
   
   (if (and (= (wandering-cargo-delay spec) 0)
-           (entity-cargo (action-bot input))
+           (bot-info-cargo (action-info input))
            (blocks-nearby? (action-info input)))
       (choose-drop)
       (let ([blocks (find-removable-blocks (action-info input))])
@@ -68,7 +68,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (action command #f choose success
-            (bot-info (entity 101 type-bot (location 1 1) cargo) neighbors)))
+            (bot-info (entity 101 type-bot (location 1 1)) cargo neighbors)))
   
   (define (wander-with
            #:chance [chance 0]
@@ -100,7 +100,7 @@
    "take nearby block"
    (let-values ([(command parameter spec)
                  ((wander-with)
-                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
+                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
      (check-equal? command take-command)
      (check-equal? parameter 102)
      (check-equal? (wandering-direction spec) direction-south)
@@ -110,15 +110,15 @@
    "delay taking nearby block"
    (let-values ([(command parameter procedure)
                  ((wander-with #:cargo-delay 1)
-                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0) #f))))])
+                  (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
      (check-equal? command move-command)))
 
   (test-case
    "drop nearby block"
    (let-values ([(command parameter spec)
                  ((wander-with)
-                  (choose-input #:neighbors (list (entity 102 type-block (location 2 2) #f))
-                                #:cargo (entity 103 type-block (location 0 0) #f)))])
+                  (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
+                                #:cargo (entity 103 type-block (location 0 0))))])
      (check-equal? command drop-command)
      (check-equal? parameter direction-north)
      (check-equal? (wandering-cargo-delay spec) 5)
@@ -128,6 +128,6 @@
    "delay dropping nearby block"
    (let-values ([(command parameter spec)
                  ((wander-with #:cargo-delay 1)
-                  (choose-input #:neighbors (list (entity 102 type-block (location 2 2) #f))
-                                #:cargo (entity 103 type-block (location 0 0) #f)))])
+                  (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
+                                #:cargo (entity 103 type-block (location 0 0))))])
      (check-equal? command move-command))))

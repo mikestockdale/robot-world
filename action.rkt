@@ -40,8 +40,8 @@
     (let ([bot1 (add-entity! world type-bot (location 1 1))]
           [bot2 (add-entity! world type-bot (location 0 0))])
     (list
-     (action #f #f go-north #f (bot-info bot1 '()))
-     (action #f #f go-east #f (bot-info bot2 '())))))
+     (action #f #f go-north #f (bot-info bot1 #f '()))
+     (action #f #f go-east #f (bot-info bot2 #f '())))))
   
   (test-case
    "simple actions are performed"

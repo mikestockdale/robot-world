@@ -64,10 +64,10 @@
   
   (test-case
    "adjacent entities"
-   (check-true (entity-adjacent? (make-entity 101 type-bot (location 1 1))
-                                 (make-entity 102 type-bot (location 1 2))))
-   (check-false (entity-adjacent? (make-entity 101 type-bot (location 1 1))
-                                  (make-entity 102 type-bot (location 2 2)))))  
+   (check-true (entity-adjacent? (entity 101 type-bot (location 1 1))
+                                 (entity 102 type-bot (location 1 2))))
+   (check-false (entity-adjacent? (entity 101 type-bot (location 1 1))
+                                  (entity 102 type-bot (location 2 2)))))  
   (test-case
    "direction from location to location"
    (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
@@ -78,52 +78,52 @@
   
   (test-case
    "removable block found"
-   (let* ([bot1 (make-entity 101 type-bot (location 1 1))]
-          [block1 (make-entity 102 type-block (location 1 2))]
-          [block2 (make-entity 102 type-block (location 2 2))]
-          [bot2 (make-entity 103 type-bot (location 2 1))]
-          [info (bot-info bot1 (list bot2 block1 block2))]
+   (let* ([bot1 (entity 101 type-bot (location 1 1))]
+          [block1 (entity 102 type-block (location 1 2))]
+          [block2 (entity 102 type-block (location 2 2))]
+          [bot2 (entity 103 type-bot (location 2 1))]
+          [info (bot-info bot1 #f (list bot2 block1 block2))]
           [removable (find-removable-blocks info)])
      (check-equal? (length removable) 1)
      (check-equal? (first removable) block1)))
   
   (test-case
    "block not removable"
-   (let* ([bot1 (make-entity 101 type-bot (location 1 1))]
-          [block1 (make-entity 102 type-block (location 1 2))]
-          [block2 (make-entity 102 type-block (location 2 2))]
-          [block3 (make-entity 103 type-block (location 0 2))]
-          [info (bot-info bot1 (list block1 block2 block3))]
+   (let* ([bot1 (entity 101 type-bot (location 1 1))]
+          [block1 (entity 102 type-block (location 1 2))]
+          [block2 (entity 102 type-block (location 2 2))]
+          [block3 (entity 103 type-block (location 0 2))]
+          [info (bot-info bot1 #f (list block1 block2 block3))]
           [removable (find-removable-blocks info)])
      (check-equal? (length removable) 0)))
 
     
   (test-case
    "free location found"
-   (let* ([bot (make-entity 101 type-bot (location 1 1))]
-          [block (make-entity 102 type-block (location 1 2))]
-          [info (bot-info bot (list block))])
+   (let* ([bot (entity 101 type-bot (location 1 1))]
+          [block (entity 102 type-block (location 1 2))]
+          [info (bot-info bot #f (list block))])
      (check-equal? (best-drop-direction info) direction-east)))
 
   (test-case
    "best location found"
-   (let* ([bot (make-entity 101 type-bot (location 1 1))]
-          [block1 (make-entity 102 type-block (location 0 0))]
-          [block2 (make-entity 103 type-block (location 2 0))])
-     (check-equal? (best-drop-direction (bot-info bot (list block1 block2)))
+   (let* ([bot (entity 101 type-bot (location 1 1))]
+          [block1 (entity 102 type-block (location 0 0))]
+          [block2 (entity 103 type-block (location 2 0))])
+     (check-equal? (best-drop-direction (bot-info bot #f (list block1 block2)))
                    direction-south)))
     
   (test-case
    "free location not outside world"
-   (let* ([bot (make-entity 101 type-bot (location 49 49))]
-          [edge1 (make-entity 0 type-edge (location 50 49))]
-          [edge2 (make-entity 0 type-edge (location 49 50))]
-          [block (make-entity 102 type-block (location 49 48))]
-          [info (bot-info bot (list edge1 edge2 block))])
+   (let* ([bot (entity 101 type-bot (location 49 49))]
+          [edge1 (make-edge (location 50 49))]
+          [edge2 (make-edge (location 49 50))]
+          [block (entity 102 type-block (location 49 48))]
+          [info (bot-info bot #f (list edge1 edge2 block))])
      (check-equal? (best-drop-direction info) direction-west)))
   
   (test-case
    "blocks nearby"
-   (check-true (blocks-nearby? (bot-info #f (list (make-entity 101 type-block #f)))))
-   (check-false (blocks-nearby? (bot-info #f (list (make-entity 101 type-bot #f)))))
-   (check-false (blocks-nearby? (bot-info #f '())))))
+   (check-true (blocks-nearby? (bot-info #f #f (list (entity 101 type-block #f)))))
+   (check-false (blocks-nearby? (bot-info #f #f (list (entity 101 type-bot #f)))))
+   (check-false (blocks-nearby? (bot-info #f #f '())))))

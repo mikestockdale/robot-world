@@ -4,6 +4,6 @@
 
 (require "entity.rkt")
 
-(struct bot-info (bot neighbors) #:prefab)
+(struct bot-info (bot cargo neighbors) #:prefab)
 
 (define (bot-info-bot-id info) (entity-id (bot-info-bot info)))

@@ -66,7 +66,7 @@
                           (list (list take-command (entity-id bot) (entity-id block)))
                           (list process-info))])
      (check-equal?
-      (entity-id (entity-cargo (bot-info-bot (first infos))))
+      (entity-id (bot-info-cargo (first infos)))
       (entity-id block))))
   
   (test-case
@@ -83,7 +83,7 @@
            (send-commands connection
                           (list (list drop-command (entity-id bot) direction-west))
                           (list process-info))])
-     (check-false (entity-cargo (bot-info-bot (first infos-2))))))
+     (check-false (bot-info-cargo (first infos-2)))))
   
   (test-case
    "neighbors added to server response"
