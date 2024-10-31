@@ -60,7 +60,7 @@
        [new-location (move-direction direction (entity-location old-entity))])
     (if (location-OK? world new-location)
         (begin
-          (place-entity! world (entity-at-location old-entity new-location))
+          (place-entity! world (change-entity-location old-entity new-location))
           #t)
         #f)))
 
@@ -78,7 +78,7 @@
          [drop-location (move-direction direction (entity-location bot))])
     (if (location-OK? world drop-location)
         (begin
-          (place-entity! world (entity-at-location (unload-cargo! world id) drop-location))
+          (place-entity! world (change-entity-location (unload-cargo! world id) drop-location))
           #t)
         #f)))
 
