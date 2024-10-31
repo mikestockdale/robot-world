@@ -40,7 +40,7 @@
   (require rackunit threading
            "shared.rkt" "world.rkt")
 
-  (define (process-info success? info) info)
+  (define (process-bot success? bot) bot)
 
   (test-case
    "list of moves"
@@ -51,9 +51,9 @@
            (list
             (list move-command (entity-id bot) direction-east)
             (list move-command (entity-id bot) direction-south))]
-          [processes (list process-info process-info)]
-          [infos (send-commands connection commands processes)])
-     (check-equal? (entity-location (bot-info-bot (second infos))) (location 2 1))))
+          [processes (list process-bot process-bot)]
+          [bots (send-commands connection commands processes)])
+     (check-equal? (bot-location (second bots)) (location 2 1))))
   
   (test-case
    "take block remote"
@@ -61,12 +61,12 @@
           [connection (connect-local world)]
           [bot (add-entity!  world type-bot (location 1 2))]
           [block (add-entity! world type-block (location 2 2))]
-          [infos
+          [bots
            (send-commands connection
                           (list (list take-command (entity-id bot) (entity-id block)))
-                          (list process-info))])
+                          (list process-bot))])
      (check-equal?
-      (entity-id (bot-info-cargo (first infos)))
+      (entity-id (bot-cargo (first bots)))
       (entity-id block))))
   
   (test-case
@@ -75,15 +75,15 @@
           [connection (connect-local world)]
           [bot (add-entity!  world type-bot (location 1 2))]
           [block (add-entity! world type-block (location 2 2))]
-          [infos-1
+          [bots-1
            (send-commands connection
                           (list (list take-command (entity-id bot) (entity-id block)))
-                          (list process-info))]
-          [infos-2
+                          (list process-bot))]
+          [bots-2
            (send-commands connection
                           (list (list drop-command (entity-id bot) direction-west))
-                          (list process-info))])
-     (check-false (bot-info-cargo (first infos-2)))))
+                          (list process-bot))])
+     (check-false (bot-cargo (first bots-2)))))
   
   (test-case
    "neighbors added to server response"
@@ -94,7 +94,7 @@
      (let ([neighbor
             (~> (send-commands connection
                                (list (list move-command (entity-id bot) direction-east))
-                               (list process-info))
-                first bot-info-neighbors first)])
+                               (list process-bot))
+                first bot-neighbors first)])
        (check-equal? (entity-type neighbor) type-block)
        (check-equal? (entity-location neighbor) (location 2 1))))))

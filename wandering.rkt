@@ -29,7 +29,7 @@
           old-direction)))
 
   (define (choose-drop)
-    (let ([drop-direction (best-drop-direction (action-info input))])
+    (let ([drop-direction (best-drop-direction (action-bot input))])
       (values drop-command drop-direction
               (struct-copy wandering spec
                            [direction (change-direction drop-direction)]
@@ -43,17 +43,17 @@
                            [cargo-delay (max 0 (- (wandering-cargo-delay spec) 1))]))))
 
   (define (choose-take block)
-    (let ([take-direction (direction-from-entity (action-bot input) block)]) 
+    (let ([take-direction (direction-from-entity (bot-entity (action-bot input)) block)]) 
       (values take-command (entity-id block)
               (struct-copy wandering spec
                            [direction take-direction]
                            [cargo-delay 5]))))
   
   (if (and (= (wandering-cargo-delay spec) 0)
-           (bot-info-cargo (action-info input))
-           (blocks-nearby? (action-info input)))
+           (bot-cargo (action-bot input))
+           (blocks-nearby? (action-bot input)))
       (choose-drop)
-      (let ([blocks (find-removable-blocks (action-info input))])
+      (let ([blocks (find-removable-blocks (action-bot input))])
         (if (and (= (wandering-cargo-delay spec) 0)
                  (> (length blocks) 0))
             (choose-take (first blocks))
@@ -68,7 +68,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (action command #f choose success
-            (bot-info (entity 101 type-bot (location 1 1)) cargo neighbors)))
+            (bot (entity 101 type-bot (location 1 1)) cargo neighbors)))
   
   (define (wander-with
            #:chance [chance 0]

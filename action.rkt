@@ -6,18 +6,17 @@
 (require threading)
 (require "shared.rkt" "connection.rkt")
 
-(struct action (command parameter strategy success? info))
+(struct action (command parameter strategy success? bot))
 
-(define (action-bot action) (bot-info-bot (action-info action)))
-(define (action-bot-id action) (bot-info-bot-id (action-info action)))
+(define (action-bot-id action) (bot-id (action-bot action)))
 
 (define (perform-actions connection to-do)
   
   (define (perform-procedure action)
     ((action-strategy action) action))
 
-  (define ((make-action input-action) success? info)
-    (struct-copy action input-action [success? success?] [info info]))
+  (define ((make-action input-action) success? bot)
+    (struct-copy action input-action [success? success?] [bot bot]))
 
   (define (make-request action)
     (list (action-command action) (action-bot-id action) (action-parameter action)))
@@ -40,8 +39,8 @@
     (let ([bot1 (add-entity! world type-bot (location 1 1))]
           [bot2 (add-entity! world type-bot (location 0 0))])
     (list
-     (action #f #f go-north #f (bot-info bot1 #f '()))
-     (action #f #f go-east #f (bot-info bot2 #f '())))))
+     (action #f #f go-north #f (bot bot1 #f '()))
+     (action #f #f go-east #f (bot bot2 #f '())))))
   
   (test-case
    "simple actions are performed"
@@ -49,9 +48,9 @@
           [server (connect-local world)]
           [action-list (perform-actions server (simple-actions world))])
      (check-true (~> action-list first action-success?))
-     (check-equal? (~> action-list first action-bot entity-location) (location 1 2))
+     (check-equal? (~> action-list first action-bot bot-location) (location 1 2))
      (check-true (~> action-list second action-success?))
-     (check-equal? (~> action-list second action-bot entity-location) (location 1 0))))
+     (check-equal? (~> action-list second action-bot bot-location) (location 1 0))))
   
   (test-case
    "simple actions are copied"
@@ -59,5 +58,5 @@
           [server (connect-local world)]
           [action-list
            (perform-actions server (perform-actions server (simple-actions world)))])
-     (check-equal? (~> action-list first action-bot entity-location) (location 2 2))
-     (check-equal? (~> action-list second action-bot entity-location) (location 1 1)))))
+     (check-equal? (~> action-list first action-bot bot-location) (location 2 2))
+     (check-equal? (~> action-list second action-bot bot-location) (location 1 1)))))
