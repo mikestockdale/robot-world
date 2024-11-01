@@ -21,7 +21,7 @@
 (define command-procedures (vector drop-entity! move-entity! take-entity!))
 
 (define (make-response-list success? entity world)
-  (list success? (bot entity (cargo-ref world (entity-id entity)) (neighbors world entity))))
+  (list success? (make-bot world entity)))
 
 (define (execute-command-list world list)
 

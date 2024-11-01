@@ -1,25 +1,28 @@
 #lang racket
 
-(provide make-world  entity-ref neighbors draw-entities world-size
-         cargo-ref
+(provide make-world make-bot entity-ref draw-entities world-size
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
-(require "shared.rkt")
+(require "shared.rkt" "cargos.rkt")
 
 (struct world (size [next-id #:mutable] entities cargos))
 
-(define (make-world size) (world size 101 (make-hash) (make-hash)))
+(define (make-world size) (world size 101 (make-hash) (make-cargos)))
 
-(define (cargo-ref world id) (hash-ref (world-cargos world) id #f))
+(define (edges world location)
+  (for/list ([direction all-directions]
+             #:unless (is-valid-location? world (move-direction direction location)))
+    (make-edge (move-direction direction location))))
 
-(define (load-cargo! world id cargo)
-  (hash-set! (world-cargos world) id cargo))
-
-(define (unload-cargo! world id)
-  (let ([cargo (cargo-ref world id)])
-    (hash-remove! (world-cargos world) id)
-    cargo))
+(define (neighbors world entity)
+  (append
+   (edges world (entity-location entity))
+   (~>> world world-entities hash-values
+        (filter (λ (other) (nearby? (entity-location entity) (entity-location other)))))))
+  
+(define (make-bot world entity)
+  (bot entity (cargo-ref (world-cargos world) (entity-id entity)) (neighbors world entity)))
 
 (define (place-entity! world entity)
   (hash-set! (world-entities world) (entity-id entity) entity))
@@ -68,7 +71,7 @@
   (let ([cargo (entity-ref world cargo-id)])
     (if cargo
         (begin
-          (load-cargo! world id cargo)
+          (load-cargo! (world-cargos world) id cargo)
           (remove-entity! world cargo-id)
           #t)
         #f)))
@@ -78,26 +81,16 @@
          [drop-location (move-direction direction (entity-location bot))])
     (if (location-OK? world drop-location)
         (begin
-          (place-entity! world (change-entity-location (unload-cargo! world id) drop-location))
+          (place-entity!
+           world (change-entity-location (unload-cargo! (world-cargos world) id) drop-location))
           #t)
         #f)))
-
-(define (edges world location)
-  (for/list ([direction all-directions]
-             #:unless (is-valid-location? world (move-direction direction location)))
-    (make-edge (move-direction direction location))))
-
-(define (neighbors world entity)
-  (append
-   (edges world (entity-location entity))
-   (~>> world world-entities hash-values
-        (filter (λ (other) (nearby? (entity-location entity) (entity-location other)))))))
 
 (define (draw-entities world procedure)
 
   (define (draw-entity id entity)
     (let ([location (entity-location entity)])
-      (procedure (entity-symbol entity (cargo-ref world (entity-id entity)))
+      (procedure (entity-symbol entity (cargo-ref (world-cargos world) (entity-id entity)))
                  (location-x location)
                  (- (world-size world) 1 (location-y location)))))
   
@@ -217,7 +210,7 @@
           [bot (add-entity! world type-bot (location 1 1))]
           [block (add-entity! world type-block (location 2 1))])
      (check-true (take-entity! world (entity-id bot) (entity-id block)))
-     (check-equal? (cargo-ref world (entity-id bot)) block)
+     (check-equal? (cargo-ref (world-cargos world) (entity-id bot)) block)
      (check-false (entity-ref world (entity-id block)))))
 
   (test-case
@@ -227,7 +220,7 @@
           [block (add-entity! world type-block (location 2 1))])
      (remove-entity! world (entity-id block))
      (check-false (take-entity! world (entity-id bot) (entity-id block)))
-     (check-false (cargo-ref world (entity-id bot)))))
+     (check-false (cargo-ref (world-cargos world) (entity-id bot)))))
 
   (test-case
    "block is dropped"
@@ -236,7 +229,7 @@
           [bot (add-entity! world type-bot (location 1 1))])
      (take-entity! world (entity-id bot) (entity-id block))
      (check-true (drop-entity! world (entity-id bot) direction-north))
-     (check-false (cargo-ref world (entity-id bot)))
+     (check-false (cargo-ref (world-cargos world) (entity-id bot)))
      (check-equal? (entity-location (entity-ref world (entity-id block))) (location 1 2))))
 
   (test-case
@@ -247,4 +240,4 @@
      (take-entity! world (entity-id bot) (entity-id block))
      (add-entity! world type-block (location 0 1))
      (check-false (drop-entity! world (entity-id bot) direction-west))
-     (check-equal? (cargo-ref world (entity-id bot)) block))))
+     (check-equal? (cargo-ref (world-cargos world) (entity-id bot)) block))))
