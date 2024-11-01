@@ -1,18 +1,18 @@
 #lang racket
 
-(provide make-cargos cargo-ref load-cargo! unload-cargo!)
+(provide make-cargos cargo-for-bot load-cargo unload-cargo)
 
 (struct cargos (hash))
 
 (define (make-cargos) (cargos (make-hash)))
 
-(define (cargo-ref cargos id) (hash-ref (cargos-hash cargos) id #f))
+(define (cargo-for-bot cargos id) (hash-ref (cargos-hash cargos) id #f))
 
-(define (load-cargo! cargos id entity)
+(define (load-cargo cargos id entity)
   (hash-set! (cargos-hash cargos) id entity))
 
-(define (unload-cargo! cargos id)
-  (let ([entity (cargo-ref cargos id)])
+(define (unload-cargo cargos id)
+  (let ([entity (cargo-for-bot cargos id)])
     (when entity
       (hash-remove! (cargos-hash cargos) id))
     entity))
@@ -21,16 +21,16 @@
   (require rackunit "shared.rkt")
 
   (test-case
-   "load"
+   "load and retrieve"
    (let ([cargos (make-cargos)]
          [block (entity 102 type-block (location 1 2))])
-     (load-cargo! cargos 101 block )
-     (check-equal? (cargo-ref cargos 101) block)))
+     (load-cargo cargos 101 block )
+     (check-equal? (cargo-for-bot cargos 101) block)))
 
   (test-case
    "unload"
    (let ([cargos (make-cargos)]
          [block (entity 102 type-block (location 1 2))])
-     (load-cargo! cargos 101 block )
-     (check-equal? (unload-cargo! cargos 101) block)
-     (check-false (cargo-ref cargos 101)))))
+     (load-cargo cargos 101 block )
+     (check-equal? (unload-cargo cargos 101) block)
+     (check-false (cargo-for-bot cargos 101)))))
