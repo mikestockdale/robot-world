@@ -20,15 +20,15 @@
 
 (define command-procedures (vector drop-entity! move-entity! take-entity!))
 
-(define (make-response-list success? entity world)
-  (list success? (make-bot world entity)))
+(define (make-response-list success? entity-id world)
+  (list success? (make-bot world entity-id)))
 
 (define (execute-command-list world list)
 
   (define (exec-request request)
     (make-response-list
      (apply (vector-ref command-procedures (first request)) (cons world (rest request)))
-     (entity-ref world (second request))
+     (second request)
      world))
 
   (map exec-request list))
@@ -41,7 +41,7 @@
   response)
 
 (define (execute-hello world)
-  (map (λ (bot) (make-response-list #t bot world))
+  (map (λ (bot) (make-response-list #t (entity-id bot) world))
        (setup-bots world)))
 
 (module+ test
