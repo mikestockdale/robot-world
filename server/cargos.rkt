@@ -2,17 +2,19 @@
 
 (provide make-cargos cargo-ref load-cargo! unload-cargo!)
 
-(define (make-cargos) (make-hash))
+(struct cargos (hash))
 
-(define (cargo-ref cargos id) (hash-ref cargos id #f))
+(define (make-cargos) (cargos (make-hash)))
+
+(define (cargo-ref cargos id) (hash-ref (cargos-hash cargos) id #f))
 
 (define (load-cargo! cargos id entity)
-  (hash-set! cargos id entity))
+  (hash-set! (cargos-hash cargos) id entity))
 
 (define (unload-cargo! cargos id)
   (let ([entity (cargo-ref cargos id)])
     (when entity
-      (hash-remove! cargos id))
+      (hash-remove! (cargos-hash cargos) id))
     entity))
 
 (module+ test

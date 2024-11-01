@@ -4,7 +4,7 @@
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
-(require "shared.rkt" "cargos.rkt" "grid.rkt")
+(require "shared.rkt" "server/cargos.rkt" "server/grid.rkt")
 
 (struct world (size [next-id #:mutable] grid cargos))
 
