@@ -1,33 +1,23 @@
 #lang racket
 
-(provide make-world make-bot draw-entities world-size
+(provide make-world make-bot draw-entities
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
 (require "shared.rkt" "server/cargos.rkt" "server/grid.rkt")
 
-(struct world (size [next-id #:mutable] grid cargos))
+(struct world ([next-id #:mutable] grid cargos))
 
-(define (make-world size) (world size 101 (make-grid) (make-cargos)))
-
-(define (edges world location)
-  (for/list ([direction all-directions]
-             #:unless (is-valid-location? world (move-direction direction location)))
-    (make-edge (move-direction direction location))))
-
-(define (neighbors world location)
-  (append
-   (edges world location)
-   (entities-nearby (world-grid world) location)))
-  
+(define (make-world size) (world 101 (make-grid size) (make-cargos)))
+ 
 (define (make-bot world entity-id)
   (let ([entity (entity-by-id (world-grid world) entity-id)])
-  (bot entity
-       (cargo-for-bot (world-cargos world) entity-id)
-       (neighbors world (entity-location entity)))))
+    (bot entity
+         (cargo-for-bot (world-cargos world) entity-id)
+         (neighbors (world-grid world) (entity-location entity)))))
 
 (define (add-entity! world type location)
-  (if (location-OK? world location)
+  (if (location-OK? (world-grid world) location)
       (let* ([new-id (world-next-id world)]
              [new-entity (entity new-id type location)])
         (place-entity (world-grid world) new-entity)
@@ -35,23 +25,12 @@
         new-entity)
       #f))
 
-(define (is-valid-location? world location)
-  (let ([x (location-x location)]
-        [y (location-y location)])
-    (and (>= x 0)
-         (>= y 0)
-         (< x (world-size world))
-         (< y (world-size world)))))
-
-(define (location-OK? world location)
-  (and (is-valid-location? world location)
-       (not (entity-at (world-grid world) location))))  
 
 (define (move-entity! world id direction)
   (let*
       ([old-entity (entity-by-id (world-grid world) id)]
        [new-location (move-direction direction (entity-location old-entity))])
-    (if (location-OK? world new-location)
+    (if (location-OK? (world-grid world) new-location)
         (begin
           (place-entity (world-grid world) (change-entity-location old-entity new-location))
           #t)
@@ -69,23 +48,21 @@
 (define (drop-entity! world id direction)
   (let* ([bot (entity-by-id (world-grid world) id)]
          [drop-location (move-direction direction (entity-location bot))])
-    (if (location-OK? world drop-location)
+    (if (location-OK? (world-grid world) drop-location)
         (begin
           (place-entity (world-grid world)
-                          (change-entity-location
-                           (unload-cargo (world-cargos world) id) drop-location))
+                        (change-entity-location
+                         (unload-cargo (world-cargos world) id) drop-location))
           #t)
         #f)))
 
 (define (draw-entities world procedure)
 
-  (define (draw-entity id entity)
-    (let ([location (entity-location entity)])
-      (procedure (entity-symbol entity (cargo-for-bot (world-cargos world) id))
-                 (location-x location)
-                 (- (world-size world) 1 (location-y location)))))
+  (define (draw-entity entity x y)
+    (let ([cargo (cargo-for-bot (world-cargos world) (entity-id entity))])
+      (procedure (entity-symbol entity cargo) x y)))
   
-  (for-each-entity (world-grid world) draw-entity))
+  (draw-each-entity (world-grid world) draw-entity))
 
 (module+ test
   (require rackunit)
@@ -158,41 +135,7 @@
        (set! result (string-join (list result (string symbol) (number->string x) (number->string y)))))
      (draw-entities world draw)
      (check-equal? result (string-append " " bot " 0 0 " block " 2 1 " bot " 1 1"))))
-
-  (test-case
-   "valid locations"
-   (check-true (is-valid-location? (make-world 1) (location 0 0)))
-   (check-true (is-valid-location? (make-world 10) (location 9 9)))
-   (check-false (is-valid-location? (make-world 1) (location 0 -1)))
-   (check-false (is-valid-location? (make-world 1) (location -1 0)))
-   (check-false (is-valid-location? (make-world 10) (location 10 9)))
-   (check-false (is-valid-location? (make-world 10) (location 9 10))))
   
-  (test-case
-   "no edges in middle"
-   (check-equal? (length (edges (make-world 3) (location 1 1))) 0))
-
-  (test-case
-   "edges at limits"
-   (check-equal? (length (edges (make-world 1) (location 0 0))) 4))
-
-  (test-case
-   "neighbors are nearby"
-   (let* ([world (make-world 4)])
-     (add-entity! world type-block (location 2 2))
-     (add-entity! world type-block (location 3 1))
-     (let ([nearby (neighbors world (location 1 1))])
-       (check-equal? (length nearby) 1)
-       (check-equal? (entity-location (first nearby)) (location 2 2)))))
-
-  (test-case
-   "neighbors include edges"
-   (let* ([world (make-world 3)])
-     (let ([nearby (neighbors world (location 0 1))])
-       (check-equal? (length nearby) 1)
-       (check-equal? (entity-type (first nearby)) type-edge)
-       (check-equal? (entity-location (first nearby)) (location -1 1)))))
-
   (test-case
    "block is taken"
    (let* ([world (make-world 3)]
