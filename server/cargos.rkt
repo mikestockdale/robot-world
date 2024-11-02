@@ -3,7 +3,6 @@
 (provide make-cargos cargo-for-bot load-cargo unload-cargo)
 
 (struct cargos (hash))
-
 (define (make-cargos) (cargos (make-hash)))
 
 (define (cargo-for-bot cargos id) (hash-ref (cargos-hash cargos) id #f))

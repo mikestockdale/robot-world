@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-world make-bot entity-ref draw-entities world-size
+(provide make-world make-bot draw-entities world-size
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
@@ -18,10 +18,10 @@
 (define (neighbors world location)
   (append
    (edges world location)
-   (nearby-grid-location (world-grid world) location)))
+   (entities-nearby (world-grid world) location)))
   
 (define (make-bot world entity-id)
-  (let ([entity (entity-ref (world-grid world) entity-id)])
+  (let ([entity (entity-by-id (world-grid world) entity-id)])
   (bot entity
        (cargo-for-bot (world-cargos world) entity-id)
        (neighbors world (entity-location entity)))))
@@ -30,7 +30,7 @@
   (if (location-OK? world location)
       (let* ([new-id (world-next-id world)]
              [new-entity (entity new-id type location)])
-        (place-in-grid! (world-grid world) new-entity)
+        (place-entity (world-grid world) new-entity)
         (set-world-next-id! world (+ 1 (world-next-id world)))
         new-entity)
       #f))
@@ -45,33 +45,33 @@
 
 (define (location-OK? world location)
   (and (is-valid-location? world location)
-       (not (at-grid-location (world-grid world) location))))  
+       (not (entity-at (world-grid world) location))))  
 
 (define (move-entity! world id direction)
   (let*
-      ([old-entity (entity-ref (world-grid world) id)]
+      ([old-entity (entity-by-id (world-grid world) id)]
        [new-location (move-direction direction (entity-location old-entity))])
     (if (location-OK? world new-location)
         (begin
-          (place-in-grid! (world-grid world) (change-entity-location old-entity new-location))
+          (place-entity (world-grid world) (change-entity-location old-entity new-location))
           #t)
         #f)))
 
 (define (take-entity! world id cargo-id)
-  (let ([cargo (entity-ref (world-grid world) cargo-id)])
+  (let ([cargo (entity-by-id (world-grid world) cargo-id)])
     (if cargo
         (begin
           (load-cargo (world-cargos world) id cargo)
-          (remove-from-grid! (world-grid world) cargo-id)
+          (remove-entity (world-grid world) cargo-id)
           #t)
         #f)))
 
 (define (drop-entity! world id direction)
-  (let* ([bot (entity-ref (world-grid world) id)]
+  (let* ([bot (entity-by-id (world-grid world) id)]
          [drop-location (move-direction direction (entity-location bot))])
     (if (location-OK? world drop-location)
         (begin
-          (place-in-grid! (world-grid world)
+          (place-entity (world-grid world)
                           (change-entity-location
                            (unload-cargo (world-cargos world) id) drop-location))
           #t)
@@ -81,11 +81,11 @@
 
   (define (draw-entity id entity)
     (let ([location (entity-location entity)])
-      (procedure (entity-symbol entity (cargo-for-bot (world-cargos world) (entity-id entity)))
+      (procedure (entity-symbol entity (cargo-for-bot (world-cargos world) id))
                  (location-x location)
                  (- (world-size world) 1 (location-y location)))))
   
-  (grid-for-each (world-grid world) draw-entity))
+  (for-each-entity (world-grid world) draw-entity))
 
 (module+ test
   (require rackunit)
@@ -103,7 +103,7 @@
           [block (add-entity! world type-block somewhere)])
      (check-equal? (entity-type block) type-block)  
      (check-equal? (entity-location block) somewhere)
-     (check-equal? (entity-ref (world-grid world) (entity-id block)) block)))  
+     (check-equal? (entity-by-id (world-grid world) (entity-id block)) block)))  
 
   (test-case
    "bot is not created at invalid location"
@@ -124,13 +124,13 @@
           [bot (add-entity! world type-bot (location 5 6))]
           [id (entity-id bot)])
      (move-entity! world id direction-north)
-     (check-equal? (entity-location (entity-ref (world-grid world) id)) (location 5 7))
+     (check-equal? (entity-location (entity-by-id (world-grid world) id)) (location 5 7))
      (move-entity! world id direction-east)
-     (check-equal? (entity-location (entity-ref (world-grid world) id)) (location 6 7))
+     (check-equal? (entity-location (entity-by-id (world-grid world) id)) (location 6 7))
      (move-entity! world id direction-south)
-     (check-equal? (entity-location (entity-ref (world-grid world) id)) (location 6 6))
+     (check-equal? (entity-location (entity-by-id (world-grid world) id)) (location 6 6))
      (move-entity! world id direction-west)
-     (check-equal? (entity-location (entity-ref (world-grid world) id)) (location 5 6))))
+     (check-equal? (entity-location (entity-by-id (world-grid world) id)) (location 5 6))))
 
   (test-case
    "invalid move leaves bot location unchanged"
@@ -200,14 +200,14 @@
           [block (add-entity! world type-block (location 2 1))])
      (check-true (take-entity! world (entity-id bot) (entity-id block)))
      (check-equal? (cargo-for-bot (world-cargos world) (entity-id bot)) block)
-     (check-false (entity-ref (world-grid world) (entity-id block)))))
+     (check-false (entity-by-id (world-grid world) (entity-id block)))))
 
   (test-case
    "can not take if block is removed"
    (let* ([world (make-world 3)]
           [bot (add-entity! world type-bot (location 1 1))]
           [block (add-entity! world type-block (location 2 1))])
-     (remove-from-grid! (world-grid world) (entity-id block))
+     (remove-entity (world-grid world) (entity-id block))
      (check-false (take-entity! world (entity-id bot) (entity-id block)))
      (check-false (cargo-for-bot (world-cargos world) (entity-id bot)))))
 
@@ -219,7 +219,7 @@
      (take-entity! world (entity-id bot) (entity-id block))
      (check-true (drop-entity! world (entity-id bot) direction-north))
      (check-false (cargo-for-bot (world-cargos world) (entity-id bot)))
-     (check-equal? (entity-location (entity-ref (world-grid world) (entity-id block))) (location 1 2))))
+     (check-equal? (entity-location (entity-by-id (world-grid world) (entity-id block))) (location 1 2))))
 
   (test-case
    "can not drop in occupied location"
