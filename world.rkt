@@ -17,7 +17,7 @@
          (neighbors (world-grid world) (entity-location entity)))))
 
 (define (add-entity! world type location)
-  (if (location-OK? (world-grid world) location)
+  (if (is-available? (world-grid world) location)
       (let* ([new-id (world-next-id world)]
              [new-entity (entity new-id type location)])
         (place-entity (world-grid world) new-entity)
@@ -30,7 +30,7 @@
   (let*
       ([old-entity (entity-by-id (world-grid world) id)]
        [new-location (move-direction direction (entity-location old-entity))])
-    (if (location-OK? (world-grid world) new-location)
+    (if (is-available? (world-grid world) new-location)
         (begin
           (place-entity (world-grid world) (change-entity-location old-entity new-location))
           #t)
@@ -48,7 +48,7 @@
 (define (drop-entity! world id direction)
   (let* ([bot (entity-by-id (world-grid world) id)]
          [drop-location (move-direction direction (entity-location bot))])
-    (if (location-OK? (world-grid world) drop-location)
+    (if (is-available? (world-grid world) drop-location)
         (begin
           (place-entity (world-grid world)
                         (change-entity-location
