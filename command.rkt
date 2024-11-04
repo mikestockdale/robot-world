@@ -2,21 +2,12 @@
 
 (require "shared.rkt" "setup.rkt" "world.rkt")
 
-(provide drop-command move-command take-command
-         dispatch-request execute-command-list execute-draw execute-hello)
+(provide dispatch-request execute-command-list execute-draw execute-hello)
 
 (define (dispatch-request world request-list)
   (let* ([method (first request-list)]
-         [parms (cons world (rest request-list))]
-         [dispatch (make-hash
-                    (list (cons "execs" execute-command-list)
-                          (cons "draw" execute-draw)
-                          (cons "hello" execute-hello)))])
-    (apply (hash-ref dispatch method) parms)))
-
-(define drop-command 0)
-(define move-command 1)
-(define take-command 2)
+         [parms (cons world (rest request-list))])
+    (apply (vector-ref dispatch method) parms)))
 
 (define command-procedures (vector drop-entity! move-entity! take-entity!))
 
@@ -43,6 +34,8 @@
 (define (execute-hello world)
   (map (λ (bot) (make-response-list #t (entity-id bot) world))
        (setup-bots world)))
+
+(define dispatch (vector execute-command-list execute-draw execute-hello))
 
 (module+ test
   (require rackunit)

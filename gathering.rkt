@@ -2,7 +2,7 @@
 
 (provide gathering-actions)
 
-(require "shared.rkt" "action.rkt" "command.rkt" "strategy.rkt")
+(require "shared.rkt" "action.rkt" "strategy.rkt")
 
 (struct gathering (direction direction-change-chance cargo-delay location))
 

@@ -3,10 +3,10 @@
 (provide connect-local connect-remote send-commands send-draw send-hello)
 
 (require net/http-client)
-(require "command.rkt")
+(require "command.rkt" "shared.rkt")
 
 (define (send-commands connection request-list process-reply-list)
-  (let* ([requests (list "execs" request-list)]
+  (let* ([requests (list request-execute-list request-list)]
          [replies (connection requests)])
     (map (λ (reply process-reply)
            (process-reply (first reply) (second reply)))
@@ -14,10 +14,10 @@
          process-reply-list)))
 
 (define (send-draw connection)
-  (connection '("draw")))
+  (connection (list request-draw)))
 
 (define (send-hello connection)
-  (map (λ (reply) (second reply)) (connection '("hello"))))
+  (map (λ (reply) (second reply)) (connection (list request-hello))))
 
 (define (connect-remote host port) (remote-call host port))
 (define (connect-local world) (local-call world))

@@ -2,7 +2,7 @@
 
 (provide wandering-actions)
 
-(require "action.rkt" "command.rkt" "shared.rkt" "strategy.rkt")
+(require "action.rkt" "shared.rkt" "strategy.rkt")
 
 (struct wandering (direction direction-change-chance cargo-delay))
 
