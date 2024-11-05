@@ -6,7 +6,7 @@
 (require "command.rkt" "shared.rkt")
 
 (define (send-commands connection request-list process-reply-list)
-  (let* ([requests (list request-execute-list request-list)]
+  (let* ([requests (list request-execute-commands request-list)]
          [replies (connection requests)])
     (map (λ (reply process-reply)
            (process-reply (first reply) (second reply)))
@@ -38,7 +38,7 @@
 
 (module+ test
   (require rackunit threading
-           "shared.rkt" "world.rkt")
+           "shared.rkt" "server/world.rkt")
 
   (define (process-bot success? bot) bot)
 

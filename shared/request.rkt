@@ -1,9 +1,9 @@
 #lang racket
 
-(provide request-execute-list request-draw request-hello
+(provide request-execute-commands request-draw request-hello
          drop-command move-command take-command)
 
-(define request-execute-list 0)
+(define request-execute-commands 0)
 (define request-draw 1)
 (define request-hello 2)
 

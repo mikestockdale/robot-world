@@ -1,6 +1,6 @@
 #lang racket
 
-(require "shared.rkt" "setup.rkt" "world.rkt")
+(require "shared.rkt" "setup.rkt" "server/world.rkt")
 
 (provide dispatch-request execute-command-list execute-draw execute-hello)
 

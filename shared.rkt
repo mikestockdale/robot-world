@@ -12,5 +12,5 @@
          (struct-out entity) make-edge entity-symbol change-entity-location
          type-block type-bot type-edge
          (struct-out location) adjacent? nearby? location-offset
-         request-execute-list request-draw request-hello
+         request-execute-commands request-draw request-hello
          drop-command move-command take-command)

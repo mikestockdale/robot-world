@@ -26,7 +26,7 @@
     (send-commands connection (map make-request requests) process-replies)))
 
 (module+ test
-  (require rackunit "command.rkt" "world.rkt")
+  (require rackunit "command.rkt" "server/world.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action

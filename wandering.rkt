@@ -60,7 +60,7 @@
             (choose-move)))))
 
 (module+ test
-  (require rackunit "world.rkt")
+  (require rackunit)
 
   (define (choose-input
            #:success [success #t]
