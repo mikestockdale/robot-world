@@ -4,10 +4,10 @@
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
-(require "shared.rkt" "cargos.rkt" "grid.rkt" "id-source.rkt")
+(require "shared.rkt" "cargos.rkt" "grid.rkt" "sequence.rkt")
 
-(struct engine (id-source grid cargos))
-(define (make-engine size) (engine (make-id-source) (make-grid size) (make-cargos)))
+(struct engine (sequence grid cargos))
+(define (make-engine size) (engine (make-sequence) (make-grid size) (make-cargos)))
  
 (define (make-bot engine entity-id)
   (let ([entity (entity-by-id (engine-grid engine) entity-id)])
@@ -17,7 +17,7 @@
 
 (define (add-entity! engine type location)
   (if (is-available? (engine-grid engine) location)
-      (let ([new-entity (entity (new-id! (engine-id-source engine)) type location)])
+      (let ([new-entity (entity (new-id (engine-sequence engine)) type location)])
         (place-entity (engine-grid engine) new-entity)
         new-entity)
       #f))
