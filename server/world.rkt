@@ -4,11 +4,10 @@
          add-entity! move-entity! take-entity! drop-entity!)
 
 (require threading)
-(require "shared.rkt" "cargos.rkt" "grid.rkt")
+(require "shared.rkt" "cargos.rkt" "grid.rkt" "id-source.rkt")
 
-(struct world ([next-id #:mutable] grid cargos))
-
-(define (make-world size) (world 101 (make-grid size) (make-cargos)))
+(struct world (id-source grid cargos))
+(define (make-world size) (world (make-id-source) (make-grid size) (make-cargos)))
  
 (define (make-bot world entity-id)
   (let ([entity (entity-by-id (world-grid world) entity-id)])
@@ -18,13 +17,10 @@
 
 (define (add-entity! world type location)
   (if (is-available? (world-grid world) location)
-      (let* ([new-id (world-next-id world)]
-             [new-entity (entity new-id type location)])
+      (let ([new-entity (entity (new-id! (world-id-source world)) type location)])
         (place-entity (world-grid world) new-entity)
-        (set-world-next-id! world (+ 1 (world-next-id world)))
         new-entity)
       #f))
-
 
 (define (move-entity! world id direction)
   (let*
@@ -56,12 +52,10 @@
           #t)
         #f)))
 
-(define (draw-entities world procedure)
-
+(define (draw-entities world draw)
   (define (draw-entity entity x y)
     (let ([cargo (cargo-for-bot (world-cargos world) (entity-id entity))])
-      (procedure (entity-symbol entity cargo) x y)))
-  
+      (draw (entity-symbol entity cargo) x y)))
   (draw-each-entity (world-grid world) draw-entity))
 
 (module+ test
@@ -172,4 +166,6 @@
      (take-entity! world (entity-id bot) (entity-id block))
      (add-entity! world type-block (location 0 1))
      (check-false (drop-entity! world (entity-id bot) direction-west))
-     (check-equal? (cargo-for-bot (world-cargos world) (entity-id bot)) block))))
+     (check-equal? (cargo-for-bot (world-cargos world) (entity-id bot)) block)))
+
+  )
