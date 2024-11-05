@@ -1,18 +1,18 @@
 #lang racket
 
-(require "shared.rkt" "setup.rkt" "server/world.rkt")
+(require "shared.rkt" "setup.rkt" "server/engine.rkt")
 
 (provide dispatch-request execute-command-list execute-draw execute-hello)
 
-(define (dispatch-request world request-list)
+(define (dispatch-request engine request-list)
   (let* ([method (first request-list)]
-         [parms (cons world (rest request-list))])
+         [parms (cons engine (rest request-list))])
     (apply (vector-ref dispatch method) parms)))
 
 (define command-procedures (vector drop-entity! move-entity! take-entity!))
 
-(define (make-response-list success? entity-id world)
-  (list success? (make-bot world entity-id)))
+(define (make-response-list success? entity-id engine)
+  (list success? (make-bot engine entity-id)))
 
 (define (execute-command-list world list)
 
@@ -43,7 +43,7 @@
   (test-case
    "connect creates bots"
    (check-equal?
-    (execute-hello (make-world 50))
+    (execute-hello (make-engine 50))
     '((#t #s(bot #s(entity 101 0 #s(location 10 10)) #f ()))
       (#t #s(bot #s(entity 102 0 #s(location 20 20)) #f ()))
       (#t #s(bot #s(entity 103 0 #s(location 30 30)) #f ()))
@@ -51,10 +51,10 @@
 
   (test-case
    "execute performs commands"
-   (let* ([world (make-world 3)]
-          [bot (add-entity! world type-bot (location 1 1))])
+   (let* ([engine (make-engine 3)]
+          [bot (add-entity! engine type-bot (location 1 1))])
      (check-equal?
-      (execute-command-list world '((1 101 1)))
+      (execute-command-list engine '((1 101 1)))
       '((#t
          #s(bot
             #s(entity 101 0 #s(location 2 1)) #f

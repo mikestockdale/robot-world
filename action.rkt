@@ -26,7 +26,7 @@
     (send-commands connection (map make-request requests) process-replies)))
 
 (module+ test
-  (require rackunit "command.rkt" "server/world.rkt")
+  (require rackunit "command.rkt" "server/engine.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action
@@ -44,9 +44,9 @@
   
   (test-case
    "simple actions are performed"
-   (let* ([world (make-world 3)]
-          [server (connect-local world)]
-          [action-list (perform-actions server (simple-actions world))])
+   (let* ([engine (make-engine 3)]
+          [server (connect-local engine)]
+          [action-list (perform-actions server (simple-actions engine))])
      (check-true (~> action-list first action-success?))
      (check-equal? (~> action-list first action-bot bot-location) (location 1 2))
      (check-true (~> action-list second action-success?))
@@ -54,9 +54,9 @@
   
   (test-case
    "simple actions are copied"
-   (let* ([world (make-world 4)]
-          [server (connect-local world)]
+   (let* ([engine (make-engine 4)]
+          [server (connect-local engine)]
           [action-list
-           (perform-actions server (perform-actions server (simple-actions world)))])
+           (perform-actions server (perform-actions server (simple-actions engine)))])
      (check-equal? (~> action-list first action-bot bot-location) (location 2 2))
      (check-equal? (~> action-list second action-bot bot-location) (location 1 1)))))

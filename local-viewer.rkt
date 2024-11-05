@@ -2,10 +2,10 @@
 
 (require "action.rkt" "connection.rkt" "setup.rkt" "viewer.rkt" "gathering.rkt")
 
-(let* ([world (setup-world)]
-       [connection (connect-local world)]
+(let* ([engine (setup-engine)]
+       [connection (connect-local engine)]
        [to-do (gathering-actions (send-hello connection))])
-  (setup-blocks world)
+  (setup-blocks engine)
 
   (define (draw-procedure draw-entity)
     (for ([entity (send-draw connection)])

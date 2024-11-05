@@ -3,12 +3,12 @@
 (require web-server/servlet web-server/servlet-env)
 (require "command.rkt" "setup.rkt")
 
-(define world (setup-world))
+(define engine (setup-engine))
 
 (define (process-request in out)
   (let ([request (read in)])
     (unless (equal? request eof)
-      (write (dispatch-request world request) out)
+      (write (dispatch-request engine request) out)
       (flush-output out)
       (process-request in out))))
 
@@ -23,5 +23,5 @@
     
     (listen)))
 
-(setup-blocks world)
+(setup-blocks engine)
 (run-server)

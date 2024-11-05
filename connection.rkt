@@ -38,15 +38,15 @@
 
 (module+ test
   (require rackunit threading
-           "shared.rkt" "server/world.rkt")
+           "shared.rkt" "server/engine.rkt")
 
   (define (process-bot success? bot) bot)
 
   (test-case
    "list of moves"
-   (let* ([world (make-world 3)]
-          [connection (connect-local world)]
-          [bot (add-entity!  world type-bot (location 1 2))]
+   (let* ([engine (make-engine 3)]
+          [connection (connect-local engine)]
+          [bot (add-entity!  engine type-bot (location 1 2))]
           [commands
            (list
             (list move-command (entity-id bot) direction-east)
@@ -57,10 +57,10 @@
   
   (test-case
    "take block remote"
-   (let* ([world (make-world 3)]
-          [connection (connect-local world)]
-          [bot (add-entity!  world type-bot (location 1 2))]
-          [block (add-entity! world type-block (location 2 2))]
+   (let* ([engine (make-engine 3)]
+          [connection (connect-local engine)]
+          [bot (add-entity! engine type-bot (location 1 2))]
+          [block (add-entity! engine type-block (location 2 2))]
           [bots
            (send-commands connection
                           (list (list take-command (entity-id bot) (entity-id block)))
@@ -71,10 +71,10 @@
   
   (test-case
    "drop block remote"
-   (let* ([world (make-world 3)]
-          [connection (connect-local world)]
-          [bot (add-entity!  world type-bot (location 1 2))]
-          [block (add-entity! world type-block (location 2 2))]
+   (let* ([engine (make-engine 3)]
+          [connection (connect-local engine)]
+          [bot (add-entity! engine type-bot (location 1 2))]
+          [block (add-entity! engine type-block (location 2 2))]
           [bots-1
            (send-commands connection
                           (list (list take-command (entity-id bot) (entity-id block)))
@@ -87,10 +87,10 @@
   
   (test-case
    "neighbors added to server response"
-   (let* ([world (make-world 3)]
-          [connection (connect-local world)]
-          [bot (add-entity!  world type-bot (location 0 1))])
-     (add-entity! world type-block (location 2 1))
+   (let* ([engine (make-engine 3)]
+          [connection (connect-local engine)]
+          [bot (add-entity! engine type-bot (location 0 1))])
+     (add-entity! engine type-block (location 2 1))
      (let ([neighbor
             (~> (send-commands connection
                                (list (list move-command (entity-id bot) direction-east))
