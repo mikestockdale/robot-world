@@ -36,8 +36,8 @@
                  [command move-command] [parameter direction-east] [strategy go-north]))
   
   (define (simple-actions world)
-    (let ([bot1 (add-entity! world type-bot (location 1 1))]
-          [bot2 (add-entity! world type-bot (location 0 0))])
+    (let ([bot1 (add-entity world type-bot (location 1 1))]
+          [bot2 (add-entity world type-bot (location 0 0))])
     (list
      (action #f #f go-north #f (bot bot1 #f '()))
      (action #f #f go-east #f (bot bot2 #f '())))))
