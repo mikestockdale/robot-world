@@ -34,7 +34,7 @@
   (define (fake-network item)
     (with-input-from-string
         (with-output-to-string (λ () (write item))) read))
-  (fake-network (dispatch-request world (fake-network request-list))))
+  (dispatch-request world (fake-network request-list) (λ (reply) (fake-network reply))))
 
 (module+ test
   (require rackunit threading
@@ -46,7 +46,7 @@
    "list of moves"
    (let* ([engine (make-engine 3)]
           [connection (connect-local engine)]
-          [bot (add-entity!  engine type-bot (location 1 2))]
+          [bot (add-entity  engine type-bot (location 1 2))]
           [commands
            (list
             (list move-command (entity-id bot) direction-east)
@@ -59,8 +59,8 @@
    "take block remote"
    (let* ([engine (make-engine 3)]
           [connection (connect-local engine)]
-          [bot (add-entity! engine type-bot (location 1 2))]
-          [block (add-entity! engine type-block (location 2 2))]
+          [bot (add-entity engine type-bot (location 1 2))]
+          [block (add-entity engine type-block (location 2 2))]
           [bots
            (send-commands connection
                           (list (list take-command (entity-id bot) (entity-id block)))
@@ -73,8 +73,8 @@
    "drop block remote"
    (let* ([engine (make-engine 3)]
           [connection (connect-local engine)]
-          [bot (add-entity! engine type-bot (location 1 2))]
-          [block (add-entity! engine type-block (location 2 2))]
+          [bot (add-entity engine type-bot (location 1 2))]
+          [block (add-entity engine type-block (location 2 2))]
           [bots-1
            (send-commands connection
                           (list (list take-command (entity-id bot) (entity-id block)))
@@ -89,8 +89,8 @@
    "neighbors added to server response"
    (let* ([engine (make-engine 3)]
           [connection (connect-local engine)]
-          [bot (add-entity! engine type-bot (location 0 1))])
-     (add-entity! engine type-block (location 2 1))
+          [bot (add-entity engine type-bot (location 0 1))])
+     (add-entity engine type-block (location 2 1))
      (let ([neighbor
             (~> (send-commands connection
                                (list (list move-command (entity-id bot) direction-east))

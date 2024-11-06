@@ -12,6 +12,7 @@
       (apply draw-entity entity)))
 
   (define (do-actions)
+    (sleep .1)
     (set! to-do (perform-actions connection to-do)))
   
   (run-viewer "robots - local" draw-procedure do-actions))

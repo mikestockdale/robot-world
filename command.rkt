@@ -4,12 +4,12 @@
 
 (provide dispatch-request execute-command-list execute-draw execute-hello)
 
-(define (dispatch-request engine request-list)
+(define (dispatch-request engine request-list reply)
   (let* ([method (first request-list)]
          [parms (cons engine (rest request-list))])
-    (apply (vector-ref dispatch method) parms)))
+    (reply (apply (vector-ref dispatch method) parms))))
 
-(define command-procedures (vector drop-entity! move-entity! take-entity!))
+(define command-procedures (vector drop-entity move-entity take-entity))
 
 (define (make-response-list success? entity-id engine)
   (list success? (make-bot engine entity-id)))
@@ -52,7 +52,7 @@
   (test-case
    "execute performs commands"
    (let* ([engine (make-engine 3)]
-          [bot (add-entity! engine type-bot (location 1 1))])
+          [bot (add-entity engine type-bot (location 1 1))])
      (check-equal?
       (execute-command-list engine '((1 101 1)))
       '((#t

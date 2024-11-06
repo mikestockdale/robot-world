@@ -1,13 +1,15 @@
 #lang racket
 
-(require net/http-client)
 (require "connection.rkt" "viewer.rkt")
-
-(define (draw-procedure draw-entity)
-  (let ([connection (connect-remote "localhost" 8080)])
-    (for ([entity (send-draw connection)])
-      (apply draw-entity entity))))
 
 (define (do-actions) #t )
   
-(run-viewer "robots - localhost:8080" draw-procedure do-actions)
+(define (run)
+  (let ([connection (connect-remote "localhost" 8080)])
+    (define (draw-procedure draw-entity)
+      (for ([entity (send-draw connection)])
+        (apply draw-entity entity)))
+  (run-viewer "robots - localhost:8080" draw-procedure do-actions)))
+
+(run)
+  

@@ -2,7 +2,7 @@
 
 (require "shared.rkt" "viewer.rkt")
 
-(define (timer) #f)
+(define (timer) (sleep .1))
 
 (define (adjacent draw-entity)
   (draw-entity (entity-symbol (entity #f type-bot #f)) 2 2)
@@ -22,4 +22,9 @@
   (draw-entity (entity-symbol (entity #f type-block #f)) 3 2 #:color "light gray")
   (draw-entity (entity-symbol (entity #f type-block #f)) 3 3 #:color "light gray"))
 
-(run-viewer "test" nearby timer #:size 5 #:style '(no-caption))
+(define (bottom draw-entity)
+  (draw-entity (entity-symbol (entity #f type-bot #f)) 0 49)
+  (draw-entity (entity-symbol (entity #f type-bot #f)) 49 49))
+
+;(run-viewer "test" nearby timer #:size 5 #:style '(no-caption))
+(run-viewer "test" bottom timer)
