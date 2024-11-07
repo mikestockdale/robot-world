@@ -2,7 +2,7 @@
 
 (require "shared.rkt" "setup.rkt" "server/engine.rkt")
 
-(provide dispatch-request execute-command-list execute-draw execute-hello)
+(provide dispatch-request execute-command-list execute-hello)
 
 (define (dispatch-request engine request-list reply)
   (let* ([method (first request-list)]
@@ -24,18 +24,11 @@
 
   (map exec-request list))
 
-(define (execute-draw world)
-  (define response '())
-  (define (draw-entity symbol x y)
-    (set! response (cons (list symbol x y) response)))
-  (draw-entities world draw-entity)
-  response)
-
 (define (execute-hello world)
   (map (λ (bot) (make-response-list #t (entity-id bot) world))
        (setup-bots world)))
 
-(define dispatch (vector execute-command-list execute-draw execute-hello))
+(define dispatch (vector execute-command-list draw-entities execute-hello))
 
 (module+ test
   (require rackunit)
