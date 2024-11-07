@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-grid place-entity remove-entity entity-by-id
-         entity-at is-available? neighbors draw-each-entity)
+         entity-at is-available? neighbors map-entities)
 (require threading "shared.rkt")
 
 (struct grid (size hash))
@@ -42,14 +42,14 @@
    (edges grid location)
    (entities-nearby grid location)))
 
-(define (draw-each-entity grid draw)
-  (hash-for-each
+(define (map-entities grid procedure)
+  (hash-map
    (grid-hash grid)
-   (λ (id entity)
+   (λ (_ entity)
      (let ([location (entity-location entity)])
-       (draw entity
-             (location-x location)
-             (- (grid-size grid) 1 (location-y location)))))))
+       (procedure entity
+                  (location-x location)
+                  (- (grid-size grid) 1 (location-y location)))))))
 
 (module+ test
   (require rackunit "shared.rkt")
@@ -122,12 +122,11 @@
        (check-equal? (entity-location (first neighbors)) (location -1 1)))))
 
   (test-case
-   "draw all"
-   (let ([grid (make-grid 5)]
-         [count 0])
+   "map all"
+   (let ([grid (make-grid 5)])
      (place-entity grid (entity 102 type-block (location 3 3)))
      (place-entity grid (entity 103 type-block (location 2 4)))
-     (draw-each-entity grid (λ (entity x y) (set! count (add1 count)))) 
-     (check-equal? count 2)))
+     (check-equal? (map-entities grid (λ (entity x y) (entity-id entity)))
+                   '(102 103))))
   
   )

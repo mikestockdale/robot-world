@@ -47,12 +47,13 @@
         #f)))
 
 (define (draw-entities engine)
-  (define response '())
-  (define (draw-entity entity x y)
-    (let ([cargo (cargo-for-bot (engine-cargos engine) (entity-id entity))])
-      (set! response (cons (list (entity-symbol entity cargo) x y) response))))
-  (draw-each-entity (engine-grid engine) draw-entity)
-  response)
+  (map-entities
+   (engine-grid engine)
+   (λ (entity x y)
+     (let ([cargo (cargo-for-bot (engine-cargos engine) (entity-id entity))]
+           [location (entity-location entity)])
+       (list (entity-symbol entity cargo) x y)))))
+                  
  
 (define (make-bot engine entity-id)
   (let ([entity (entity-by-id (engine-grid engine) entity-id)])
@@ -148,7 +149,7 @@
           [bot (entity-symbol (add-entity engine type-bot (location 0 2)) #f)]
           [block (entity-symbol (add-entity engine type-block (location 2 1)) #f)])
      (add-entity engine type-bot(location 1 1))
-     (check-equal? (draw-entities engine) (list (list bot 1 1) (list block 2 1) (list bot 0 0)))))
+     (check-equal? (draw-entities engine) (list (list bot 0 0) (list block 2 1) (list bot 1 1)))))
 
   (test-case
    "make bot"
