@@ -17,34 +17,25 @@
       #f))
 
 (define (move-entity engine id direction)
-  (let*
-      ([old-entity (entity-by-id (engine-grid engine) id)]
-       [new-location (move-direction direction (entity-location old-entity))])
-    (if (is-available? (engine-grid engine) new-location)
-        (begin
-          (place-entity (engine-grid engine) (change-entity-location old-entity new-location))
-          #t)
-        #f)))
+  (let* ([old-entity (entity-by-id (engine-grid engine) id)]
+         [new-location (move-direction direction (entity-location old-entity))])
+    (and (is-available? (engine-grid engine) new-location)
+         (place-entity (engine-grid engine) (change-entity-location old-entity new-location)))))
 
 (define (take-entity engine id cargo-id)
   (let ([cargo (entity-by-id (engine-grid engine) cargo-id)])
-    (if cargo
+    (and cargo
         (begin
           (load-cargo (engine-cargos engine) id cargo)
-          (remove-entity (engine-grid engine) cargo-id)
-          #t)
-        #f)))
+          (remove-entity (engine-grid engine) cargo-id)))))
 
 (define (drop-entity engine id direction)
   (let* ([bot (entity-by-id (engine-grid engine) id)]
          [drop-location (move-direction direction (entity-location bot))])
-    (if (is-available? (engine-grid engine) drop-location)
-        (begin
+    (and (is-available? (engine-grid engine) drop-location)
           (place-entity (engine-grid engine)
                         (change-entity-location
-                         (unload-cargo (engine-cargos engine) id) drop-location))
-          #t)
-        #f)))
+                         (unload-cargo (engine-cargos engine) id) drop-location)))))
 
 (define (draw-entities engine)
   (map-entities
@@ -110,7 +101,7 @@
    (let* ([engine (make-engine 3)]
           [bot (add-entity engine type-bot (location 1 1))]
           [block (add-entity engine type-block (location 2 1))])
-     (check-true (take-entity engine (entity-id bot) (entity-id block)))
+     (check-not-false (take-entity engine (entity-id bot) (entity-id block)))
      (check-equal? (cargo-for-bot (engine-cargos engine) (entity-id bot)) block)
      (check-false (entity-by-id (engine-grid engine) (entity-id block)))))
 
@@ -129,7 +120,7 @@
           [block (add-entity engine type-block (location 2 1))]
           [bot (add-entity engine type-bot (location 1 1))])
      (take-entity engine (entity-id bot) (entity-id block))
-     (check-true (drop-entity engine (entity-id bot) direction-north))
+     (check-not-false (drop-entity engine (entity-id bot) direction-north))
      (check-false (cargo-for-bot (engine-cargos engine) (entity-id bot)))
      (check-equal? (entity-location (entity-by-id (engine-grid engine) (entity-id block))) (location 1 2))))
 

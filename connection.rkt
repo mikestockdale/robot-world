@@ -34,7 +34,7 @@
   (define (fake-network item)
     (with-input-from-string
         (with-output-to-string (λ () (write item))) read))
-  (dispatch-request world (fake-network request-list) (λ (reply) (fake-network reply))))
+  (fake-network (dispatch-request world (fake-network request-list))))
 
 (module+ test
   (require rackunit threading

@@ -4,24 +4,22 @@
 
 (provide dispatch-request execute-command-list execute-hello)
 
-(define (dispatch-request engine request-list reply)
+(define (dispatch-request engine request-list)
   (let* ([method (first request-list)]
          [parms (cons engine (rest request-list))])
-    (reply (apply (vector-ref dispatch method) parms))))
+    (apply (vector-ref dispatch method) parms)))
 
 (define command-procedures (vector drop-entity move-entity take-entity))
 
 (define (make-response-list success? entity-id engine)
-  (list success? (make-bot engine entity-id)))
+  (list (if success? #t #f) (make-bot engine entity-id)))
 
-(define (execute-command-list world list)
-
+(define (execute-command-list engine list)
   (define (exec-request request)
     (make-response-list
-     (apply (vector-ref command-procedures (first request)) (cons world (rest request)))
+     (apply (vector-ref command-procedures (first request)) (cons engine (rest request)))
      (second request)
-     world))
-
+     engine))
   (map exec-request list))
 
 (define (execute-hello world)
