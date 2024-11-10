@@ -1,7 +1,11 @@
 #lang racket
 
-(provide request-execute-commands request-draw request-hello
+(provide (struct-out request) (struct-out command)
+         request-execute-commands request-draw request-hello
          drop-command move-command take-command)
+
+(struct request (type commands) #:prefab)
+(struct command (type id parameter) #:prefab)
 
 (define request-execute-commands 0)
 (define request-draw 1)
