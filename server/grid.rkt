@@ -43,13 +43,8 @@
    (entities-nearby grid location)))
 
 (define (map-entities grid procedure)
-  (hash-map
-   (grid-hash grid)
-   (λ (_ entity)
-     (let ([location (entity-location entity)])
-       (procedure entity
-                  (location-x location)
-                  (- (grid-size grid) 1 (location-y location)))))))
+  (hash-map (grid-hash grid)
+            (λ (_ entity) (procedure entity))))
 
 (module+ test
   (require rackunit "shared.rkt")
@@ -126,7 +121,7 @@
    (let ([grid (make-grid 5)])
      (place-entity grid (entity 102 type-block (location 3 3)))
      (place-entity grid (entity 103 type-block (location 2 4)))
-     (check-equal? (map-entities grid (λ (entity x y) (entity-id entity)))
+     (check-equal? (map-entities grid (λ (entity) (entity-id entity)))
                    '(102 103))))
   
   )

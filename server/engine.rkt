@@ -40,10 +40,10 @@
 (define (draw-entities engine)
   (map-entities
    (engine-grid engine)
-   (λ (entity x y)
+   (λ (entity)
      (let ([cargo (cargo-for-bot (engine-cargos engine) (entity-id entity))]
            [location (entity-location entity)])
-       (list (entity-symbol entity cargo) x y)))))
+       (list (entity-symbol entity cargo) (location-x location) (location-y location))))))
                   
  
 (define (make-bot engine entity-id)
@@ -140,7 +140,7 @@
           [bot (entity-symbol (add-entity engine type-bot (location 0 2)) #f)]
           [block (entity-symbol (add-entity engine type-block (location 2 1)) #f)])
      (add-entity engine type-bot(location 1 1))
-     (check-equal? (draw-entities engine) (list (list bot 0 0) (list block 2 1) (list bot 1 1)))))
+     (check-equal? (draw-entities engine) (list (list bot 0 2) (list block 2 1) (list bot 1 1)))))
 
   (test-case
    "make bot"
