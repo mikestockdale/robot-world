@@ -1,15 +1,15 @@
 #lang racket
 
-(require "command.rkt" "setup.rkt" "server/player.rkt")
+(require "command.rkt" "setup.rkt" "server/agent.rkt")
 
 (define engine (setup-engine))
 
 (define (process-requests in out)
-  (let ([player (player 0)])
+  (let ([agent (agent 0)])
     (define (process-request)
       (let ([request (read in)])
         (unless (equal? request eof)
-          (sleep (delay! player))
+          (sleep (delay! agent))
           (write (dispatch-request engine request) out)
           (flush-output out)
           (process-request))))
