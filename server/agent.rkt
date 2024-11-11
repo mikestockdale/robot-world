@@ -2,9 +2,21 @@
 
 (provide make-agent dispatch-request)
 (require "engine.rkt" "shared.rkt" "../setup.rkt")
+(module+ test (require rackunit))
 
 (struct agent (engine [dispatcher #:mutable] [last-active-time #:mutable]))
 (define (make-agent engine) (agent engine dispatch-first-request 0))
+
+(test-case:
+ "delay is calculated"
+ (define ((fake-timer value)) value)
+ (let ([agent (make-agent #f)])
+   (parameterize ([timer (fake-timer 1000)])
+     (check-equal? (delay! agent) 0.0))
+   (parameterize ([timer (fake-timer 1010)])
+     (check-= (delay! agent) 0.09 .001))
+   (parameterize ([timer (fake-timer 1105)])
+     (check-= (delay! agent) 0.095 .001))))
 
 (define timer (make-parameter current-inexact-milliseconds))
 
@@ -53,18 +65,4 @@
 (define (make-response-list success? entity-id engine)
   (list (if success? #t #f) (make-bot engine entity-id)))
 
-(module+ test
-  (require rackunit)
 
-  (test-case
-   "delay is calculated"
-   (define ((fake-timer value)) value)
-   (let ([agent (make-agent #f)])
-     (parameterize ([timer (fake-timer 1000)])
-       (check-equal? (delay! agent) 0.0))
-     (parameterize ([timer (fake-timer 1010)])
-       (check-= (delay! agent) 0.09 .001))
-     (parameterize ([timer (fake-timer 1105)])
-       (check-= (delay! agent) 0.095 .001))))
-
-  )

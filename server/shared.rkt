@@ -4,7 +4,8 @@
          "../shared/direction.rkt"
          "../shared/entity.rkt"
          "../shared/location.rkt"
-         "../shared/request.rkt")
+         "../shared/request.rkt"
+         "../shared/testing.rkt")
 
 (provide (struct-out bot) bot-id bot-location
          all-directions move-direction change-direction
@@ -13,4 +14,5 @@
          type-block type-bot type-edge
          (struct-out location) adjacent? nearby? location-offset
          (struct-out request)
-         request-drop request-move request-take)
+         request-drop request-move request-take
+         test-case:)
