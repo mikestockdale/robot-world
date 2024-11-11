@@ -1,23 +1,22 @@
 #lang racket
 
-(provide connect-local connect-remote send-commands send-draw send-hello)
+(provide connect-local connect-remote send-requests send-draw send-hello)
 
 (require net/http-client)
 (require "server/agent.rkt" "shared.rkt")
 
-(define (send-commands connection commands process-reply-list)
-  (let* ([requests (request request-execute-commands commands)]
-         [replies (connection requests)])
+(define (send-requests connection requests process-reply-list)
+  (let ([replies (connection requests)])
     (map (λ (reply process-reply)
            (process-reply (first reply) (second reply)))
          replies
          process-reply-list)))
 
 (define (send-draw connection)
-  (connection (request request-draw #f)))
+  (connection 'draw))
 
 (define (send-hello connection)
-  (map (λ (reply) (second reply)) (connection (request request-hello #f))))
+  (map (λ (reply) (second reply)) (connection 'hello)))
 
 (define (connect-remote host port) (remote-call host port))
 (define (connect-local engine) (local-call (make-agent engine)))
@@ -52,12 +51,12 @@
    (let* ([engine (make-engine 50)]
           [connection (prepare-connection engine)]
           [bot (add-entity  engine type-bot (location 1 2))]
-          [commands
+          [requests
            (list
-            (command move-command (entity-id bot) direction-east)
-            (command move-command (entity-id bot) direction-south))]
+            (request request-move (entity-id bot) direction-east)
+            (request request-move (entity-id bot) direction-south))]
           [processes (list process-bot process-bot)]
-          [bots (send-commands connection commands processes)])
+          [bots (send-requests connection requests processes)])
      (check-equal? (bot-location (second bots)) (location 2 1))))
   
   (test-case
@@ -67,8 +66,8 @@
           [bot (add-entity engine type-bot (location 1 2))]
           [block (add-entity engine type-block (location 2 2))]
           [bots
-           (send-commands connection
-                          (list (command take-command (entity-id bot) (entity-id block)))
+           (send-requests connection
+                          (list (request request-take (entity-id bot) (entity-id block)))
                           (list process-bot))])
      (check-equal?
       (entity-id (bot-cargo (first bots)))
@@ -81,12 +80,12 @@
           [bot (add-entity engine type-bot (location 1 2))]
           [block (add-entity engine type-block (location 2 2))]
           [bots-1
-           (send-commands connection
-                          (list (command take-command (entity-id bot) (entity-id block)))
+           (send-requests connection
+                          (list (request request-take (entity-id bot) (entity-id block)))
                           (list process-bot))]
           [bots-2
-           (send-commands connection
-                          (list (command drop-command (entity-id bot) direction-west))
+           (send-requests connection
+                          (list (request request-drop (entity-id bot) direction-west))
                           (list process-bot))])
      (check-false (bot-cargo (first bots-2)))))
   
@@ -97,8 +96,8 @@
           [bot (add-entity engine type-bot (location 0 1))])
      (add-entity engine type-block (location 2 1))
      (let ([neighbor
-            (~> (send-commands connection
-                               (list (command move-command (entity-id bot) direction-east))
+            (~> (send-requests connection
+                               (list (request request-move (entity-id bot) direction-east))
                                (list process-bot))
                 first bot-neighbors first)])
        (check-equal? (entity-type neighbor) type-block)

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "server/dispatch.rkt" "setup.rkt" "server/agent.rkt")
+(require "setup.rkt" "server/agent.rkt")
 
 (define engine (setup-engine))
 

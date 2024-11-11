@@ -12,9 +12,9 @@
    bot-infos))
 
 (define ((wander spec) input-action)
-  (let-values ([(command parameter new-spec) ((choose spec) input-action)])
+  (let-values ([(request-type parameter new-spec) ((choose spec) input-action)])
     (struct-copy action input-action
-                 [command command]
+                 [request-type request-type]
                  [parameter parameter]
                  [strategy (wander new-spec)])))
 
@@ -22,7 +22,7 @@
   
   (define (pick-direction)
     (let ([old-direction (wandering-direction spec)])
-      (if (or (and (equal? (action-command input) move-command)
+      (if (or (and (equal? (action-request-type input) request-move)
                    (not (action-success? input))) 
               (> (wandering-direction-change-chance spec) (random)))
           (change-direction old-direction)
@@ -30,21 +30,21 @@
 
   (define (choose-drop)
     (let ([drop-direction (best-drop-direction (action-bot input))])
-      (values drop-command drop-direction
+      (values request-drop drop-direction
               (struct-copy wandering spec
                            [direction (change-direction drop-direction)]
                            [cargo-delay 5]))))
   
   (define (choose-move)
     (let ([direction (pick-direction)])
-      (values move-command direction
+      (values request-move direction
               (struct-copy wandering spec
                            [direction direction]
                            [cargo-delay (max 0 (- (wandering-cargo-delay spec) 1))]))))
 
   (define (choose-take block)
     (let ([take-direction (direction-from-entity (bot-entity (action-bot input)) block)]) 
-      (values take-command (entity-id block)
+      (values request-take (entity-id block)
               (struct-copy wandering spec
                            [direction take-direction]
                            [cargo-delay 5]))))
@@ -77,57 +77,57 @@
 
   (test-case
    "move in current direction"
-   (let-values ([(command parameter spec) ((wander-with #:cargo-delay 5) (choose-input))])
-     (check-equal? command move-command)
+   (let-values ([(request-type parameter spec) ((wander-with #:cargo-delay 5) (choose-input))])
+     (check-equal? request-type request-move)
      (check-equal? parameter direction-east)
      (check-equal? (wandering-cargo-delay spec) 4)))
   
   (test-case
    "move in random direction"
-   (let-values ([(command parameter spec)
+   (let-values ([(request-type parameter spec)
                  ((wander-with #:chance 1) (choose-input))])
-     (check-equal? command move-command)
+     (check-equal? request-type request-move)
      (check-not-equal? parameter direction-east)))
   
   (test-case
    "change direction if can't move"
-   (let-values ([(command parameter spec)
-                 ((wander-with) (choose-input #:success #f #:command move-command))])
-     (check-equal? command move-command)
+   (let-values ([(request-type parameter spec)
+                 ((wander-with) (choose-input #:success #f #:command request-move))])
+     (check-equal? request-type request-move)
      (check-not-equal? parameter direction-east)))
   
   (test-case
    "take nearby block"
-   (let-values ([(command parameter spec)
+   (let-values ([(request-type parameter spec)
                  ((wander-with)
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
-     (check-equal? command take-command)
+     (check-equal? request-type request-take)
      (check-equal? parameter 102)
      (check-equal? (wandering-direction spec) direction-south)
      (check-equal? (wandering-cargo-delay spec) 5)))
   
   (test-case
    "delay taking nearby block"
-   (let-values ([(command parameter procedure)
+   (let-values ([(request-type parameter procedure)
                  ((wander-with #:cargo-delay 1)
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
-     (check-equal? command move-command)))
+     (check-equal? request-type request-move)))
 
   (test-case
    "drop nearby block"
-   (let-values ([(command parameter spec)
+   (let-values ([(request-type parameter spec)
                  ((wander-with)
                   (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
                                 #:cargo (entity 103 type-block (location 0 0))))])
-     (check-equal? command drop-command)
+     (check-equal? request-type request-drop)
      (check-equal? parameter direction-north)
      (check-equal? (wandering-cargo-delay spec) 5)
      (check-not-equal? (wandering-direction spec) direction-north)))
 
   (test-case
    "delay dropping nearby block"
-   (let-values ([(command parameter spec)
+   (let-values ([(request-type parameter spec)
                  ((wander-with #:cargo-delay 1)
                   (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
                                 #:cargo (entity 103 type-block (location 0 0))))])
-     (check-equal? command move-command))))
+     (check-equal? request-type request-move))))

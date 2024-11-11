@@ -19,32 +19,32 @@
   ((agent-dispatcher agent) agent request))
 
 (define (dispatch-first-request agent request)
-  (let ([type (request-type request)])
-    (cond
-      [(= type request-draw)
-       (set-agent-dispatcher! agent dispatch-draw)
-       (draw-entities (agent-engine agent))]
-      [(= type request-hello)
-       (set-agent-dispatcher! agent dispatch-player)
-       (execute-hello (agent-engine agent))]
-      [else "not a player"])))
+  (cond
+    [(eq? request 'draw)
+     (set-agent-dispatcher! agent dispatch-draw)
+     (draw-entities (agent-engine agent))]
+    [(eq? request 'hello)
+     (set-agent-dispatcher! agent dispatch-player)
+     (execute-hello (agent-engine agent))]
+    [else "draw or hello"]))
 
 (define (dispatch-draw agent request)
-  (if (= (request-type request) request-draw)
+  (if (eq? request 'draw)
       (draw-entities (agent-engine agent))
-       "draw only"))
+      "draw only"))
 
-(define command-procedures (vector drop-entity move-entity take-entity))
+(define player-procedures (vector drop-entity move-entity take-entity))
 
-(define (dispatch-player agent request)
-  (define (exec-request command)
-    (make-response-list ((vector-ref command-procedures (command-type command))
-                         (agent-engine agent) (command-id command) (command-parameter command))
-                        (command-id command)
-                        (agent-engine agent)))
-  (if (= (request-type request) request-execute-commands)
-      (map exec-request (request-commands request))
-      "commands only"))
+(define (dispatch-player agent request-list)
+  (define (execute request)
+    (let ([procedure (vector-ref player-procedures (request-type request))])
+      (if procedure
+          (make-response-list
+           (procedure (agent-engine agent) (request-id request) (request-parameter request))
+           (request-id request)
+           (agent-engine agent))
+          "player only")))
+  (map execute request-list))
 
 (define (execute-hello engine)
   (map (λ (bot) (make-response-list #t (entity-id bot) engine))

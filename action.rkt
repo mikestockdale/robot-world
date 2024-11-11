@@ -6,7 +6,7 @@
 (require threading)
 (require "shared.rkt" "connection.rkt")
 
-(struct action (command parameter strategy success? bot))
+(struct action (request-type parameter strategy success? bot))
 
 (define (action-bot-id action) (bot-id (action-bot action)))
 
@@ -15,25 +15,25 @@
   (define (perform-procedure action)
     ((action-strategy action) action))
 
-  (define ((make-action input-action) success? bot)
+  (define ((copy-action input-action) success? bot)
     (struct-copy action input-action [success? success?] [bot bot]))
 
-  (define (make-command action)
-    (command (action-command action) (action-bot-id action) (action-parameter action)))
+  (define (make-request action)
+    (request (action-request-type action) (action-bot-id action) (action-parameter action)))
   
-  (let* ([requests (map perform-procedure to-do)]
-         [process-replies (map make-action requests)])
-    (send-commands connection (map make-command requests) process-replies)))
+  (let* ([actions (map perform-procedure to-do)]
+         [process-replies (map copy-action actions)])
+    (send-requests connection (map make-request actions) process-replies)))
 
 (module+ test
   (require rackunit "server/engine.rkt")
   
   (define (go-north input-action)
     (struct-copy action input-action
-                 [command move-command] [parameter direction-north] [strategy go-east]))
+                 [request-type request-move] [parameter direction-north] [strategy go-east]))
   (define (go-east input-action)
     (struct-copy action input-action
-                 [command move-command] [parameter direction-east] [strategy go-north]))
+                 [request-type request-move] [parameter direction-east] [strategy go-north]))
   
   (define (simple-actions)
     (let ([bot1 (entity 101 type-bot (location 1 1))]
@@ -42,16 +42,16 @@
      (action #f #f go-north #f (bot bot1 #f '()))
      (action #f #f go-east #f (bot bot2 #f '())))))
 
-  (define (fake-connection request)
-    (map (λ (command) (list #t command)) (request-commands request)))
+  (define (fake-connection requests)
+    (map (λ (command) (list #t command)) requests))
   
   (test-case
    "simple actions are performed"
    (let* ([action-list (perform-actions fake-connection (simple-actions))])
      (check-true (~> action-list first action-success?))
-     (check-equal? (~> action-list first action-bot) (command move-command 101 direction-north))
+     (check-equal? (~> action-list first action-bot) (request request-move 101 direction-north))
      (check-true (~> action-list second action-success?))
-     (check-equal? (~> action-list second action-bot) (command move-command 102 direction-east))))
+     (check-equal? (~> action-list second action-bot) (request request-move 102 direction-east))))
   
   (test-case
    "simple actions are copied"
