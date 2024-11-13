@@ -1,7 +1,7 @@
 #lang racket
 
-(provide make-agent process-request)
-(require "dispatcher.rkt" "shared.rkt")
+(provide make-agent delay!)
+(require "shared.rkt")
 (module+ test (require rackunit))
 
 ;@title{Agent}
@@ -9,10 +9,10 @@
 ;An agent represents a body of code that interacts with the game.
 ;This may be a player client, a game viewer client, or a server module.
 ;
-;The agent manages incoming requests. It uses a dispatcher to process them, and it tracks the last time it was active.
+;The agent tracks the last time it was active.
 
-(struct agent (dispatcher [last-active-time #:mutable]))
-(define (make-agent engine) (agent (make-dispatcher engine) 0))
+(struct agent ([last-active-time #:mutable]))
+(define (make-agent) (agent 0))
 
 ;An agent can be active only once every 100 milliseconds.
 ;It calculates the @bold{delay} required until the next active time.
@@ -24,7 +24,7 @@
 (test-case:
  "delay is calculated"
  (define ((fake-timer value)) value)
- (let ([agent (make-agent #f)])
+ (let ([agent (make-agent)])
    (parameterize ([timer (fake-timer 1000)])
      (check-equal? (delay! agent) 0.0))
    (parameterize ([timer (fake-timer 1010)])
@@ -41,9 +41,3 @@
          [delay (max (+ (agent-last-active-time agent) 100.0 (- now)) 0.0)])
     (set-agent-last-active-time! agent (+ now delay))
     (/ delay 1000.0)))
-
-;When the agent @bold{process}es a @bold{request}, it sleeps for the delay time and then dispatches the request.
-
-(define (process-request agent request)
-  (sleep (delay! agent))
-  (dispatch-request (agent-dispatcher agent) request))

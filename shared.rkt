@@ -13,6 +13,6 @@
          (struct-out entity) make-edge entity-symbol change-entity-location
          type-block type-bot type-edge
          (struct-out location) adjacent? nearby? location-offset
-         (struct-out request)
+         (struct-out request) request-draw request-hello
          request-drop request-move request-take
          test-case:)

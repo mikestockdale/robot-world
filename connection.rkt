@@ -3,7 +3,7 @@
 (provide connect-local connect-remote send-requests send-draw send-hello)
 
 (require net/http-client)
-(require "server/agent.rkt" "shared.rkt")
+(require "server/dispatcher.rkt" "shared.rkt")
 
 (define (send-requests connection requests process-reply-list)
   (let ([replies (connection requests)])
@@ -13,13 +13,13 @@
          process-reply-list)))
 
 (define (send-draw connection)
-  (connection 'draw))
+  (connection request-draw))
 
 (define (send-hello connection)
-  (map (λ (reply) (second reply)) (connection 'hello)))
+  (map (λ (reply) (second reply)) (connection request-hello)))
 
 (define (connect-remote host port) (remote-call host port))
-(define (connect-local engine) (local-call (make-agent engine)))
+(define (connect-local engine) (local-call (make-dispatcher engine)))
 
 (define (remote-call host port)
   (let-values ([(in out) (tcp-connect host port)])
@@ -29,11 +29,11 @@
       (flush-output out)
       (read in))))
 
-(define ((local-call agent) request-list)
+(define ((local-call dispatcher) request-list)
   (define (fake-network item)
     (with-input-from-string
         (with-output-to-string (λ () (write item))) read))
-  (fake-network (process-request agent (fake-network request-list))))
+  (fake-network (dispatch-request dispatcher (fake-network request-list))))
 
 (module+ test
   (require rackunit threading
