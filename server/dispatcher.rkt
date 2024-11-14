@@ -7,45 +7,23 @@
 ;@title{Dispatcher}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/dispatcher.rkt" "dispatcher.rkt"]}
 
-(struct dispatcher (engine agent [last-request #:mutable]))
-(define (make-dispatcher engine) (dispatcher engine (make-agent) 'none))
-
-(test-case:
- "valid and invalid request order"
- (check-true (is-valid? request-hello 'none))
- (check-false (is-valid? request-hello request-draw))
- (check-false (is-valid? request-hello request-hello))
- (check-false (is-valid? request-hello '(#f)))
- (check-true (is-valid? request-draw 'none))
- (check-true (is-valid? request-draw request-draw))
- (check-false (is-valid? request-draw request-hello))
- (check-false (is-valid? request-draw (list #f)))
- (check-true (is-valid? '(#f) request-hello))
- (check-true (is-valid? '(#f) '(#f)))
- (check-false (is-valid? '(#f) 'none))
- (check-false (is-valid? '(#f) request-draw)))
-
-(define (is-valid? request last-request)
-  (cond
-    [(equal? request request-hello) (equal? last-request 'none)]
-    [(equal? request request-draw)
-     (or (equal? last-request 'none) (equal? last-request request-draw))]
-    [else (or (equal? last-request request-hello) (list? last-request))]))
+(struct dispatcher (engine agent))
+(define (make-dispatcher engine) (dispatcher engine (make-agent)))
 
 (test-case:
  "dispatch first request"
- (define (test-request request)
+ (define (first-request request)
    (dispatch-request (make-dispatcher (make-engine 50)) request))
- (check-equal? (length (test-request request-hello)) 4 "bots created") 
- (check-equal? (test-request request-draw) '() "nothing to draw")
- (check-equal? (test-request '(#f)) "invalid request" "invalid"))
+ (check-equal? (first-request request-hello) (execute-hello (make-engine 50))) 
+ (check-equal? (first-request request-draw) '() "nothing to draw")
+ (check-equal? (first-request '(#f)) "invalid request"))
 
 (define (dispatch-request dispatcher request)
   (let ([delay (delay! (dispatcher-agent dispatcher))])
     (sleep delay))
-  (if (is-valid? request (dispatcher-last-request dispatcher))
+  (if (request-is-valid? (dispatcher-agent dispatcher) request)
       (begin
-        (set-dispatcher-last-request! dispatcher request)
+        (set-type! (dispatcher-agent dispatcher) request)
         (cond
           [(equal? request request-draw) (draw-entities (dispatcher-engine dispatcher))]
           [(equal? request request-hello) (execute-hello (dispatcher-engine dispatcher))]
@@ -61,18 +39,15 @@
 
 (test-case:
  "requests from player"
- (define (next-request the-dispatcher request)
-   (dispatch-request
-    (struct-copy dispatcher the-dispatcher [agent (make-agent)]) request)) 
- (let* ([engine (make-engine 50)]
-        [bot (add-entity engine type-bot (location 1 1))]
-        [dispatcher (make-dispatcher engine)])
-   (dispatch-request dispatcher request-hello)
-   (check-equal?
-    (length
-     (next-request dispatcher
-                   (list (request request-move (entity-id bot) direction-east))))
-    1 "response")))
+ (parameterize ([agent-interval 0.0])
+   (let* ([engine (make-engine 50)]
+          [bot1 (add-entity engine type-bot (location 1 1))]
+          [dispatcher (make-dispatcher engine)])
+     (dispatch-request dispatcher request-hello)
+     (check-equal?
+      (dispatch-request dispatcher
+                        (list (request request-move (entity-id bot1) direction-east)))
+      (list (list #t (bot (entity 101 type-bot (location 2 1)) #f '())))))))
 
 (define player-procedures (vector drop-entity move-entity take-entity))
 
