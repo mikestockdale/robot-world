@@ -1,53 +1,62 @@
 #lang racket
 
 (provide make-dispatcher dispatch-request)
-(require "agent.rkt" "engine.rkt" "shared.rkt" "../setup.rkt")
+(require "agent.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "../setup.rkt")
 (module+ test (require rackunit))
 
 ;@title{Dispatcher}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/dispatcher.rkt" "dispatcher.rkt"]}
+;The dispatcher takes requests from clients and executes the appropriate procedures on the server.
+;It contains an engine to perform the requested actions and an agent that validates and schedules the requests.
 
-(struct dispatcher (engine agent))
-(define (make-dispatcher engine) (dispatcher engine (make-agent)))
+(struct dispatcher (engine agent interval))
+(define (make-dispatcher engine) (dispatcher engine (make-agent) (make-interval)))
 
 (test-case:
- "dispatch first request"
- (define (first-request request)
-   (dispatch-request (make-dispatcher (make-engine 50)) request))
- (check-equal? (first-request request-hello) (execute-hello (make-engine 50))) 
- (check-equal? (first-request request-draw) '() "nothing to draw")
- (check-equal? (first-request '(#f)) "invalid request"))
+ "dispatch invalid request"
+ (check-equal?
+  (dispatch-request (make-dispatcher (make-engine 50)) '(#f))
+  "invalid request"))
 
-(define (dispatch-request dispatcher request)
-  (let ([delay (delay! (dispatcher-agent dispatcher))])
-    (sleep delay))
-  (if (request-is-valid? (dispatcher-agent dispatcher) request)
-      (begin
-        (set-type! (dispatcher-agent dispatcher) request)
-        (cond
-          [(equal? request request-draw) (draw-entities (dispatcher-engine dispatcher))]
-          [(equal? request request-hello) (execute-hello (dispatcher-engine dispatcher))]
-          [else (dispatch-list (dispatcher-engine dispatcher) request)]))
-      "invalid request"))
-  
+(test-case:
+ "dispatch draw"
+ (let ([engine (make-engine 50)])
+   (check-equal? (execute-request engine request-draw) '()
+                 "nothing to draw")
+   (add-entity engine type-block (location 1 1))
+   (check-equal? (length (execute-request engine request-draw)) 1
+                 "one entity drawn")))
+
+(define (execute-request engine request)
+  (cond
+    [(equal? request request-draw) (draw-entities engine)]
+    [(equal? request request-hello) (execute-hello engine)]
+    [else (dispatch-list engine request)]))
+   
+(test-case:
+ "dispatch hello"
+ (let ([reply (execute-request (make-engine 50) request-hello)])
+   (check-true (andmap
+                (λ (item) (bot? (second item)))
+                reply)
+               "returns new bots")))
+
 (define (execute-hello engine)
   (map (λ (bot) (make-response-list #t (entity-id bot) engine))
        (setup-bots engine)))
 
 (define (make-response-list success? entity-id engine)
   (list (if success? #t #f) (make-bot engine entity-id)))
-
+  
 (test-case:
  "requests from player"
- (parameterize ([agent-interval 0.0])
    (let* ([engine (make-engine 50)]
-          [bot1 (add-entity engine type-bot (location 1 1))]
-          [dispatcher (make-dispatcher engine)])
-     (dispatch-request dispatcher request-hello)
+          [bot1 (add-entity engine type-bot (location 1 1))])
+     (execute-request engine request-hello)
      (check-equal?
-      (dispatch-request dispatcher
+      (execute-request engine
                         (list (request request-move (entity-id bot1) direction-east)))
-      (list (list #t (bot (entity 101 type-bot (location 2 1)) #f '())))))))
+      (list (list #t (bot (entity 101 type-bot (location 2 1)) #f '()))))))
 
 (define player-procedures (vector drop-entity move-entity take-entity))
 
@@ -61,3 +70,14 @@
                           (request-id request)
                           engine)))
   (map execute request-list))
+
+(test-case:
+ "invalid request"
+ (check-equal? (dispatch-request (make-dispatcher (make-engine 5)) '(#f))
+               "invalid request"))
+
+(define (dispatch-request dispatcher request)
+  (sleep (delay (dispatcher-interval dispatcher)))
+  (if (validate-request (dispatcher-agent dispatcher) request)
+      (execute-request (dispatcher-engine dispatcher) request)
+      "invalid request"))
