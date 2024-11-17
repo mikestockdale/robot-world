@@ -1,6 +1,11 @@
 #lang racket
 
-(require "setup.rkt" "server/dispatcher.rkt")
+(require "setup.rkt" "dispatcher.rkt")
+
+;@title{TCP Server}
+;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/tcp-server.rkt" "tcp-server.rkt"]}
+;The TCP server listens on a TCP port.
+;It starts a thread to process requests for each client that connects.
 
 (define engine (setup-engine))
 
@@ -13,7 +18,6 @@
 
 (define (run-server)
   (let ([listener (tcp-listen 8080 4 #f "localhost")])
-
     (define (listen)
       (let-values ([(in out) (tcp-accept listener)])
         (file-stream-buffer-mode in 'none)
@@ -23,7 +27,6 @@
            (close-input-port in)
            (close-output-port out)))
         (listen)))
-    
     (listen)))
 
 (setup-blocks engine)

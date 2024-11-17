@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-agent validate-request)
+(provide make-agent match-request)
 (require "shared.rkt")
 (module+ test (require rackunit))
 
@@ -10,7 +10,7 @@
 ;This may be a player client, or a game viewer client.
 
 (struct agent ([type #:mutable]))
-(define (make-agent) (agent 'none))
+(define (make-agent) (agent 'unassigned))
 
 ;The first request sent to the agent @bold{set}s its @bold{type}.
 ;A draw request means the agent is a game viewer.
@@ -25,49 +25,58 @@
  (check-equal? (check-type request-draw) 'viewer)
  (check-equal? (check-type request-hello) 'player))
 
-;If the agent type is none, it means that the type hasn't been set yet.
+;If the agent type is unassigned, it means that the type hasn't been set yet.
 ;Once set, the type doesn't change.
  
 (define (set-type! agent request)
-  (when (equal? (agent-type agent) 'none)
+  (when (equal? (agent-type agent) 'unassigned)
     (cond
       [(equal? request request-hello) (set-agent-type! agent 'player)]
       [(equal? request request-draw) (set-agent-type! agent 'viewer)])))
 
-;An agent checks if a @bold{request matches} the agent type.
+;An agent checks if a @bold{request is valid}, based on the agent type.
 
 (test-case:
  "valid request"
- (let ([agent (agent 'none)])
-   (check-true (request-matches? agent request-draw))
-   (check-true (request-matches? agent request-hello))
-   (check-false (request-matches? agent '(#f))))
+ (let ([agent (agent 'unassigned)])
+   (check-true (request-is-valid? agent request-draw))
+   (check-true (request-is-valid? agent request-hello))
+   (check-false (request-is-valid? agent '(#f))))
  (let ([agent (agent 'viewer)])
-   (check-true (request-matches? agent request-draw))
-   (check-false (request-matches? agent request-hello))
-   (check-false (request-matches? agent '(#f))))
+   (check-true (request-is-valid? agent request-draw))
+   (check-false (request-is-valid? agent request-hello))
+   (check-false (request-is-valid? agent '(#f))))
  (let ([agent (agent 'player)])
-   (check-false (request-matches? agent request-draw))
-   (check-false (request-matches? agent request-hello))
-   (check-true (request-matches? agent '(#f)))))
+   (check-false (request-is-valid? agent request-draw))
+   (check-false (request-is-valid? agent request-hello))
+   (check-true (request-is-valid? agent '(#f)))))
 
 ;If the type hasn't been set yet, a draw or hello request is valid.
 ;For a game viewer, only draw requests are OK.
 ;For a game player, each request must be a list of commands.
 
-(define (request-matches? agent request)
+(define (request-is-valid? agent request)
   (let ([type (agent-type agent)])
     (cond
-      [(equal? type 'none)
+      [(equal? type 'unassigned)
        (or (equal? request request-hello) (equal? request request-draw))]
       [(equal? type 'viewer) (equal? request request-draw)]
       [(equal? type 'player) (list? request)])))
 
-(test-case:
- "something"
- (check-true #t))
+;An agent @bold{match}es a @bold{request} by checking if the request is valid, and setting the agent type.
 
-(define (validate-request agent request)
-  (let ([matches? (request-matches? agent request)])
-    (when matches? (set-type! agent request))
-    matches?))    
+(test-case:
+ "match request"
+ (let ([agent (make-agent)])
+   (check-false (match-request agent '(#f)))
+   (check-equal? (agent-type agent) 'unassigned)
+   (check-true (match-request agent request-draw))
+   (check-equal? (agent-type agent) 'viewer)))
+
+;If the request is not valid, the type is not changed.
+;The result of the valid check is returned.
+
+(define (match-request agent request)
+  (let ([valid? (request-is-valid? agent request)])
+    (when valid? (set-type! agent request))
+    valid?))    

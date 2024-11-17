@@ -1,7 +1,11 @@
 #lang racket
 
 (provide setup-blocks setup-bots setup-engine)
-(require "shared.rkt" "server/engine.rkt")
+(require "shared.rkt" "engine.rkt")
+
+;@title{Setup}
+;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/setup.rkt" "setup.rkt"]}
+;Setup creates an engine, populates it with blocks, and creates bots for a player.
 
 (define (setup-engine)
   (make-engine 50))
