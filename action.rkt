@@ -4,7 +4,7 @@
          perform-actions)
 
 (require threading)
-(require "shared.rkt" "connection.rkt")
+(require "shared.rkt" "client/connection.rkt")
 
 (struct action (request-type parameter strategy success? bot))
 
@@ -21,9 +21,15 @@
   (define (make-request action)
     (request (action-request-type action) (action-bot-id action) (action-parameter action)))
   
+  (define (handle-replies replies process-reply-list)
+    (map (λ (reply process-reply)
+           (process-reply (first reply) (second reply)))
+         replies
+         process-reply-list))
+  
   (let* ([actions (map perform-procedure to-do)]
          [process-replies (map copy-action actions)])
-    (send-requests connection (map make-request actions) process-replies)))
+    (handle-replies (connection (map make-request actions)) process-replies)))
 
 (module+ test
   (require rackunit "server/engine.rkt")
@@ -38,9 +44,9 @@
   (define (simple-actions)
     (let ([bot1 (entity 101 type-bot (location 1 1))]
           [bot2 (entity 102 type-bot (location 0 0))])
-    (list
-     (action #f #f go-north #f (bot bot1 #f '()))
-     (action #f #f go-east #f (bot bot2 #f '())))))
+      (list
+       (action #f #f go-north #f (bot bot1 #f '()))
+       (action #f #f go-east #f (bot bot2 #f '())))))
 
   (define (fake-connection requests)
     (map (λ (command) (list #t command)) requests))

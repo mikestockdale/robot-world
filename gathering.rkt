@@ -6,11 +6,11 @@
 
 (struct gathering (direction direction-change-chance cargo-delay location))
 
-(define (gathering-actions bot-infos)
+(define (gathering-actions replies)
   (map
-   (λ (bot-info)
-     (action #f #f (gather (gathering direction-east 0.2 0 (location 25 25))) #t bot-info))
-   bot-infos))
+   (λ (reply)
+     (action #f #f (gather (gathering direction-east 0.2 0 (location 25 25))) #t (second reply)))
+   replies))
 
 (define ((gather spec) input-action)
   (let-values ([(request-type parameter new-spec) ((choose spec) input-action)])

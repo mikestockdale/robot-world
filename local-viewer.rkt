@@ -1,15 +1,16 @@
 #lang racket
 
-(require "action.rkt" "connection.rkt" "server/setup.rkt" "viewer.rkt" "gathering.rkt")
+(require "shared.rkt" "action.rkt" "local-connect.rkt"
+         "server/setup.rkt" "viewer.rkt" "gathering.rkt")
 
 (let* ([engine (setup-engine)]
        [draw-connection (connect-local engine)]
        [action-connection (connect-local engine)]
-       [to-do (gathering-actions (send-hello action-connection))])
+       [to-do (gathering-actions (action-connection request-hello))])
   (setup-blocks engine)
 
   (define (draw-procedure draw-entity)
-    (for ([entity (send-draw draw-connection)])
+    (for ([entity (draw-connection request-draw)])
       (apply draw-entity entity)))
 
   (define (do-actions)

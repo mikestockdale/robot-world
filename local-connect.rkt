@@ -1,33 +1,9 @@
 #lang racket
 
-(provide connect-local connect-remote send-requests send-draw send-hello)
+(provide connect-local)
+(require "server/dispatcher.rkt")
 
-(require net/http-client)
-(require "server/dispatcher.rkt" "shared.rkt")
-
-(define (send-requests connection requests process-reply-list)
-  (let ([replies (connection requests)])
-    (map (λ (reply process-reply)
-           (process-reply (first reply) (second reply)))
-         replies
-         process-reply-list)))
-
-(define (send-draw connection)
-  (connection request-draw))
-
-(define (send-hello connection)
-  (map (λ (reply) (second reply)) (connection request-hello)))
-
-(define (connect-remote host port) (remote-call host port))
 (define (connect-local engine) (local-call (make-dispatcher engine)))
-
-(define (remote-call host port)
-  (let-values ([(in out) (tcp-connect host port)])
-    (file-stream-buffer-mode in 'none)
-    (λ (request-list)
-      (write request-list out)
-      (flush-output out)
-      (read in))))
 
 (define ((local-call dispatcher) request-list)
   (define (fake-network item)
@@ -37,14 +13,21 @@
 
 (module+ test
   (require rackunit threading
-           "shared.rkt" "server/engine.rkt")
-
+           "shared.rkt" "server/engine.rkt" "client/connection.rkt")
+  
   (define (process-bot success? bot) bot)
-
+  
   (define (prepare-connection engine)
     (let ([connection (connect-local engine)])
-      (send-hello connection)
+      (connection request-hello)
       connection))
+  
+  (define (send-requests connection requests process-reply-list)
+    (let ([replies (connection requests)])
+      (map (λ (reply process-reply)
+             (process-reply (first reply) (second reply)))
+           replies
+           process-reply-list)))
 
   (test-case
    "list of moves"
@@ -58,7 +41,7 @@
           [processes (list process-bot process-bot)]
           [bots (send-requests connection requests processes)])
      (check-equal? (bot-location (second bots)) (location 2 1))))
-  
+
   (test-case
    "take block remote"
    (let* ([engine (make-engine 50)]
