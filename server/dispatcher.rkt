@@ -9,7 +9,7 @@
 ;The dispatcher takes requests from clients and executes the appropriate procedures on the server.
 ;It uses an agent to validate the requests, an engine to perform the requested actions and an interval to schedule their execution.
 
-(struct dispatcher (engine agent [interval #:mutable]))
+(struct dispatcher (engine agent interval))
 (define (make-dispatcher engine) (dispatcher engine (make-agent) (make-interval)))
 
 ;A draw request returns a list of information for drawing entities.
@@ -88,8 +88,7 @@
 ;Otherwise, a message is returned.
 
 (define (dispatch-request dispatcher request)
-  (set-dispatcher-interval! dispatcher ((dispatcher-interval dispatcher)))
-  ;(sleep (delay (dispatcher-interval dispatcher)))
+  ((dispatcher-interval dispatcher))
   (if (match-request (dispatcher-agent dispatcher) request)
       (execute-request (dispatcher-engine dispatcher) request)
       "invalid request"))
