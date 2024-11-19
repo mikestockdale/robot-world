@@ -9,7 +9,7 @@
 ;The dispatcher takes requests from clients and executes the appropriate procedures on the server.
 ;It uses an agent to validate the requests, an engine to perform the requested actions and an interval to schedule their execution.
 
-(struct dispatcher (engine agent interval))
+(struct dispatcher (engine agent [interval #:mutable]))
 (define (make-dispatcher engine) (dispatcher engine (make-agent) (make-interval)))
 
 ;A draw request returns a list of information for drawing entities.
@@ -44,23 +44,22 @@
 ;A hello request executes a procedure to set up bots.
 
 (define (execute-hello engine)
-  (map (λ (bot) (make-response-list #t (entity-id bot) engine))
+  (map (λ (bot) (make-response #t (entity-id bot) engine))
        (setup-bots engine)))
 
-(define (make-response-list success? entity-id engine)
+(define (make-response success? entity-id engine)
   (list (if success? #t #f) (make-bot engine entity-id)))
   
 ;A list of commands returns bot information for each command.
 
 (test-case:
  "requests from player"
-   (let* ([engine (make-engine 50)]
-          [bot1 (add-entity engine type-bot (location 1 1))])
-     (execute-request engine request-hello)
-     (check-equal?
-      (execute-request engine
-                        (list (request request-move (entity-id bot1) direction-east)))
-      (list (list #t (bot (entity 101 type-bot (location 2 1)) #f '()))))))
+ (let* ([engine (make-engine 50)]
+        [bot1 (add-entity engine type-bot (location 1 1))])
+   (check-equal?
+    (execute-request engine
+                     (list (request request-move (entity-id bot1) direction-east)))
+    (list (list #t (bot (entity 101 type-bot (location 2 1)) #f '()))))))
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.
 
@@ -72,9 +71,9 @@
            [response (procedure engine
                                 (request-id request)
                                 (request-parameter request))])
-      (make-response-list response
-                          (request-id request)
-                          engine)))
+      (make-response response
+                     (request-id request)
+                     engine)))
   (map execute request-list))
 
 ;When the dispatcher @bold{dispatch}es a @bold{request}, an invalid request returns an error message.
@@ -89,7 +88,8 @@
 ;Otherwise, a message is returned.
 
 (define (dispatch-request dispatcher request)
-  (sleep (delay (dispatcher-interval dispatcher)))
+  (set-dispatcher-interval! dispatcher ((dispatcher-interval dispatcher)))
+  ;(sleep (delay (dispatcher-interval dispatcher)))
   (if (match-request (dispatcher-agent dispatcher) request)
       (execute-request (dispatcher-engine dispatcher) request)
       "invalid request"))
