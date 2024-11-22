@@ -1,6 +1,6 @@
 #lang racket
 
-(require "shared.rkt" "action.rkt" "local-connect.rkt"
+(require "shared.rkt" "client/action.rkt" "local-connect.rkt"
          "server/setup.rkt" "viewer.rkt" "gathering.rkt")
 
 (let* ([engine (setup-engine)]
