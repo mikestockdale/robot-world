@@ -35,33 +35,18 @@
                   (> (direction-change-chance) (random)))
               (change-direction old-direction)
               old-direction))))
-
-  (define (choose-drop)
-    (let ([drop-direction (best-drop-direction (action-bot input))])
-      (update request-drop drop-direction
-              (change-direction drop-direction) 5)))
-  
-  (define (choose-move)
-    (let ([direction (pick-direction)])
-      (update request-move direction
-              direction (max 0 (- (gathering-cargo-delay spec) 1)))))
-
-  (define (choose-take block)
-    (let ([take-direction (direction-from-entity (bot-entity (action-bot input)) block)]) 
-      (update request-take (entity-id block)
-              take-direction 5)))
   
   (if (and (= (gathering-cargo-delay spec) 0)
            (bot-cargo (action-bot input))
            (or
             (blocks-nearby? (action-bot input))
             (equal? (gathering-location spec) (bot-location (action-bot input)))))
-      (choose-drop)
+      (choose-drop (action-bot input))
       (let ([blocks (find-removable-blocks (action-bot input))])
         (if (and (= (gathering-cargo-delay spec) 0)
                  (> (length blocks) 0))
-            (choose-take (first blocks))
-            (choose-move)))))
+            (choose-take (action-bot input) (first blocks))
+            (choose-move (pick-direction) (gathering-cargo-delay spec))))))
 
 (module+ test
   (require rackunit)

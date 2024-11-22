@@ -1,8 +1,8 @@
 #lang racket
 
-(provide best-drop-direction blocks-nearby? find-removable-blocks
-         direction-from direction-from-entity
-         (struct-out update) direction-change-chance)
+(provide blocks-nearby? find-removable-blocks direction-from 
+         (struct-out update) direction-change-chance
+         choose-drop choose-move choose-take)
 
 (require "shared.rkt")
 (module+ test (require rackunit))
@@ -29,34 +29,15 @@
         (if (positive? difference-x) direction-west direction-east)
         (if (positive? difference-y) direction-south direction-north))))
 
+;------------------------------------------------------------------------------------
+
 (struct update (type parameter direction delay))
 (define direction-change-chance (make-parameter 0.2))
 
-(define (entity-adjacent? a b)
-  (entity-location-adjacent? a (entity-location b)))
-
-(define (entity-location-adjacent? entity location)
-  (adjacent? (entity-location entity) location))
-
-(define (direction-from-entity from to)
-  (direction-from (entity-location from) (entity-location to)))
-
-(define (count-adjacent location bot)
-  (count
-   (λ (entity) (and
-                (= (entity-type entity) type-block)
-                (entity-location-adjacent? entity location)))
-   (bot-neighbors bot)))
-
-(define (find-removable-blocks bot)
-  (filter (λ (entity)
-            (and (= (entity-type entity) type-block)
-                 (entity-adjacent? entity (bot-entity bot))
-                 (< (count-adjacent (entity-location entity) bot) 2)))
-          (bot-neighbors bot)))
-  
-(define (is-free? location neighbors)
-  (not (findf (λ (neighbor) (equal? location (entity-location neighbor))) neighbors)))
+(define (choose-drop bot)
+  (let ([drop-direction (best-drop-direction bot)])
+    (update request-drop drop-direction
+            (change-direction drop-direction) 5)))
 
 (define (best-drop-direction bot)
   (define (score direction)
@@ -72,6 +53,42 @@
       (if (> score best-score)
           (values direction score)
           (values best-direction best-score)))))
+  
+(define (is-free? location neighbors)
+  (not (findf (λ (neighbor) (equal? location (entity-location neighbor))) neighbors)))
+
+(define (choose-move direction delay)
+  (update request-move direction direction (max 0 (- delay 1))))
+
+(define (choose-take bot block)
+  (let ([take-direction (direction-from-entity (bot-entity bot) block)]) 
+    (update request-take (entity-id block)
+            take-direction 5)))
+
+(define (direction-from-entity from to)
+  (direction-from (entity-location from) (entity-location to)))
+
+;------------------------------------------------------------------------------------
+
+(define (entity-adjacent? a b)
+  (entity-location-adjacent? a (entity-location b)))
+
+(define (entity-location-adjacent? entity location)
+  (adjacent? (entity-location entity) location))
+
+(define (count-adjacent location bot)
+  (count
+   (λ (entity) (and
+                (= (entity-type entity) type-block)
+                (entity-location-adjacent? entity location)))
+   (bot-neighbors bot)))
+
+(define (find-removable-blocks bot)
+  (filter (λ (entity)
+            (and (= (entity-type entity) type-block)
+                 (entity-adjacent? entity (bot-entity bot))
+                 (< (count-adjacent (entity-location entity) bot) 2)))
+          (bot-neighbors bot)))
   
 (define (blocks-nearby? bot)
   (ormap
