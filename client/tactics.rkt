@@ -9,7 +9,12 @@
 
 ;@title{Tactics}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/client/tactics.rkt" "tactics.rkt"]}
-;This is a collection of functions for use inimplementing an action strategy. 
+;This is a collection of functions for use in implementing an action strategy.
+
+;The @bold{direction change chance} is the chance of making a random direction change when a bot is wandering around the world.
+;This is set to a 20% chance.
+
+(define direction-change-chance (make-parameter 0.2))
 
 ;The @bold{direction from} one location to another is a direction that will move a bot closer to a destination.
 
@@ -29,33 +34,57 @@
         (if (positive? difference-x) direction-west direction-east)
         (if (positive? difference-y) direction-south direction-north))))
 
-;------------------------------------------------------------------------------------
+;The @bold{update} structure is used to return information about what a strategy has chosen for the next action.
 
 (struct update (type parameter direction delay))
-(define direction-change-chance (make-parameter 0.2))
+
+;When a strategy @bold{choose}s to @bold{drop} a block, the request type is 'drop' and the parameter is the direction to a free location.
+;The next move direction is different from the drop direcvtion, and the delay before taking another block is 5 turns.
+
+(test-case:
+ "free location found"
+ (let* ([bot1 (entity 101 type-bot (location 1 1))]
+        [block (entity 102 type-block (location 1 2))]
+        [bot (bot bot1 #f (list block))]
+        [update (choose-drop bot)])
+   (check-equal? (update-type update) request-drop)
+   (check-equal? (update-parameter update) direction-east)
+   (check-not-equal? (update-direction update) direction-east)
+   (check-equal? (update-delay update) 5)))
+
+;The direction chosen places the block in a location with the most adjacent blocks.
+
+(test-case:
+ "best location found"
+ (let* ([bot1 (entity 101 type-bot (location 1 1))]
+        [block1 (entity 102 type-block (location 0 0))]
+        [block2 (entity 103 type-block (location 2 0))]
+        [update (choose-drop (bot bot1 #f (list block1 block2)))])
+   (check-equal? (update-parameter update) direction-south)))
+
+;The direction chosen doesn't move outside the world
+    
+(test-case:
+ "free location not outside world"
+ (let* ([bot1 (entity 101 type-bot (location 49 49))]
+        [edge1 (make-edge (location 50 49))]
+        [edge2 (make-edge (location 49 50))]
+        [block (entity 102 type-block (location 49 48))]
+        [update (choose-drop (bot bot1 #f (list edge1 edge2 block)))])
+   (check-equal? (update-parameter update) direction-west)))
 
 (define (choose-drop bot)
-  (let ([drop-direction (best-drop-direction bot)])
+  (define (is-free? location)
+    (not (findf (λ (neighbor) (equal? location (entity-location neighbor)))
+                (bot-neighbors bot))))
+  (define (score location) (count-adjacent location bot))
+  (let* ([drop-location
+          (argmax score (filter is-free? (all-directions (bot-location bot))))]
+         [drop-direction (direction-from (bot-location bot) drop-location)])
     (update request-drop drop-direction
             (change-direction drop-direction) 5)))
 
-(define (best-drop-direction bot)
-  (define (score direction)
-    (let ([location (move-direction direction (bot-location bot))])
-      (if (is-free? location (bot-neighbors bot))
-          (count-adjacent location bot)
-          -1)))
-  (for/fold ([best-direction 0]
-             [best-score -1]
-             #:result best-direction)
-            ([direction all-directions])
-    (let ([score (score direction)])
-      (if (> score best-score)
-          (values direction score)
-          (values best-direction best-score)))))
-  
-(define (is-free? location neighbors)
-  (not (findf (λ (neighbor) (equal? location (entity-location neighbor))) neighbors)))
+;------------------------------------------------------------------------------------
 
 (define (choose-move direction delay)
   (update request-move direction direction (max 0 (- delay 1))))
@@ -125,29 +154,6 @@
    (check-equal? (length removable) 0)))
 
     
-(test-case:
- "free location found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
-        [block (entity 102 type-block (location 1 2))]
-        [bot (bot bot1 #f (list block))])
-   (check-equal? (best-drop-direction bot) direction-east)))
-
-(test-case:
- "best location found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
-        [block1 (entity 102 type-block (location 0 0))]
-        [block2 (entity 103 type-block (location 2 0))])
-   (check-equal? (best-drop-direction (bot bot1 #f (list block1 block2)))
-                 direction-south)))
-    
-(test-case:
- "free location not outside world"
- (let* ([bot1 (entity 101 type-bot (location 49 49))]
-        [edge1 (make-edge (location 50 49))]
-        [edge2 (make-edge (location 49 50))]
-        [block (entity 102 type-block (location 49 48))]
-        [bot (bot bot1 #f (list edge1 edge2 block))])
-   (check-equal? (best-drop-direction bot) direction-west)))
   
 (test-case:
  "blocks nearby"

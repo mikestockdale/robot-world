@@ -33,9 +33,9 @@
        (not (entity-at grid location))))  
 
 (define (edges grid location)
-  (for/list ([direction all-directions]
-             #:unless (is-valid? grid (move-direction direction location)))
-    (make-edge (move-direction direction location))))
+  (for/list ([adjacent (all-directions location)]
+             #:unless (is-valid? grid adjacent))
+    (make-edge adjacent)))
 
 (define (neighbors grid location)
   (append
