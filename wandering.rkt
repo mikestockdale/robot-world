@@ -12,15 +12,15 @@
    bot-infos))
 
 (define ((wander spec) input-action)
-  (let ([update (choose spec input-action)])
+  (let ([choice (choose spec input-action)])
     (struct-copy
      action input-action
-     [request-type (update-type update)]
-     [parameter (update-parameter update)]
+     [request-type (choice-type choice)]
+     [parameter (choice-parameter choice)]
      [strategy (wander (struct-copy
                         wandering spec
-                        [direction (update-direction update)]
-                        [cargo-delay (update-delay update)]))])))
+                        [direction (choice-direction choice)]
+                        [cargo-delay (choice-delay choice)]))])))
 
 (define (choose spec input)
   
@@ -62,53 +62,53 @@
 
   (test-case
    "move in current direction"
-   (let ([update (wander-with #:cargo-delay 5 (choose-input))])
-     (check-equal? (update-type update) request-move)
-     (check-equal? (update-parameter update) direction-east)
-     (check-equal? (update-delay update) 4)))
+   (let ([choice (wander-with #:cargo-delay 5 (choose-input))])
+     (check-equal? (choice-type choice) request-move)
+     (check-equal? (choice-parameter choice) direction-east)
+     (check-equal? (choice-delay choice) 4)))
   
   (test-case
    "move in random direction"
-   (let ([update (wander-with #:chance 1 (choose-input))])
-     (check-equal? (update-type update) request-move)
-     (check-not-equal? (update-parameter update) direction-east)))
+   (let ([choice (wander-with #:chance 1 (choose-input))])
+     (check-equal? (choice-type choice) request-move)
+     (check-not-equal? (choice-parameter choice) direction-east)))
   
   (test-case
    "change direction if can't move"
-   (let ([update (wander-with (choose-input #:success #f #:command request-move))])
-     (check-equal? (update-type update) request-move)
-     (check-not-equal? (update-parameter update) direction-east)))
+   (let ([choice (wander-with (choose-input #:success #f #:command request-move))])
+     (check-equal? (choice-type choice) request-move)
+     (check-not-equal? (choice-parameter choice) direction-east)))
   
   (test-case
    "take nearby block"
-   (let ([update (wander-with
+   (let ([choice (wander-with
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
-     (check-equal? (update-type update) request-take)
-     (check-equal? (update-parameter update) 102)
-     (check-equal? (update-direction update) direction-south)
-     (check-equal? (update-delay update) 5)))
+     (check-equal? (choice-type choice) request-take)
+     (check-equal? (choice-parameter choice) 102)
+     (check-equal? (choice-direction choice) direction-south)
+     (check-equal? (choice-delay choice) 5)))
   
   (test-case
    "delay taking nearby block"
-   (let ([update (wander-with
+   (let ([choice (wander-with
                   #:cargo-delay 1
                   (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
-     (check-equal? (update-type update) request-move)))
+     (check-equal? (choice-type choice) request-move)))
 
   (test-case
    "drop nearby block"
-   (let ([update (wander-with
+   (let ([choice (wander-with
                   (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
                                 #:cargo (entity 103 type-block (location 0 0))))])
-     (check-equal? (update-type update) request-drop)
-     (check-equal? (update-parameter update) direction-north)
-     (check-equal? (update-delay update) 5)
-     (check-not-equal? (update-direction update) direction-north)))
+     (check-equal? (choice-type choice) request-drop)
+     (check-equal? (choice-parameter choice) direction-north)
+     (check-equal? (choice-delay choice) 5)
+     (check-not-equal? (choice-direction choice) direction-north)))
 
   (test-case
    "delay dropping nearby block"
-   (let ([update (wander-with
+   (let ([choice (wander-with
                   #:cargo-delay 1
                   (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
                                 #:cargo (entity 103 type-block (location 0 0))))])
-     (check-equal? (update-type update) request-move))))
+     (check-equal? (choice-type choice) request-move))))

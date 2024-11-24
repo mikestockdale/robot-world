@@ -1,7 +1,7 @@
 #lang racket
 
 (provide blocks-nearby? find-removable-blocks direction-from 
-         (struct-out update) direction-change-chance
+         (struct-out choice) direction-change-chance
          choose-drop choose-move choose-take)
 
 (require "shared.rkt")
@@ -34,23 +34,23 @@
         (if (positive? difference-x) direction-west direction-east)
         (if (positive? difference-y) direction-south direction-north))))
 
-;The @bold{update} structure is used to return information about what a strategy has chosen for the next action.
+;The @bold{choice} structure is used to return information about what a strategy has chosen for the next action.
 
-(struct update (type parameter direction delay))
+(struct choice (type parameter direction delay))
 
 ;When a strategy @bold{choose}s to @bold{drop} a block, the request type is 'drop' and the parameter is the direction to a free location.
-;The next move direction is different from the drop direcvtion, and the delay before taking another block is 5 turns.
+;The next move direction is different from the drop direction, and the delay before taking another block is 5 turns.
 
 (test-case:
  "free location found"
  (let* ([bot1 (entity 101 type-bot (location 1 1))]
         [block (entity 102 type-block (location 1 2))]
         [bot (bot bot1 #f (list block))]
-        [update (choose-drop bot)])
-   (check-equal? (update-type update) request-drop)
-   (check-equal? (update-parameter update) direction-east)
-   (check-not-equal? (update-direction update) direction-east)
-   (check-equal? (update-delay update) 5)))
+        [choice (choose-drop bot)])
+   (check-equal? (choice-type choice) request-drop)
+   (check-equal? (choice-parameter choice) direction-east)
+   (check-not-equal? (choice-direction choice) direction-east)
+   (check-equal? (choice-delay choice) 5)))
 
 ;The direction chosen places the block in a location with the most adjacent blocks.
 
@@ -59,8 +59,8 @@
  (let* ([bot1 (entity 101 type-bot (location 1 1))]
         [block1 (entity 102 type-block (location 0 0))]
         [block2 (entity 103 type-block (location 2 0))]
-        [update (choose-drop (bot bot1 #f (list block1 block2)))])
-   (check-equal? (update-parameter update) direction-south)))
+        [choice (choose-drop (bot bot1 #f (list block1 block2)))])
+   (check-equal? (choice-parameter choice) direction-south)))
 
 ;The direction chosen doesn't move outside the world
     
@@ -70,8 +70,8 @@
         [edge1 (make-edge (location 50 49))]
         [edge2 (make-edge (location 49 50))]
         [block (entity 102 type-block (location 49 48))]
-        [update (choose-drop (bot bot1 #f (list edge1 edge2 block)))])
-   (check-equal? (update-parameter update) direction-west)))
+        [choice (choose-drop (bot bot1 #f (list edge1 edge2 block)))])
+   (check-equal? (choice-parameter choice) direction-west)))
 
 (define (choose-drop bot)
   (define (is-free? location)
@@ -81,17 +81,17 @@
   (let* ([drop-location
           (argmax score (filter is-free? (all-directions (bot-location bot))))]
          [drop-direction (direction-from (bot-location bot) drop-location)])
-    (update request-drop drop-direction
+    (choice request-drop drop-direction
             (change-direction drop-direction) 5)))
 
 ;------------------------------------------------------------------------------------
 
 (define (choose-move direction delay)
-  (update request-move direction direction (max 0 (- delay 1))))
+  (choice request-move direction direction (max 0 (- delay 1))))
 
 (define (choose-take bot block)
   (let ([take-direction (direction-from-entity (bot-entity bot) block)]) 
-    (update request-take (entity-id block)
+    (choice request-take (entity-id block)
             take-direction 5)))
 
 (define (direction-from-entity from to)
