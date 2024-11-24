@@ -36,7 +36,7 @@
            (bot-cargo (action-bot input))
            (blocks-nearby? (action-bot input)))
       (choose-drop (action-bot input))
-      (let ([blocks (find-removable-blocks (action-bot input))])
+      (let ([blocks (removable-blocks (action-bot input))])
         (if (and (= (wandering-cargo-delay spec) 0)
                  (> (length blocks) 0))
             (choose-take (action-bot input) (first blocks))
