@@ -37,18 +37,18 @@
  "execute hello"
  (let ([reply (execute-request (make-engine 50) request-hello)])
    (check-true (andmap
-                (λ (item) (bot? (second item)))
+                (λ (item) (bot? (reply-bot item)))
                 reply)
                "returns new bots")))
 
 ;A hello request executes a procedure to set up bots.
 
 (define (execute-hello engine)
-  (map (λ (bot) (make-response #t (entity-id bot) engine))
+  (map (λ (bot) (make-reply #t (entity-id bot) engine))
        (setup-bots engine)))
 
-(define (make-response success? entity-id engine)
-  (list (if success? #t #f) (make-bot engine entity-id)))
+(define (make-reply success? entity-id engine)
+  (reply (if success? #t #f) (make-bot engine entity-id)))
   
 ;A list of commands returns bot information for each command.
 
@@ -59,7 +59,7 @@
    (check-equal?
     (execute-request engine
                      (list (request request-move (entity-id bot1) direction-east)))
-    (list (list #t (bot (entity 101 type-bot (location 2 1)) #f '()))))))
+    (list (reply #t (bot (entity 101 type-bot (location 2 1)) #f '()))))))
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.
 
@@ -71,7 +71,7 @@
            [response (procedure engine
                                 (request-id request)
                                 (request-parameter request))])
-      (make-response response
+      (make-reply response
                      (request-id request)
                      engine)))
   (map execute request-list))

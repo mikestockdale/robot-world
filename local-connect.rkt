@@ -25,7 +25,7 @@
   (define (send-requests connection requests process-reply-list)
     (let ([replies (connection requests)])
       (map (λ (reply process-reply)
-             (process-reply (first reply) (second reply)))
+             (process-reply (reply-success? reply) (reply-bot reply)))
            replies
            process-reply-list)))
 

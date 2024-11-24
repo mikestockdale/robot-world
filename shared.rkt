@@ -5,6 +5,7 @@
          "shared/entity.rkt"
          "shared/location.rkt"
          "shared/request.rkt"
+         "shared/reply.rkt"
          "shared/testing.rkt")
 
 (provide (struct-out bot) bot-id bot-location
@@ -15,4 +16,5 @@
          (struct-out location) adjacent? nearby? location-offset
          (struct-out request) request-draw request-hello
          request-drop request-move request-take
+         (struct-out reply)
          test-case:)

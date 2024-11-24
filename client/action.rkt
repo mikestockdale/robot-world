@@ -29,7 +29,7 @@
     (action go-east #f #f #f (bot (entity 102 type-bot #f) #f '()))))
  (define (fake-connection requests)
    (map (λ (request)
-          (list #t (~a "fakebot " request))) requests))
+          (reply #t (~a "fakebot " request))) requests))
  (let* ([action-list (perform-actions fake-connection actions)])
    (check-true (~> action-list first action-success?))
    (check-equal? (~> action-list first action-bot) "fakebot #s(request 1 101 0)")
@@ -54,7 +54,8 @@
      (bot-id (action-bot action))
      (action-parameter action)))
   (define (copy-action reply input-action)
-    (struct-copy action input-action [success? (first reply)] [bot (second reply)]))
+    (struct-copy action input-action
+                 [success? (reply-success? reply)] [bot (reply-bot reply)]))
   (let ([actions (map perform-strategy action-list)])
     (map copy-action 
          (connection (map make-request actions))

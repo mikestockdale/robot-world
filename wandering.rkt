@@ -6,10 +6,10 @@
 
 (struct wandering (direction cargo-delay))
 
-(define (wandering-actions bot-infos)
+(define (wandering-actions replies)
   (map
-   (λ (bot-info) (action (wander (wandering direction-east 0)) #f #f #t bot-info))
-   bot-infos))
+   (λ (reply) (action (wander (wandering direction-east 0)) #f #f #t (reply-bot reply)))
+   replies))
 
 (define ((wander spec) input-action)
   (let ([choice (choose spec input-action)])

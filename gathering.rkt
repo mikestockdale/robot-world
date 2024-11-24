@@ -9,7 +9,7 @@
 (define (gathering-actions replies)
   (map
    (λ (reply)
-     (action (gather (gathering direction-east 0 (location 25 25))) #f #f #t (second reply)))
+     (action (gather (gathering direction-east 0 (location 25 25))) #f #f #t (reply-bot reply)))
    replies))
 
 (define ((gather spec) input-action)
