@@ -2,7 +2,7 @@
 
 (provide wandering-actions)
 
-(require "action.rkt" "shared.rkt" "tactics.rkt")
+(require "action.rkt" "bot.rkt" "shared.rkt" "tactics.rkt")
 (module+ test (require rackunit))
 
 ;@title{Wandering}
@@ -23,7 +23,7 @@
 
 (define (wandering-actions replies)
   (map
-   (λ (reply) (action (wander (wandering direction-east 0)) #f #f #t (reply-bot reply)))
+   (λ (reply) (action (wander (wandering direction-east 0)) #f #f #t (make-bot reply)))
    replies))
 
 ;At each turn, a choice is made for each bot and the action is updated. 

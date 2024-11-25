@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out action) perform-actions)
-(require threading "shared.rkt")
+(require threading "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
 
 ;@title{Action}
@@ -29,13 +29,13 @@
     (action go-east #f #f #f (bot (entity 102 type-bot #f) #f '()))))
  (define (fake-connection requests)
    (map (λ (request)
-          (reply #t (~a "fakebot " request))) requests))
+          (reply #t (~a "fakebot " request) #f #f)) requests))
  (let* ([action-list (perform-actions fake-connection actions)])
    (check-true (~> action-list first action-success?))
-   (check-equal? (~> action-list first action-bot) "fakebot #s(request 1 101 0)")
+   (check-equal? (~> action-list first action-bot bot-entity) "fakebot #s(request 1 101 0)")
    (check-equal? (~> action-list first action-strategy) go-east)
    (check-true (~> action-list second action-success?))
-   (check-equal? (~> action-list second action-bot) "fakebot #s(request 1 102 1)")
+   (check-equal? (~> action-list second action-bot bot-entity) "fakebot #s(request 1 102 1)")
    (check-equal? (~> action-list second action-strategy) go-north)))
 
 ;The actions are performed in these steps:
@@ -55,9 +55,8 @@
      (action-parameter action)))
   (define (copy-action reply input-action)
     (struct-copy action input-action
-                 [success? (reply-success? reply)] [bot (reply-bot reply)]))
+                 [success? (reply-success? reply)] [bot (make-bot reply)]))
   (let ([actions (map perform-strategy action-list)])
     (map copy-action 
          (connection (map make-request actions))
          actions)))
-

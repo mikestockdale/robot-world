@@ -2,14 +2,15 @@
 
 (provide gathering-actions)
 
-(require "shared.rkt" "client/action.rkt" "client/tactics.rkt")
+(require "shared.rkt" "action.rkt" "bot.rkt" "tactics.rkt")
 
 (struct gathering (direction cargo-delay location))
 
 (define (gathering-actions replies)
   (map
    (λ (reply)
-     (action (gather (gathering direction-east 0 (location 25 25))) #f #f #t (reply-bot reply)))
+     (action (gather (gathering direction-east 0 (location 25 25))) #f #f #t
+             (make-bot reply)))
    replies))
 
 (define ((gather spec) input-action)

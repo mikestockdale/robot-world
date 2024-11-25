@@ -4,7 +4,7 @@
          (struct-out choice) direction-change-chance
          choose-drop choose-move choose-take)
 
-(require "shared.rkt")
+(require "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
 
 ;@title{Tactics}
@@ -92,13 +92,14 @@
   (define (is-free? location)
     (not (findf (λ (neighbor) (equal? location (entity-location neighbor)))
                 (bot-neighbors bot))))
-  (let* ([drop-location
-          (argmax (count-adjacent bot) (filter is-free? (all-directions (bot-location bot))))]
+  (define (score location)
+    (if (is-free? location) (count-adjacent bot location) -1))
+  (let* ([drop-location (argmax score (all-directions (bot-location bot)))]
          [drop-direction (direction-from (bot-location bot) drop-location)])
     (choice request-drop drop-direction
             (change-direction drop-direction) 5)))
 
-(define ((count-adjacent bot) location)
+(define (count-adjacent bot location)
   (define (adjacent-block? entity)
     (and (= (entity-type entity) type-block)
          (adjacent? (entity-location entity) location)))
@@ -163,5 +164,5 @@
   (filter (λ (entity)
             (and (= (entity-type entity) type-block)
                  (adjacent? (entity-location entity) (bot-location bot))
-                 (< ((count-adjacent bot) (entity-location entity)) 2)))
+                 (< (count-adjacent bot (entity-location entity)) 2)))
           (bot-neighbors bot)))

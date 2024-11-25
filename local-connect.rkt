@@ -13,7 +13,7 @@
 
 (module+ test
   (require rackunit threading
-           "shared.rkt" "server/engine.rkt" "client/connection.rkt")
+           "shared.rkt" "server/engine.rkt" "client/connection.rkt" "client/bot.rkt")
   
   (define (process-bot success? bot) bot)
   
@@ -25,7 +25,7 @@
   (define (send-requests connection requests process-reply-list)
     (let ([replies (connection requests)])
       (map (λ (reply process-reply)
-             (process-reply (reply-success? reply) (reply-bot reply)))
+             (process-reply (reply-success? reply) (make-bot reply)))
            replies
            process-reply-list)))
 
