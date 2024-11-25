@@ -34,10 +34,7 @@
      action input-action
      [request-type (choice-type choice)]
      [parameter (choice-parameter choice)]
-     [strategy (wander (struct-copy
-                        wandering spec
-                        [direction (choice-direction choice)]
-                        [cargo-delay (choice-delay choice)]))])))
+     [strategy (wander (wandering spec (choice-direction choice) (choice-delay choice)))])))
 
 ;A couple of helper methods for testing
 
