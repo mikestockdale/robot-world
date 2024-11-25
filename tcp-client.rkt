@@ -1,6 +1,6 @@
 #lang racket
 
-(require "shared.rkt" "client/action.rkt" "client/connection.rkt" "gathering.rkt")
+(require "shared.rkt" "client/action.rkt" "client/connection.rkt" "client/gathering.rkt")
 
 (define (run)
   (let* ([connection (connect-remote "localhost" 8080)]
