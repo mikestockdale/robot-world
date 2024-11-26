@@ -1,6 +1,6 @@
 #lang racket
 
-(provide change-direction move-direction
+(provide move-direction direction-from
          direction-north direction-east direction-south direction-west
          all-directions)
 
@@ -40,26 +40,36 @@
 (define (move-direction direction from)
   ((vector-ref movement direction) from))
 
-;We can list the locations in @bold{all directions} from a location.
+;We can list the locations in @bold{all directions} from a source location.
+;THe @racket[#:except] keyword excludes a direction.
 
 (test-case:
  "all directions from location"
  (check-equal? (all-directions (location 1 2))
-               (list (location 1 3) (location 2 2) (location 1 1) (location 0 2))))
+               (list (location 1 3) (location 2 2) (location 1 1) (location 0 2)))
+ (check-equal? (all-directions (location 1 2) #:except direction-east)
+               (list (location 1 3) (location 1 1) (location 0 2))))
 
-;Each item in the @racket[movement] vector is appplied to the location.
+;Each item is a movement from the source location.
 
-(define (all-directions location)
-  (map (λ (move) (move location)) (vector->list movement)))
+(define (all-directions source #:except [except -1])
+  (for/list ([direction 4] #:when (not (= direction except)))
+    (move-direction direction source)))
 
-;A bot needs to @bold{change direction} when the current direction is blocked.
+;The @bold{direction from} one location to another is a direction that will move a bot closer to a destination.
 
 (test-case:
- "new direction is different"
- (let ([new (change-direction direction-west)])
-   (check-true
-    (or (= new direction-north) (= new direction-south) (= new direction-east)))))
+ "direction from location to location"
+ (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
+ (check-equal? (direction-from (location 1 1) (location 3 4)) direction-north)
+ (check-equal? (direction-from (location 1 1) (location 4 3)) direction-east)
+ (check-equal? (direction-from (location 1 4) (location 3 1)) direction-south)
+ (check-equal? (direction-from (location 4 1) (location 1 3)) direction-west))
 
-;A simple way to change direction is to pick another direction at random.
+;The direction returned will reduce the larger of the x and y difference.
 
-(define (change-direction current) (modulo (+ current (random 1 4)) 4))
+(define (direction-from from to)
+  (let-values ([(difference-x difference-y) (location-offset from to)])
+    (if (> (abs difference-x) (abs difference-y))
+        (if (positive? difference-x) direction-west direction-east)
+        (if (positive? difference-y) direction-south direction-north))))

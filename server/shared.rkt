@@ -7,7 +7,7 @@
          "../shared/reply.rkt"
          "../shared/testing.rkt")
 
-(provide all-directions move-direction change-direction
+(provide all-directions move-direction
          direction-north direction-east direction-south direction-west
          (struct-out entity) make-edge entity-symbol change-entity-location
          type-block type-bot type-edge

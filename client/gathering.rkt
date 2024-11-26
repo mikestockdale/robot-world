@@ -141,7 +141,7 @@
           (if (or (and (equal? (action-request-type input) request-move)
                        (not (action-success? input))) 
                   (> (direction-change-chance) (random)))
-              (change-direction old-direction)
+              (change-direction (action-bot input) old-direction)
               old-direction))))
   (if (and (= (gathering-cargo-delay spec) 0)
            (bot-cargo (action-bot input))

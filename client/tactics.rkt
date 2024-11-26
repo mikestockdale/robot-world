@@ -1,6 +1,6 @@
 #lang racket
 
-(provide blocks-nearby? removable-blocks direction-from 
+(provide blocks-nearby? removable-blocks
          (struct-out choice) direction-change-chance
          choose-drop choose-move choose-take)
 
@@ -15,24 +15,6 @@
 ;This is set to a 20% chance.
 
 (define direction-change-chance (make-parameter 0.2))
-
-;The @bold{direction from} one location to another is a direction that will move a bot closer to a destination.
-
-(test-case:
- "direction from location to location"
- (check-equal? (direction-from (location 1 1) (location 2 1)) direction-east)
- (check-equal? (direction-from (location 1 1) (location 3 4)) direction-north)
- (check-equal? (direction-from (location 1 1) (location 4 3)) direction-east)
- (check-equal? (direction-from (location 1 4) (location 3 1)) direction-south)
- (check-equal? (direction-from (location 4 1) (location 1 3)) direction-west))
-
-;The direction returned will reduce the larger of the x and y difference.
-
-(define (direction-from from to)
-  (let-values ([(difference-x difference-y) (location-offset from to)])
-    (if (> (abs difference-x) (abs difference-y))
-        (if (positive? difference-x) direction-west direction-east)
-        (if (positive? difference-y) direction-south direction-north))))
 
 ;There are @bold{blocks nearby} if they are in the bot's neighbor list.
 
@@ -85,19 +67,15 @@
         [choice (choose-drop (bot bot1 #f (list edge1 edge2 block)))])
    (check-equal? (choice-parameter choice) direction-west)))
 
-;A location is free if there are no entities at the location.
-;The chosen direction is the one to the location with most adjacent blocks
+;The chosen direction is the one to the free location with most adjacent blocks
 
 (define (choose-drop bot)
-  (define (is-free? location)
-    (not (findf (λ (neighbor) (equal? location (entity-location neighbor)))
-                (bot-neighbors bot))))
   (define (score location)
-    (if (is-free? location) (count-adjacent bot location) -1))
+    (if (is-free? bot location) (count-adjacent bot location) -1))
   (let* ([drop-location (argmax score (all-directions (bot-location bot)))]
          [drop-direction (direction-from (bot-location bot) drop-location)])
     (choice request-drop drop-direction
-            (change-direction drop-direction) 5)))
+            (change-direction bot drop-direction) 5)))
 
 (define (count-adjacent bot location)
   (define (adjacent-block? entity)
