@@ -41,7 +41,7 @@
   ((vector-ref movement direction) from))
 
 ;We can list the locations in @bold{all directions} from a source location.
-;THe @racket[#:except] keyword excludes a direction.
+;The @racket[#:except] keyword excludes a direction.
 
 (test-case:
  "all directions from location"
