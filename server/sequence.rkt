@@ -1,23 +1,22 @@
 #lang racket
 
-(provide make-sequence new-id)
+(provide make-sequence)
+(require "shared.rkt")
+(module+ test (require rackunit))
 
-(struct sequence (get-next))
+;@title{Sequence}
+;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/sequence.rkt" "sequence.rkt"]}
+;The sequence is a generator for integers.
+
 (define (make-sequence)
   (let-values ([(_ get-next) (sequence-generate (in-naturals 101))])
-    (sequence get-next)))
+    get-next))
 
-(define (new-id sequence)
-  ((sequence-get-next sequence)))
+;The sequence supplies new ids.
 
-(module+ test
-  (require rackunit)
-
-  (test-case
-   "generates ids"
-   (let ([sequence (make-sequence)])
-     (check-equal? (new-id sequence) 101)
-     (check-equal? (new-id sequence) 102)
-     (check-equal? (new-id sequence) 103)))
-
-  )
+(test-case:
+ "generates ids"
+ (let ([sequence (make-sequence)])
+   (check-equal? (sequence) 101)
+   (check-equal? (sequence) 102)
+   (check-equal? (sequence) 103)))

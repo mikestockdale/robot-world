@@ -45,7 +45,7 @@
 
 (define (add-entity engine type location)
   (if (is-available? (engine-grid engine) location)
-      (let ([new-entity (entity (new-id (engine-sequence engine)) type location)])
+      (let ([new-entity (entity ((engine-sequence engine)) type location)])
         (place-entity (engine-grid engine) new-entity)
         new-entity)
       #f))
