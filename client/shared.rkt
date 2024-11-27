@@ -9,7 +9,7 @@
 
 (provide all-directions move-direction direction-from
          direction-north direction-east direction-south direction-west
-         (struct-out entity) make-edge entity-symbol change-entity-location
+         (struct-out entity) make-edge change-entity-location
          type-block type-bot type-edge
          (struct-out location) adjacent? nearby? location-offset
          (struct-out request) request-draw request-hello

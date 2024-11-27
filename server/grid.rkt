@@ -134,11 +134,11 @@
 
 (test-case:
  "neighbors include edges"
- (let* ([world (make-grid 3)])
-   (let ([neighbors (neighbors world (location 0 1))])
+ (let* ([grid (make-grid 3)]
+        [neighbors (neighbors grid (location 0 1))])
      (check-equal? (length neighbors) 1)
      (check-equal? (entity-type (first neighbors)) type-edge)
-     (check-equal? (entity-location (first neighbors)) (location -1 1)))))
+     (check-equal? (entity-location (first neighbors)) (location -1 1))))
 
 (define (neighbors grid location)
   (append

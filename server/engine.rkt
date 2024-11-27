@@ -151,15 +151,16 @@
                        (change-entity-location
                         (unload-cargo (engine-cargos engine) id) drop-location)))))
 
-;The engine can @bold{draw} the @bold{entities} by calling a procedure from a game viewer.
+;The engine can provide the data that a game viewer needs to @bold{draw} the @bold{entities}.
 
 (test-case:
  "entities are drawn"
- (let* ([engine (make-engine 3)]
-        [bot (entity-symbol (add-entity engine type-bot (location 0 2)) #f)]
-        [block (entity-symbol (add-entity engine type-block (location 2 1)) #f)])
+ (let* ([engine (make-engine 3)])
+   (add-entity engine type-bot (location 0 2))
+   (add-entity engine type-block (location 2 1))
    (add-entity engine type-bot(location 1 1))
-   (check-equal? (draw-entities engine) (list (list bot 0 2) (list block 2 1) (list bot 1 1)))))
+   (check-equal? (draw-entities engine)
+                 (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
 
 ;The entities are provided by the grid and the cargo is retrieved from the cargos table.
 
@@ -169,7 +170,7 @@
    (λ (entity)
      (let ([cargo (cargo-for-bot (engine-cargos engine) (entity-id entity))]
            [location (entity-location entity)])
-       (list (entity-symbol entity cargo) (location-x location) (location-y location))))))
+       (list (entity-type entity) (if cargo #t #f) (location-x location) (location-y location))))))
                   
 ;The engine provides @bold{entity info} to be returned to the client.
 
