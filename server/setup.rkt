@@ -10,13 +10,17 @@
 (define (setup-engine)
   (make-engine 50))
 
+(define (add-random-location engine entity-type)
+  (let ([new-entity (add-entity engine entity-type (location (random 50) (random 50)))])
+    (if new-entity
+        new-entity
+        (add-random-location entity-type))))
+
 (define (setup-blocks engine)
-  (for ([x 5])
-    (for ([y 5])
-      (add-entity engine type-block
-                   (location (+ 5 (* x 10)) (+ 5 (* y 10))))))
+  (for ([i 25])
+    (add-random-location engine type-block))
   #t)
 
 (define (setup-bots engine)
   (for/list ([i 4])
-    (add-entity engine type-bot (location (+ 10 (* i 10)) (+ 10 (* i 10))))))
+    (add-random-location engine type-bot)))
