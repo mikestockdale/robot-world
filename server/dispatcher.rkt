@@ -64,7 +64,7 @@
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.
 
-(define player-procedures (vector drop-entity move-entity take-entity))
+(define player-procedures (vector drop-entity move-entity take-entity transfer-entity))
 
 (define (dispatch-list engine request-list)
   (define (execute request)

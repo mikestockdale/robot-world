@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-engine entity-info draw-entities
-         add-entity move-entity take-entity drop-entity)
+         add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
 (require "shared.rkt" "cargos.rkt" "grid.rkt" "sequence.rkt")
@@ -150,6 +150,26 @@
          (place-entity (engine-grid engine)
                        (change-entity-location
                         (unload-cargo (engine-cargos engine) id) drop-location)))))
+
+;@bold{transfer entity}
+
+(test-case:
+ "transfer"
+ (let* ([engine (make-engine 3)]
+        [bot (add-entity engine type-bot (location 1 1))]
+        [bot-id (entity-id bot)]
+        [market (add-entity engine type-market (location 1 2))]
+        [market-id (entity-id market)]
+        [block (add-entity engine type-block (location 2 1))]
+        [block-id (entity-id block)])
+   (take-entity engine bot-id block-id)
+   (transfer-entity engine bot-id market-id)
+   (check-false (cargo-for-bot (engine-cargos engine) bot-id))
+   (check-equal? (cargo-for-bot (engine-cargos engine) market-id) block)))
+
+(define (transfer-entity engine from-id to-id)
+  (load-cargo (engine-cargos engine) to-id
+              (unload-cargo (engine-cargos engine) from-id)))
 
 ;The engine can provide the data that a game viewer needs to @bold{draw} the @bold{entities}.
 

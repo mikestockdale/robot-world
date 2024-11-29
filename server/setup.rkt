@@ -14,7 +14,7 @@
   (let ([new-entity (add-entity engine entity-type (location (random 50) (random 50)))])
     (if new-entity
         new-entity
-        (add-random-location entity-type))))
+        (add-random-location engine entity-type))))
 
 (define (setup-blocks engine)
   (for ([i 25])
