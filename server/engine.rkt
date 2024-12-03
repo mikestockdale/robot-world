@@ -5,7 +5,7 @@
 
 (require threading)
 (require "shared.rkt" "cargos.rkt" "grid.rkt" "sequence.rkt")
-(module+ test (require rackunit))
+(module+ test (require rackunit "testing.rkt"))
 
 ;@title{Engine}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/engine.rkt" "engine.rkt"]}
@@ -56,26 +56,24 @@
 
 (test-case:
  "move bot changes location"
- (let* ([engine (make-engine 10)]
-        [bot (add-entity engine type-bot (location 5 6))]
-        [id (entity-id bot)])
-   (move-entity engine id direction-north)
-   (check-equal? (entity-location (entity-by-id (engine-grid engine) id)) (location 5 7))))
+ (test-engine
+  ((size 10) (bot 5 6))
+  (move-entity engine bot-id direction-north)
+  (check-equal? (entity-location (entity-by-id (engine-grid engine) bot-id)) (location 5 7))))
 
 (test-case:
  "invalid move leaves bot location unchanged"
- (let* ([engine (make-engine 10)]
-        [bot (add-entity engine type-bot (location 9 9))])
-   (check-false (move-entity engine (entity-id bot) direction-north))
-   (check-equal? (entity-location bot) (location 9 9)))) 
+ (test-engine
+  ((size 10) (bot 9 9))
+  (check-false (move-entity engine bot-id direction-north))
+  (check-equal? (entity-location bot) (location 9 9)))) 
 
 (test-case:
  "can not move to occupied location"
- (let* ([engine (make-engine 3)]
-        [bot (add-entity engine type-bot (location 1 1))])
-   (add-entity engine type-block (location 1 2))
-   (check-false (move-entity engine (entity-id bot) direction-north))
-   (check-equal? (entity-location bot) (location 1 1))))
+ (test-engine
+  ((size 3) (bot 1 1) (block 1 2))
+  (check-false (move-entity engine bot-id direction-north))
+  (check-equal? (entity-location bot) (location 1 1))))
 
 ;The result is not false if successful, otherwise it is @racket[#f].
 
@@ -90,21 +88,19 @@
 
 (test-case:
  "block is taken"
- (let* ([engine (make-engine 3)]
-        [bot (add-entity engine type-bot (location 1 1))]
-        [block (add-entity engine type-block (location 2 1))])
-   (check-not-false (take-entity engine (entity-id bot) (entity-id block)))
-   (check-equal? (cargo-for-bot (engine-cargos engine) (entity-id bot)) block)
-   (check-false (entity-by-id (engine-grid engine) (entity-id block)))))
+ (test-engine
+  ((size 3) (bot 1 1) (block 2 1))
+  (check-not-false (take-entity engine bot-id block-id))
+  (check-equal? (cargo-for-bot (engine-cargos engine) bot-id) block)
+  (check-false (entity-by-id (engine-grid engine) block-id))))
 
 (test-case:
  "can not take if block is removed"
- (let* ([engine (make-engine 3)]
-        [bot (add-entity engine type-bot (location 1 1))]
-        [block (add-entity engine type-block (location 2 1))])
-   (remove-entity (engine-grid engine) (entity-id block))
-   (check-false (take-entity engine (entity-id bot) (entity-id block)))
-   (check-false (cargo-for-bot (engine-cargos engine) (entity-id bot)))))
+ (test-engine
+  ((size 3) (bot 1 1) (block 2 1))
+  (remove-entity (engine-grid engine) block-id)
+  (check-false (take-entity engine bot-id block-id))
+  (check-false (cargo-for-bot (engine-cargos engine) bot-id))))
 
 ;The entity being taken is loaded into the cargos table and removed from the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
@@ -122,23 +118,20 @@
 
 (test-case:
  "block is dropped"
- (let* ([engine (make-engine 3)]
-        [block (add-entity engine type-block (location 2 1))]
-        [bot (add-entity engine type-bot (location 1 1))])
-   (take-entity engine (entity-id bot) (entity-id block))
-   (check-not-false (drop-entity engine (entity-id bot) direction-north))
-   (check-false (cargo-for-bot (engine-cargos engine) (entity-id bot)))
-   (check-equal? (entity-location (entity-by-id (engine-grid engine) (entity-id block))) (location 1 2))))
+ (test-engine
+  ((size 3) (block 2 1) (bot 1 1))
+  (take-entity engine (entity-id bot) block-id)
+  (check-not-false (drop-entity engine bot-id direction-north))
+  (check-false (cargo-for-bot (engine-cargos engine) bot-id))
+  (check-equal? (entity-location (entity-by-id (engine-grid engine) block-id)) (location 1 2))))
 
 (test-case:
  "can not drop in occupied location"
- (let* ([engine (make-engine 3)]
-        [block (add-entity engine type-block (location 2 1))]
-        [bot (add-entity engine type-bot (location 1 1))])
-   (take-entity engine (entity-id bot) (entity-id block))
-   (add-entity engine type-block (location 0 1))
-   (check-false (drop-entity engine (entity-id bot) direction-west))
-   (check-equal? (cargo-for-bot (engine-cargos engine) (entity-id bot)) block)))
+ (test-engine
+  ((size 3) (block1 2 1) (bot 1 1) (block2 0 1))
+  (take-entity engine bot-id block1-id)
+  (check-false (drop-entity engine bot-id direction-west))
+  (check-equal? (cargo-for-bot (engine-cargos engine) bot-id) block1)))
 
 ;The entity being dropped is unloaded from the cargos table and placed in the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
@@ -155,17 +148,12 @@
 
 (test-case:
  "transfer"
- (let* ([engine (make-engine 3)]
-        [bot (add-entity engine type-bot (location 1 1))]
-        [bot-id (entity-id bot)]
-        [market (add-entity engine type-market (location 1 2))]
-        [market-id (entity-id market)]
-        [block (add-entity engine type-block (location 2 1))]
-        [block-id (entity-id block)])
-   (take-entity engine bot-id block-id)
-   (transfer-entity engine bot-id market-id)
-   (check-false (cargo-for-bot (engine-cargos engine) bot-id))
-   (check-equal? (cargo-for-bot (engine-cargos engine) market-id) block)))
+ (test-engine
+  ((size 3) (bot 1 1) (base 1 2) (block 2 1))
+  (take-entity engine bot-id block-id)
+  (transfer-entity engine bot-id base-id)
+  (check-false (cargo-for-bot (engine-cargos engine) bot-id))
+  (check-equal? (cargo-for-bot (engine-cargos engine) base-id) block)))
 
 (define (transfer-entity engine from-id to-id)
   (load-cargo (engine-cargos engine) to-id
@@ -175,12 +163,10 @@
 
 (test-case:
  "entities are drawn"
- (let* ([engine (make-engine 3)])
-   (add-entity engine type-bot (location 0 2))
-   (add-entity engine type-block (location 2 1))
-   (add-entity engine type-bot(location 1 1))
-   (check-equal? (draw-entities engine)
-                 (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
+ (test-engine
+  ((size 3) (bot1 0 2) (block 2 1) (bot2 1 1))
+  (check-equal? (draw-entities engine)
+                (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
 
 ;The entities are provided by the grid and the cargo is retrieved from the cargos table.
 
@@ -196,15 +182,13 @@
 
 (test-case:
  "entity info"
- (let* ([engine (make-engine 4)]
-        [bot1 (add-entity engine type-bot (location 2 2))]
-        [block1 (add-entity engine type-block (location 2 3))]
-        [block2 (add-entity engine type-block (location 1 1))])
-   (take-entity engine (entity-id bot1) (entity-id block1))
-   (let-values ([(entity cargo neighbors) (entity-info engine (entity-id bot1))])
-     (check-equal? entity bot1)
-     (check-equal? cargo block1)
-     (check-equal? neighbors (list block2)))))
+ (test-engine
+  ((size 4) (bot1 2 2) (block1 2 3) (block2 1 1))
+  (take-entity engine bot1-id block1-id)
+  (let-values ([(entity cargo neighbors) (entity-info engine bot1-id)])
+    (check-equal? entity bot1)
+    (check-equal? cargo block1)
+    (check-equal? neighbors (list block2)))))
  
 ;The bot and its neighbors are retrieved from the grid and the cargo from the cargos table.
 

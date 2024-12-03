@@ -160,3 +160,17 @@
 (define (map-entities grid procedure)
   (hash-map (grid-hash grid)
             (λ (_ entity) (procedure entity))))
+
+(test-case:
+ "random base"
+ (let ([grid (make-grid 4)])
+   (place-entity grid (entity 101 type-block (location 1 0)))
+   (check-not-equal? (random-base grid) (location 1 1))))
+
+(define (random-base grid)
+  (let* ([top (sub1 (grid-size grid))]
+         [location (location (random 1 top) (random 1 top))])
+    (if (andmap (λ (x) (is-available? grid x))
+                (all-directions location))
+        location
+        (random-base grid))))
