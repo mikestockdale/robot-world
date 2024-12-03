@@ -17,14 +17,16 @@
  (check-equal? (entity-symbol type-bot #f) #\u25A1)
  (check-equal? (entity-symbol type-bot 'laden) #\u25A3)
  (check-equal? (entity-symbol type-block #f) #\u25A0)
+ (check-equal? (entity-symbol type-base #f) #\u25A4)
  (check-equal? (entity-symbol type-edge #f) #\?))
 
-;Only bots and blocks should appear. Anything else is a mistake!
+;Only bases, bots,and blocks should appear. Anything else is a mistake!
 
 (define (entity-symbol entity-type laden?)
   (cond
     [(= entity-type type-bot) (if laden? #\u25A3  #\u25A1)]
     [(= entity-type type-block) #\u25A0]
+    [(= entity-type type-base) #\u25A4]
     [else #\?]))
 
 ;The animation can be paused and resumed with a mouse click.
@@ -41,8 +43,9 @@
 ;The animation is displayed.
 
 (define (viewer title draw-procedure action-procedure
-                #:size [size 50] #:style [style '()])
+                #:size [size 50] #:style [style '()] #:run [run #t])
   (define count 0)
+  (set! run-actions run)
   (let* ([frame (new frame% [label title] [style style]
                      [width (* 10 size)] [height (+ (* 11 size) 22)])]
          [font (make-font #:face "DejaVu Sans Mono")]

@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-grid place-entity remove-entity entity-by-id
-         entity-at is-available? neighbors map-entities)
+         entity-at is-available? neighbors map-entities random-base)
 
 (require threading "shared.rkt")
 (module+ test (require rackunit))

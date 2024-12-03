@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-engine entity-info draw-entities
+(provide make-engine entity-info draw-entities add-random-base
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
@@ -158,6 +158,16 @@
 (define (transfer-entity engine from-id to-id)
   (load-cargo (engine-cargos engine) to-id
               (unload-cargo (engine-cargos engine) from-id)))
+
+(test-case:
+ "add random base"
+ (test-engine
+  ((size 3))
+  (check-equal? (entity-location (add-random-base engine))
+                (location 1 1))))
+
+(define (add-random-base engine)
+  (add-entity engine type-base (random-base (engine-grid engine))))
 
 ;The engine can provide the data that a game viewer needs to @bold{draw} the @bold{entities}.
 

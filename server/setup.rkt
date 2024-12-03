@@ -22,10 +22,6 @@
   #t)
 
 (define (setup-bots engine)
-  (for/list ([i 4])
-    (add-random-location engine type-bot)))
-
-#;(define (setup-bots engine)
-  (let ([market (add-random-location engine type-market)])
-    (for/list ([location (all-directions (entity-location market))])
+  (let ([base (add-random-base engine)])
+    (for/list ([location (all-directions (entity-location base))])
       (add-entity engine type-bot location))))
