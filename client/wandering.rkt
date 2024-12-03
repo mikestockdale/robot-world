@@ -34,7 +34,7 @@
      action input-action
      [request-type (choice-type choice)]
      [parameter (choice-parameter choice)]
-     [strategy (wander (wandering spec (choice-direction choice) (choice-delay choice)))])))
+     [strategy (wander (wandering (choice-direction choice) (choice-delay choice)))])))
 
 ;A couple of helper methods for testing
 
