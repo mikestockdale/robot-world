@@ -2,7 +2,7 @@
 
 (provide blocks-nearby? removable-blocks
          (struct-out choice) direction-change-chance
-         choose-drop choose-move choose-take)
+         choose-drop choose-move choose-take choose-transfer)
 
 (require "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
@@ -112,6 +112,10 @@
 (define (choose-take bot block)
   (let ([take-direction (direction-from (bot-location bot) (entity-location block))]) 
     (choice request-take (entity-id block) take-direction 5)))
+
+(define (choose-transfer bot)
+  (let ([base (findf (λ (item) (equal? (entity-type item) type-base)) (bot-neighbors bot))])
+    (choice request-transfer (entity-id base) 0 0)))
 
 ;@bold{Removeable blocks} are ones that are adjacent to a bot and are not adjacent to two other blocks.
 

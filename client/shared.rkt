@@ -13,6 +13,6 @@
          type-block type-bot type-base type-edge
          (struct-out location) adjacent? nearby? location-offset
          (struct-out request) request-draw request-hello
-         request-drop request-move request-take
+         request-drop request-move request-take request-transfer
          (struct-out reply)
          test-case:)
