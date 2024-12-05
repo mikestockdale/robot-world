@@ -97,7 +97,9 @@
  "transfer at destination"
  (let ([choice (gather-with (choose-input #:neighbors (list (entity 103 type-base (location 0 1)))
                                           #:cargo (entity 103 type-block (location 0 0))))])
-   (check-equal? (choice-type choice) request-transfer)))
+   (check-equal? (choice-type choice) request-transfer)
+   (check-equal? (choice-parameter choice) 103)
+   (check-equal? (choice-type choice) direction-west)))
 
 ;The strategy makes a choice.
 
@@ -115,7 +117,7 @@
                   old-direction)))))
   (if (and (bot-cargo (action-bot input))
            (equal? (gathering-destination spec) (bot-location (action-bot input))))
-      (choose-transfer(action-bot input))
+      (choose-transfer (action-bot input))
       (let ([blocks (removable-blocks (action-bot input))])
         (if (> (length blocks) 0)
             (choose-take (action-bot input) (first blocks))

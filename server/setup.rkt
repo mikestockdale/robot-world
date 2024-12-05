@@ -5,7 +5,7 @@
 
 ;@title{Setup}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/setup.rkt" "setup.rkt"]}
-;Setup creates an engine, populates it with blocks, and creates bots for a player.
+;Setup creates an engine and populates it with blocks, and creates bots for a player.
 
 (define (setup-engine)
   (make-engine 50))
@@ -21,7 +21,10 @@
     (add-random-location engine type-block))
   #t)
 
+;To set up bots, a base is created in a random location.
+;The bots are added at locations adjacent to the base.
+
 (define (setup-bots engine)
-  (let ([base (add-random-base engine)])
+  (let ([base (add-base-at-random engine)])
     (for/list ([location (all-directions (entity-location base))])
       (add-entity engine type-bot location))))

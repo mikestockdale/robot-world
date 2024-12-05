@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-engine entity-info draw-entities add-random-base
+(provide make-engine entity-info draw-entities add-base-at-random
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
@@ -144,7 +144,8 @@
                        (change-entity-location
                         (unload-cargo (engine-cargos engine) id) drop-location)))))
 
-;@bold{transfer entity}
+;The engine can @bold{transfer} an @bold{entity} from a bot to a base.
+;The bot must be adjacent to the base.
 
 (test-case:
  "transfer"
@@ -155,18 +156,34 @@
   (check-false (cargo-for-bot (engine-cargos engine) bot-id))
   (check-equal? (cargo-for-bot (engine-cargos engine) base-id) block)))
 
+(test-case:
+ "must be adjacent"
+ (test-engine
+  ((size 3) (bot 1 1) (base 2 2) (block 2 1))
+  (take-entity engine bot-id block-id)
+  (check-false (transfer-entity engine bot-id base-id))))
+
+;The entity being transferred is removed from the bot's cargo and added to the base's cargo.
+;The result is not false if successful, otherwise it is @racket[#f].
+
 (define (transfer-entity engine from-id to-id)
-  (load-cargo (engine-cargos engine) to-id
-              (unload-cargo (engine-cargos engine) from-id)))
+  (let ([from-entity (entity-by-id (engine-grid engine) from-id)]
+        [to-entity (entity-by-id (engine-grid engine) to-id)])
+    (and
+     (adjacent? (entity-location from-entity) (entity-location to-entity))
+     (load-cargo (engine-cargos engine) to-id
+                 (unload-cargo (engine-cargos engine) from-id)))))
+
+;The engine @bold{add}s a @bold{base at} a @bold{random} location.
 
 (test-case:
- "add random base"
+ "add base at random"
  (test-engine
   ((size 3))
-  (check-equal? (entity-location (add-random-base engine))
+  (check-equal? (entity-location (add-base-at-random engine))
                 (location 1 1))))
 
-(define (add-random-base engine)
+(define (add-base-at-random engine)
   (add-entity engine type-base (random-base (engine-grid engine))))
 
 ;The engine can provide the data that a game viewer needs to @bold{draw} the @bold{entities}.

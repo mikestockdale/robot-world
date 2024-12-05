@@ -161,6 +161,9 @@
   (hash-map (grid-hash grid)
             (λ (_ entity) (procedure entity))))
 
+;The grid selects a @bold{random base} location.
+;The location must have all adjacent locations available.
+
 (test-case:
  "random base"
  (let ([grid (make-grid 4)])

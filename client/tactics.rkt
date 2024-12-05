@@ -113,9 +113,23 @@
   (let ([take-direction (direction-from (bot-location bot) (entity-location block))]) 
     (choice request-take (entity-id block) take-direction 5)))
 
+;When a strategy @bold{choose}s to @bold{transfer} a block to a base, the choice parameter is the base id.
+;The next move direction is away from the base.
+;The delay is not used.
+
+(test-case:
+ "choose transfer"
+ (let ([choice (choose-transfer
+                (bot (entity 101 type-bot (location 1 1)) #f
+                     (list (entity 102 type-base (location 1 2)))))])
+   (check-equal? (choice-type choice) request-transfer)
+   (check-equal? (choice-parameter choice) 102)
+   (check-equal? (choice-direction choice) direction-south)))
+
 (define (choose-transfer bot)
   (let ([base (findf (λ (item) (equal? (entity-type item) type-base)) (bot-neighbors bot))])
-    (choice request-transfer (entity-id base) 0 0)))
+    (choice request-transfer (entity-id base)
+            (direction-from (entity-location base) (bot-location bot)) 0)))
 
 ;@bold{Removeable blocks} are ones that are adjacent to a bot and are not adjacent to two other blocks.
 
