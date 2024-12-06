@@ -17,6 +17,24 @@
 
 (struct gathering (direction destination))
 
+;When a strategy @bold{choose}s to @bold{transfer} a block to a base, the choice parameter is the base id.
+;The next move direction is away from the base.
+;The delay is not used.
+
+(test-case:
+ "choose transfer"
+ (let ([choice (choose-transfer
+                (bot (entity 101 type-bot (location 1 1)) #f
+                     (list (entity 102 type-base (location 1 2)))))])
+   (check-equal? (choice-type choice) request-transfer)
+   (check-equal? (choice-parameter choice) 102)
+   (check-equal? (choice-direction choice) direction-south)))
+
+(define (choose-transfer bot)
+  (let ([base (findf (λ (item) (equal? (entity-type item) type-base)) (bot-neighbors bot))])
+    (choice request-transfer (entity-id base)
+            (direction-from (entity-location base) (bot-location bot)) 0)))
+
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
 
 (define (gathering-actions replies)
@@ -118,7 +136,7 @@
   (if (and (bot-cargo (action-bot input))
            (equal? (gathering-destination spec) (bot-location (action-bot input))))
       (choose-transfer (action-bot input))
-      (let ([blocks (removable-blocks (action-bot input))])
-        (if (> (length blocks) 0)
+      (let ([blocks (adjacent-blocks (action-bot input))])
+        (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
             (choose-take (action-bot input) (first blocks))
             (choose-move (pick-direction) 0)))))

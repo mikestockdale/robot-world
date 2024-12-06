@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out bot) make-bot bot-id bot-location
-         is-free? change-direction)
+         is-free? adjacent-blocks change-direction)
 
 (require "shared.rkt")
 (module+ test (require rackunit))
@@ -36,6 +36,36 @@
 (define (is-free? bot location)
   (not (findf (λ (neighbor) (equal? location (entity-location neighbor)))
               (bot-neighbors bot))))
+
+;@bold{Adjacent blocks} are ones that are adjacent to a bot.
+
+(test-case:
+ "adjacent block found"
+ (let* ([bot1 (entity 101 type-bot (location 1 1))]
+        [block1 (entity 102 type-block (location 1 2))]
+        [block2 (entity 102 type-block (location 2 2))]
+        [bot2 (entity 103 type-bot (location 2 1))]
+        [bot (bot bot1 #f (list bot2 block1 block2))]
+        [adjacent (adjacent-blocks bot)])
+   (check-equal? (length adjacent) 1)
+   (check-equal? (first adjacent) block1)))
+  
+(test-case:
+ "block not adjacent"
+ (let* ([bot1 (entity 101 type-bot (location 1 1))]
+        [block1 (entity 102 type-block (location 0 2))]
+        [block2 (entity 102 type-block (location 2 2))]
+        [bot (bot bot1 #f (list block1 block2))]
+        [adjacent (adjacent-blocks bot)])
+   (check-equal? (length adjacent) 0)))
+
+;We filter the bot's neighbors to find adjacent blocks
+
+(define (adjacent-blocks bot)
+  (filter (λ (entity)
+            (and (= (entity-type entity) type-block)
+                 (adjacent? (entity-location entity) (bot-location bot))))
+          (bot-neighbors bot)))
 
 ;A bot can @bold{change direction}.
 
