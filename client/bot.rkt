@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out bot) make-bot bot-id bot-location
+(provide (struct-out bot) make-bot bot-id
          is-free? adjacent-blocks change-direction)
 
 (require "shared.rkt")
@@ -13,23 +13,22 @@
 ;This is stored in the @racket[cargo] field.
 ;It also has a list of @elemref["nearby"]{nearby} entities that it can see, in the @racket[neighbors] field.
 
-(struct bot (entity cargo neighbors))
+(struct bot (entity location cargo neighbors))
 (define (make-bot reply)
-  (bot (reply-entity reply) (reply-cargo reply)
+  (bot (reply-entity reply) (entity-location (reply-entity reply)) (reply-cargo reply)
        (map (λ (entity) (occupant entity (entity-location entity))) (reply-neighbors reply))))
 
 ;We include a couple of helper functions, to access the entity id and location data.
 
 (define (bot-id bot) (entity-id (bot-entity bot)))
-(define (bot-location bot) (entity-location (bot-entity bot)))
 
 ;A location @bold{is free} if there are no entities at the location.
 
 (test-case:
- "free location found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
-        [block (entity 102 type-block (location 1 2))]
-        [bot (bot bot1 #f (list (occupant block (location 1 2))))])
+ "free location checked"
+ (let* ([bot1 (entity 101 type-bot #f)]
+        [block (entity 102 type-block #f)]
+        [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))])
    (check-true (is-free? bot (location 2 1)))
    (check-false (is-free? bot (location 1 2)))))
 
@@ -43,24 +42,26 @@
 
 (test-case:
  "adjacent block found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
-        [block1 (entity 102 type-block (location 1 2))]
-        [block2 (entity 102 type-block (location 2 2))]
-        [bot2 (entity 103 type-bot (location 2 1))]
-        [bot (bot bot1 #f (list (occupant bot2 (location 2 1))
-                                (occupant block1 (location 1 2))
-                                (occupant block2 (location 2 2))))]
+ (let* ([bot1 (entity 101 type-bot #f)]
+        [block1 (entity 102 type-block #f)]
+        [block2 (entity 102 type-block #f)]
+        [bot2 (entity 103 type-bot #f)]
+        [bot (bot bot1 (location 1 1) #f
+                  (list (occupant bot2 (location 2 1))
+                        (occupant block1 (location 1 2))
+                        (occupant block2 (location 2 2))))]
         [adjacent (adjacent-blocks bot)])
    (check-equal? (length adjacent) 1)
    (check-equal? (first adjacent) (occupant block1 (location 1 2)))))
   
 (test-case:
  "block not adjacent"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
-        [block1 (entity 102 type-block (location 0 2))]
-        [block2 (entity 102 type-block (location 2 2))]
-        [bot (bot bot1 #f (list (occupant block1 (location 0 2))
-                                (occupant block2 (location 2 2))))]
+ (let* ([bot1 (entity 101 type-bot #f)]
+        [block1 (entity 102 type-block #f)]
+        [block2 (entity 102 type-block #f)]
+        [bot (bot bot1 (location 1 1) #f
+                  (list (occupant block1 (location 0 2))
+                        (occupant block2 (location 2 2))))]
         [adjacent (adjacent-blocks bot)])
    (check-equal? (length adjacent) 0)))
 
@@ -76,9 +77,9 @@
 
 (test-case:
  "new direction is different"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
-        [block (entity 102 type-block (location 1 2))]
-        [bot (bot bot1 #f (list (occupant block (location 1 2))))]
+ (let* ([bot1 (entity 101 type-bot #f)]
+        [block (entity 102 type-block #f)]
+        [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))]
         [new (change-direction bot direction-west)])
    (check-true (or (= new direction-east) (= new direction-south)))
    (check-false (and (= new direction-north) (= new direction-west)))))

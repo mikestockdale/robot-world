@@ -25,17 +25,17 @@
                 [request-type request-move] [parameter direction-east]))
  (define actions
    (list
-    (action go-north #f #f #f (bot (entity 101 type-bot #f) #f '()))
-    (action go-east #f #f #f (bot (entity 102 type-bot #f) #f '()))))
+    (action go-north #f #f #f (bot (entity 101 type-bot #f) #f #f '()))
+    (action go-east #f #f #f (bot (entity 102 type-bot #f) #f #f '()))))
  (define (fake-connection requests)
    (map (λ (request)
-          (reply #t (~a "fakebot " request) #f '())) requests))
+          (reply #t (entity (request-id request) type-bot (location 1 1)) #f '())) requests))
  (let* ([action-list (perform-actions fake-connection actions)])
    (check-true (~> action-list first action-success?))
-   (check-equal? (~> action-list first action-bot bot-entity) "fakebot #s(request 1 101 0)")
+   (check-equal? (~> action-list first action-bot bot-entity entity-id) 101)
    (check-equal? (~> action-list first action-strategy) go-east)
    (check-true (~> action-list second action-success?))
-   (check-equal? (~> action-list second action-bot bot-entity) "fakebot #s(request 1 102 1)")
+   (check-equal? (~> action-list second action-bot bot-entity entity-id) 102)
    (check-equal? (~> action-list second action-strategy) go-north)))
 
 ;The actions are performed in these steps:

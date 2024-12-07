@@ -24,7 +24,7 @@
 (test-case:
  "choose transfer"
  (let ([choice (choose-transfer
-                (bot (entity 101 type-bot (location 1 1)) #f
+                (bot (entity 101 type-bot #f) (location 1 1) #f
                      (list (occupant (entity 102 type-base #f) (location 1 2)))))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 102)
@@ -65,7 +65,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (action #f command #f success
-            (bot (entity 101 type-bot (location 1 1)) cargo neighbors))))
+            (bot (entity 101 type-bot #f) (location 1 1) cargo neighbors))))
 
 (module+ test
   (define (gather-with

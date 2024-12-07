@@ -23,9 +23,9 @@
 
 (test-case:
  "blocks nearby"
- (check-true (blocks-nearby? (bot #f #f (list (occupant (entity 101 type-block #f) #f)))))
- (check-false (blocks-nearby? (bot #f #f (list (occupant (entity 101 type-bot #f) #f)))))
- (check-false (blocks-nearby? (bot #f #f '()))))
+ (check-true (blocks-nearby? (bot #f #f #f (list (occupant (entity 101 type-block #f) #f)))))
+ (check-false (blocks-nearby? (bot #f #f #f (list (occupant (entity 101 type-bot #f) #f)))))
+ (check-false (blocks-nearby? (bot #f #f #f '()))))
 
 (define (blocks-nearby? bot)
   (ormap (λ (neighbor) (= (entity-type (occupant-entity neighbor)) type-block))
@@ -36,9 +36,9 @@
 
 (test-case:
  "free location found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
+ (let* ([bot1 (entity 101 type-bot #f)]
         [block (entity 102 type-block (location 1 2))]
-        [bot (bot bot1 #f (list (occupant block (location 1 2))))]
+        [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))]
         [choice (choose-drop bot)])
    (check-equal? (choice-type choice) request-drop)
    (check-equal? (choice-parameter choice) direction-east)
@@ -49,24 +49,26 @@
 
 (test-case:
  "best location found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
+ (let* ([bot1 (entity 101 type-bot #f)]
         [block1 (entity 102 type-block (location 0 0))]
         [block2 (entity 103 type-block (location 2 0))]
-        [choice (choose-drop (bot bot1 #f (list (occupant block1 (location 0 0))
-                                                (occupant block2 (location 2 0)))))])
+        [choice (choose-drop (bot bot1 (location 1 1) #f
+                                  (list (occupant block1 (location 0 0))
+                                        (occupant block2 (location 2 0)))))])
    (check-equal? (choice-parameter choice) direction-south)))
 
 ;The direction chosen doesn't move outside the world
     
 (test-case:
  "free location not outside world"
- (let* ([bot1 (entity 101 type-bot (location 49 49))]
+ (let* ([bot1 (entity 101 type-bot #f)]
         [edge1 (make-edge (location 50 49))]
         [edge2 (make-edge (location 49 50))]
         [block (entity 102 type-block (location 49 48))]
-        [choice (choose-drop (bot bot1 #f (list (occupant edge1 (location 50 49))
-                                                (occupant edge2  (location 49 50))
-                                                (occupant block (location 49 48)))))])
+        [choice (choose-drop (bot bot1 (location 49 49) #f
+                                  (list (occupant edge1 (location 50 49))
+                                        (occupant edge2  (location 49 50))
+                                        (occupant block (location 49 48)))))])
    (check-equal? (choice-parameter choice) direction-west)))
 
 ;The chosen direction is the one to the free location with most adjacent blocks
@@ -89,24 +91,26 @@
 
 (test-case:
  "removable block found"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
+ (let* ([bot1 (entity 101 type-bot #f)]
         [block1 (entity 102 type-block (location 1 2))]
         [block2 (entity 102 type-block (location 2 2))]
         [bot2 (entity 103 type-bot (location 2 1))]
-        [bot (bot bot1 #f (list (occupant bot2 (location 2 1))
-                                (occupant block1 (location 1 2))
-                                (occupant block2 (location 2 2))))]
+        [bot (bot bot1 (location 1 1) #f
+                  (list (occupant bot2 (location 2 1))
+                        (occupant block1 (location 1 2))
+                        (occupant block2 (location 2 2))))]
         [removable (removable-blocks bot)])
    (check-equal? (length removable) 1)
    (check-equal? (occupant-entity (first removable)) block1)))
   
 (test-case:
  "block not removable"
- (let* ([bot1 (entity 101 type-bot (location 1 1))]
+ (let* ([bot1 (entity 101 type-bot #f)]
         [block1 (entity 102 type-block (location 1 2))]
         [block2 (entity 102 type-block (location 2 2))]
         [block3 (entity 103 type-block (location 0 2))]
-        [bot (bot bot1 #f (list (occupant block1 (location 1 2))
+        [bot (bot bot1 (location 1 1) #f
+                  (list (occupant block1 (location 1 2))
                                 (occupant block2 (location 2 2))
                                 (occupant block3 (location 0 2))))]
         [removable (removable-blocks bot)])
@@ -147,7 +151,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (action choose command #f success
-            (bot (entity 101 type-bot (location 1 1)) cargo neighbors))))
+            (bot (entity 101 type-bot #f) (location 1 1) cargo neighbors))))
   
 (module+ test
   (define (wander-with
