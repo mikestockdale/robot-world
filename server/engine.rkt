@@ -45,8 +45,8 @@
 
 (define (add-entity engine type location)
   (if (is-available? (engine-grid engine) location)
-      (let ([new-entity (entity ((engine-sequence engine)) type location)])
-        (place-entity (engine-grid engine) new-entity)
+      (let ([new-entity (entity ((engine-sequence engine)) type #f)])
+        (place-entity (engine-grid engine) new-entity location)
         new-entity)
       #f))
 
@@ -85,7 +85,7 @@
          [new-location (move-direction direction (occupant-place old-occupant))])
     (and (is-available? (engine-grid engine) new-location)
          (place-entity (engine-grid engine)
-                       (change-entity-location (occupant-entity old-occupant) new-location)))))
+                       (occupant-entity old-occupant) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
 ;The entity being taken must not have been removed.
@@ -145,8 +145,7 @@
          [drop-location (move-direction direction (occupant-place bot))])
     (and (is-available? (engine-grid engine) drop-location)
          (place-entity (engine-grid engine)
-                       (change-entity-location
-                        (unload-cargo (engine-cargos engine) id) drop-location)))))
+                       (unload-cargo (engine-cargos engine) id) drop-location))))
 
 ;The engine can @bold{transfer} an @bold{entity} from a bot to a base.
 ;The bot must be adjacent to the base.

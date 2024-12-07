@@ -21,27 +21,24 @@
 (test-case:
  "place and retrieve"
  (let ([grid (make-grid 5)]
-       [block (entity 101 type-block (location 1 2))])
-   (place-entity grid block )
+       [block (entity 101 type-block #f)])
+   (place-entity grid block (location 1 2))
    (check-equal? (occupant-by-id grid 101) (occupant block (location 1 2)))))
 
 ;This is done with basic hash table functions.
 
 (define (occupant-by-id grid id)
-  (let ([entity (hash-ref (grid-hash grid) id #f)])
-    (if entity
-        (occupant entity (entity-location entity))
-        #f)))
+  (hash-ref (grid-hash grid) id #f))
 
-(define (place-entity grid entity)
-  (hash-set! (grid-hash grid) (entity-id entity) entity))
+(define (place-entity grid entity location)
+  (hash-set! (grid-hash grid) (entity-id entity) (occupant entity location)))
 
 ;The grid can also @bold{remove} an @bold{entity} from the table.
 
 (test-case:
  "remove"
  (let ([grid (make-grid 5)])
-   (place-entity grid (entity 101 type-block (location 1 2)))
+   (place-entity grid (entity 101 type-block #f) (location 1 2))
    (remove-entity grid 101)
    (check-false (occupant-by-id grid 101))))
 
@@ -54,24 +51,27 @@
 (test-case:
  "retrieve by location"
  (let ([grid (make-grid 5)]
-       [block1 (entity 101 type-block (location 1 2))]
-       [block2 (entity 102 type-block (location 3 3))])
-   (place-entity grid block1)
-   (place-entity grid block2)
-   (place-entity grid (entity 103 type-block (location 2 4)))
+       [block1 (entity 101 type-block #f)]
+       [block2 (entity 102 type-block #f)])
+   (place-entity grid block1 (location 1 2))
+   (place-entity grid block2 (location 3 3))
+   (place-entity grid (entity 103 type-block #f) (location 2 4))
    (check-equal? (entity-at grid (location 1 2)) block1)
-   (check-equal? (entities-nearby grid (location 2 2)) (list block1 block2))))
+   (check-equal? (occupants-nearby grid (location 2 2))
+                 (list (occupant block1 (location 1 2))
+                       (occupant block2 (location 3 3))))))
 
 ;The @racket[hash-values] function returns a list of the values in the table.
 ;We can then find a single instance or filter the list.
 
 (define (entity-at grid location)
-  (~>> grid grid-hash hash-values
-       (findf (λ (entity) (equal? (entity-location entity) location)))))
+  (let ([match (~>> grid grid-hash hash-values
+                    (findf (λ (occupant) (equal? (occupant-place occupant) location))))])
+    (if match (occupant-entity match) #f)))
 
-(define (entities-nearby grid location)
+(define (occupants-nearby grid location)
   (~>> grid grid-hash hash-values
-       (filter (λ (other) (nearby? location (entity-location other))))))
+       (filter (λ (other) (nearby? location (occupant-place other))))))
 
 ;@elemtag["valid"]{A location @bold{is valid} when it is part of the grid.}
 
@@ -96,7 +96,7 @@
 (test-case:
  "available locations"
  (let ([grid (make-grid 3)])
-   (place-entity grid (entity 101 type-block (location 1 1)))
+   (place-entity grid (entity 101 type-block #f) (location 1 1))
    (check-false (is-available? grid (location 1 1)))
    (check-true (is-available? grid (location 2 1)))
    (check-false (is-available? grid (location 3 1)))))
@@ -130,8 +130,8 @@
 (test-case:
  "neighbors are nearby"
  (let* ([grid (make-grid 4)])
-   (place-entity grid (entity 101 type-block (location 2 2)))
-   (place-entity grid (entity 102 type-block (location 3 1)))
+   (place-entity grid (entity 101 type-block #f) (location 2 2))
+   (place-entity grid (entity 102 type-block #f) (location 3 1))
    (let ([neighbors (neighbors grid (location 1 1))])
      (check-equal? (length neighbors) 1)
      (check-equal? (occupant-place (first neighbors)) (location 2 2)))))
@@ -147,16 +147,15 @@
 (define (neighbors grid location)
   (append
    (edges grid location)
-   (map (λ (entity) (occupant entity (entity-location entity)))
-        (entities-nearby grid location))))
+   (occupants-nearby grid location)))
 
 ;The grid performs a procedure on each entity to @bold{map} the @bold{entities} for a game viewer.
 
 (test-case:
  "map all"
  (let ([grid (make-grid 5)])
-   (place-entity grid (entity 102 type-block (location 3 3)))
-   (place-entity grid (entity 103 type-block (location 2 4)))
+   (place-entity grid (entity 102 type-block #f) (location 3 3))
+   (place-entity grid (entity 103 type-block #f) (location 2 4))
    (check-equal?
     (map-entities grid (λ (occupant) (entity-id (occupant-entity occupant))))
     '(102 103))))
@@ -165,7 +164,7 @@
 
 (define (map-entities grid procedure)
   (hash-map (grid-hash grid)
-            (λ (_ entity) (procedure (occupant entity (entity-location entity))))))
+            (λ (_ occupant) (procedure occupant))))
 
 ;The grid selects a @bold{random base} location.
 ;The location must have all adjacent locations available.
@@ -173,7 +172,7 @@
 (test-case:
  "random base"
  (let ([grid (make-grid 4)])
-   (place-entity grid (entity 101 type-block (location 1 0)))
+   (place-entity grid (entity 101 type-block #f) (location 1 0))
    (check-not-equal? (random-base grid) (location 1 1))))
 
 (define (random-base grid)
