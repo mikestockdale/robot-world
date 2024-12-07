@@ -38,8 +38,8 @@
 (test-case:
  "choose take"
  (let ([choice (choose-take
-                (bot (entity 101 type-bot #f) (location 1 1) #f #f)
-                (occupant (entity 102 type-block #f) (location 1 2)))])
+                (bot (entity 101 type-bot) (location 1 1) #f #f)
+                (occupant (entity 102 type-block) (location 1 2)))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-north)

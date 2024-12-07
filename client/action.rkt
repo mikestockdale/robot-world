@@ -25,11 +25,11 @@
                 [request-type request-move] [parameter direction-east]))
  (define actions
    (list
-    (action go-north #f #f #f (bot (entity 101 type-bot #f) #f #f '()))
-    (action go-east #f #f #f (bot (entity 102 type-bot #f) #f #f '()))))
+    (action go-north #f #f #f (bot (entity 101 type-bot) #f #f '()))
+    (action go-east #f #f #f (bot (entity 102 type-bot) #f #f '()))))
  (define (fake-connection requests)
    (map (λ (request)
-          (reply #t (entity (request-id request) type-bot #f) (location 1 1) #f '())) requests))
+          (reply #t (entity (request-id request) type-bot) (location 1 1) #f '())) requests))
  (let* ([action-list (perform-actions fake-connection actions)])
    (check-true (~> action-list first action-success?))
    (check-equal? (~> action-list first action-bot bot-entity entity-id) 101)

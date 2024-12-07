@@ -24,8 +24,8 @@
 (test-case:
  "choose transfer"
  (let ([choice (choose-transfer
-                (bot (entity 101 type-bot #f) (location 1 1) #f
-                     (list (occupant (entity 102 type-base #f) (location 1 2)))))])
+                (bot (entity 101 type-bot) (location 1 1) #f
+                     (list (occupant (entity 102 type-base) (location 1 2)))))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)))
@@ -65,7 +65,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (action #f command #f success
-            (bot (entity 101 type-bot #f) (location 1 1) cargo neighbors))))
+            (bot (entity 101 type-bot) (location 1 1) cargo neighbors))))
 
 (module+ test
   (define (gather-with
@@ -104,7 +104,7 @@
 (test-case:
  "take nearby block"
  (let ([choice (gather-with
-                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block) (location 1 0)))))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)))
@@ -114,8 +114,8 @@
 (test-case:
  "transfer at destination"
  (let ([choice (gather-with
-                (choose-input #:neighbors (list (occupant (entity 103 type-base #f) (location 0 1)))
-                              #:cargo (entity 103 type-block (location 0 0))))])
+                (choose-input #:neighbors (list (occupant (entity 103 type-base) (location 0 1)))
+                              #:cargo (entity 103 type-block)))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 103)
    (check-equal? (choice-type choice) direction-west)))

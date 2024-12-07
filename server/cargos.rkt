@@ -22,14 +22,14 @@
   (test-case
    "load and retrieve"
    (let ([cargos (make-cargos)]
-         [block (entity 102 type-block (location 1 2))])
+         [block (entity 102 type-block)])
      (load-cargo cargos 101 block )
      (check-equal? (cargo-for-bot cargos 101) block)))
 
   (test-case
    "unload"
    (let ([cargos (make-cargos)]
-         [block (entity 102 type-block (location 1 2))])
+         [block (entity 102 type-block)])
      (load-cargo cargos 101 block )
      (check-equal? (unload-cargo cargos 101) block)
      (check-false (cargo-for-bot cargos 101)))))

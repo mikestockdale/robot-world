@@ -27,8 +27,8 @@
 
 (test-case:
  "free location checked"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block (entity 102 type-block #f)]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block (entity 102 type-block)]
         [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))])
    (check-true (is-free? bot (location 2 1)))
    (check-false (is-free? bot (location 1 2)))))
@@ -43,10 +43,10 @@
 
 (test-case:
  "adjacent block found"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block1 (entity 102 type-block #f)]
-        [block2 (entity 102 type-block #f)]
-        [bot2 (entity 103 type-bot #f)]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block1 (entity 102 type-block)]
+        [block2 (entity 102 type-block)]
+        [bot2 (entity 103 type-bot)]
         [bot (bot bot1 (location 1 1) #f
                   (list (occupant bot2 (location 2 1))
                         (occupant block1 (location 1 2))
@@ -57,9 +57,9 @@
   
 (test-case:
  "block not adjacent"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block1 (entity 102 type-block #f)]
-        [block2 (entity 102 type-block #f)]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block1 (entity 102 type-block)]
+        [block2 (entity 102 type-block)]
         [bot (bot bot1 (location 1 1) #f
                   (list (occupant block1 (location 0 2))
                         (occupant block2 (location 2 2))))]
@@ -78,8 +78,8 @@
 
 (test-case:
  "new direction is different"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block (entity 102 type-block #f)]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block (entity 102 type-block)]
         [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))]
         [new (change-direction bot direction-west)])
    (check-true (or (= new direction-east) (= new direction-south)))

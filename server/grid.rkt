@@ -21,7 +21,7 @@
 (test-case:
  "place and retrieve"
  (let ([grid (make-grid 5)]
-       [block (entity 101 type-block #f)])
+       [block (entity 101 type-block)])
    (place-entity grid block (location 1 2))
    (check-equal? (occupant-by-id grid 101) (occupant block (location 1 2)))))
 
@@ -38,7 +38,7 @@
 (test-case:
  "remove"
  (let ([grid (make-grid 5)])
-   (place-entity grid (entity 101 type-block #f) (location 1 2))
+   (place-entity grid (entity 101 type-block) (location 1 2))
    (remove-entity grid 101)
    (check-false (occupant-by-id grid 101))))
 
@@ -51,11 +51,11 @@
 (test-case:
  "retrieve by location"
  (let ([grid (make-grid 5)]
-       [block1 (entity 101 type-block #f)]
-       [block2 (entity 102 type-block #f)])
+       [block1 (entity 101 type-block)]
+       [block2 (entity 102 type-block)])
    (place-entity grid block1 (location 1 2))
    (place-entity grid block2 (location 3 3))
-   (place-entity grid (entity 103 type-block #f) (location 2 4))
+   (place-entity grid (entity 103 type-block) (location 2 4))
    (check-equal? (entity-at grid (location 1 2)) block1)
    (check-equal? (occupants-nearby grid (location 2 2))
                  (list (occupant block1 (location 1 2))
@@ -96,7 +96,7 @@
 (test-case:
  "available locations"
  (let ([grid (make-grid 3)])
-   (place-entity grid (entity 101 type-block #f) (location 1 1))
+   (place-entity grid (entity 101 type-block) (location 1 1))
    (check-false (is-available? grid (location 1 1)))
    (check-true (is-available? grid (location 2 1)))
    (check-false (is-available? grid (location 3 1)))))
@@ -130,8 +130,8 @@
 (test-case:
  "neighbors are nearby"
  (let* ([grid (make-grid 4)])
-   (place-entity grid (entity 101 type-block #f) (location 2 2))
-   (place-entity grid (entity 102 type-block #f) (location 3 1))
+   (place-entity grid (entity 101 type-block) (location 2 2))
+   (place-entity grid (entity 102 type-block) (location 3 1))
    (let ([neighbors (neighbors grid (location 1 1))])
      (check-equal? (length neighbors) 1)
      (check-equal? (occupant-place (first neighbors)) (location 2 2)))))
@@ -154,8 +154,8 @@
 (test-case:
  "map all"
  (let ([grid (make-grid 5)])
-   (place-entity grid (entity 102 type-block #f) (location 3 3))
-   (place-entity grid (entity 103 type-block #f) (location 2 4))
+   (place-entity grid (entity 102 type-block) (location 3 3))
+   (place-entity grid (entity 103 type-block) (location 2 4))
    (check-equal?
     (map-entities grid (λ (occupant) (entity-id (occupant-entity occupant))))
     '(102 103))))
@@ -172,7 +172,7 @@
 (test-case:
  "random base"
  (let ([grid (make-grid 4)])
-   (place-entity grid (entity 101 type-block #f) (location 1 0))
+   (place-entity grid (entity 101 type-block) (location 1 0))
    (check-not-equal? (random-base grid) (location 1 1))))
 
 (define (random-base grid)

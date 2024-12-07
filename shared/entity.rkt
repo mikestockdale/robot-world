@@ -1,18 +1,14 @@
 #lang racket
 
 (provide (struct-out entity) make-edge
-         change-entity-location
          type-block type-bot type-edge type-base)
-
-(require "location.rkt" "testing.rkt")
-(module+ test (require rackunit))
 
 ;@title{Entity}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/entity.rkt" "entity.rkt"]}
 ;The game world is populated with entities.
-;An entity has a unique identifier, a type, and a location.
+;An entity has a unique identifier, and a type.
 
-(struct entity (id type location) #:prefab)
+(struct entity (id type) #:prefab)
 
 ;Bots are controlled by game clients, and can move around the world.
 ;Bases are places where items can be delivered.
@@ -24,17 +20,4 @@
 (define type-block 2)
 (define type-edge 3)
 
-(define (make-edge) (entity 0 type-edge #f))
-
-;When a bot moves, it @bold{change}s an @bold{entity location}.
-
-(test-case:
- "change entity location"
- (check-equal?
-  (change-entity-location (entity 101 type-bot (location 1 2)) (location 3 4))
-  (entity 101 type-bot (location 3 4))))
-
-;Structures are immutable by default, so we make a copy with the new location.
-
-(define (change-entity-location source new-location)
-  (struct-copy entity source [location new-location]))
+(define (make-edge) (entity 0 type-edge))

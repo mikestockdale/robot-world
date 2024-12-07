@@ -23,8 +23,8 @@
 
 (test-case:
  "blocks nearby"
- (check-true (blocks-nearby? (bot #f #f #f (list (occupant (entity 101 type-block #f) #f)))))
- (check-false (blocks-nearby? (bot #f #f #f (list (occupant (entity 101 type-bot #f) #f)))))
+ (check-true (blocks-nearby? (bot #f #f #f (list (occupant (entity 101 type-block) #f)))))
+ (check-false (blocks-nearby? (bot #f #f #f (list (occupant (entity 101 type-bot) #f)))))
  (check-false (blocks-nearby? (bot #f #f #f '()))))
 
 (define (blocks-nearby? bot)
@@ -36,8 +36,8 @@
 
 (test-case:
  "free location found"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block (entity 102 type-block (location 1 2))]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block (entity 102 type-block)]
         [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))]
         [choice (choose-drop bot)])
    (check-equal? (choice-type choice) request-drop)
@@ -49,9 +49,9 @@
 
 (test-case:
  "best location found"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block1 (entity 102 type-block (location 0 0))]
-        [block2 (entity 103 type-block (location 2 0))]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block1 (entity 102 type-block)]
+        [block2 (entity 103 type-block)]
         [choice (choose-drop (bot bot1 (location 1 1) #f
                                   (list (occupant block1 (location 0 0))
                                         (occupant block2 (location 2 0)))))])
@@ -61,10 +61,10 @@
     
 (test-case:
  "free location not outside world"
- (let* ([bot1 (entity 101 type-bot #f)]
+ (let* ([bot1 (entity 101 type-bot)]
         [edge1 (make-edge)]
         [edge2 (make-edge)]
-        [block (entity 102 type-block #f)]
+        [block (entity 102 type-block)]
         [choice (choose-drop (bot bot1 (location 49 49) #f
                                   (list (occupant edge1 (location 50 49))
                                         (occupant edge2  (location 49 50))
@@ -91,10 +91,10 @@
 
 (test-case:
  "removable block found"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block1 (entity 102 type-block (location 1 2))]
-        [block2 (entity 102 type-block (location 2 2))]
-        [bot2 (entity 103 type-bot (location 2 1))]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block1 (entity 102 type-block)]
+        [block2 (entity 102 type-block)]
+        [bot2 (entity 103 type-bot)]
         [bot (bot bot1 (location 1 1) #f
                   (list (occupant bot2 (location 2 1))
                         (occupant block1 (location 1 2))
@@ -105,10 +105,10 @@
   
 (test-case:
  "block not removable"
- (let* ([bot1 (entity 101 type-bot #f)]
-        [block1 (entity 102 type-block (location 1 2))]
-        [block2 (entity 102 type-block (location 2 2))]
-        [block3 (entity 103 type-block (location 0 2))]
+ (let* ([bot1 (entity 101 type-bot)]
+        [block1 (entity 102 type-block)]
+        [block2 (entity 102 type-block)]
+        [block3 (entity 103 type-block)]
         [bot (bot bot1 (location 1 1) #f
                   (list (occupant block1 (location 1 2))
                                 (occupant block2 (location 2 2))
@@ -151,7 +151,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (action choose command #f success
-            (bot (entity 101 type-bot #f) (location 1 1) cargo neighbors))))
+            (bot (entity 101 type-bot) (location 1 1) cargo neighbors))))
   
 (module+ test
   (define (wander-with
@@ -191,7 +191,7 @@
 (test-case:
  "take nearby block"
  (let ([choice (wander-with
-                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block) (location 1 0)))))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)
@@ -203,7 +203,7 @@
  "delay taking nearby block"
  (let ([choice (wander-with
                 #:cargo-delay 1
-                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block) (location 1 0)))))])
    (check-equal? (choice-type choice) request-move)))
 
 ;If a block is nearby, drop the cargo block, and start a delay.
@@ -211,8 +211,8 @@
 (test-case:
  "drop nearby block"
  (let ([choice (wander-with
-                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 2 2)))
-                              #:cargo (entity 103 type-block (location 0 0))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block) (location 2 2)))
+                              #:cargo (entity 103 type-block)))])
    (check-equal? (choice-type choice) request-drop)
    (check-equal? (choice-parameter choice) direction-north)
    (check-equal? (choice-delay choice) 5)
@@ -224,8 +224,8 @@
  "delay dropping nearby block"
  (let ([choice (wander-with
                 #:cargo-delay 1
-                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 2 2)))
-                              #:cargo (entity 103 type-block (location 0 0))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block) (location 2 2)))
+                              #:cargo (entity 103 type-block)))])
    (check-equal? (choice-type choice) request-move)))
 
 ;The strategy makes a choice.
