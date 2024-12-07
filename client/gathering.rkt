@@ -25,15 +25,15 @@
  "choose transfer"
  (let ([choice (choose-transfer
                 (bot (entity 101 type-bot (location 1 1)) #f
-                     (list (entity 102 type-base (location 1 2)))))])
+                     (list (occupant (entity 102 type-base #f) (location 1 2)))))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)))
 
 (define (choose-transfer bot)
-  (let ([base (findf (λ (item) (equal? (entity-type item) type-base)) (bot-neighbors bot))])
-    (choice request-transfer (entity-id base)
-            (direction-from (entity-location base) (bot-location bot)) 0)))
+  (let ([base (findf (λ (item) (equal? (entity-type (occupant-entity item)) type-base)) (bot-neighbors bot))])
+    (choice request-transfer (entity-id (occupant-entity base))
+            (direction-from (occupant-place base) (bot-location bot)) 0)))
 
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
 
@@ -104,7 +104,7 @@
 (test-case:
  "take nearby block"
  (let ([choice (gather-with
-                (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 1 0)))))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)))
@@ -113,8 +113,9 @@
 
 (test-case:
  "transfer at destination"
- (let ([choice (gather-with (choose-input #:neighbors (list (entity 103 type-base (location 0 1)))
-                                          #:cargo (entity 103 type-block (location 0 0))))])
+ (let ([choice (gather-with
+                (choose-input #:neighbors (list (occupant (entity 103 type-base #f) (location 0 1)))
+                              #:cargo (entity 103 type-block (location 0 0))))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 103)
    (check-equal? (choice-type choice) direction-west)))

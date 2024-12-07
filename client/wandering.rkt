@@ -23,12 +23,12 @@
 
 (test-case:
  "blocks nearby"
- (check-true (blocks-nearby? (bot #f #f (list (entity 101 type-block #f)))))
- (check-false (blocks-nearby? (bot #f #f (list (entity 101 type-bot #f)))))
+ (check-true (blocks-nearby? (bot #f #f (list (occupant (entity 101 type-block #f) #f)))))
+ (check-false (blocks-nearby? (bot #f #f (list (occupant (entity 101 type-bot #f) #f)))))
  (check-false (blocks-nearby? (bot #f #f '()))))
 
 (define (blocks-nearby? bot)
-  (ormap (λ (entity) (= (entity-type entity) type-block))
+  (ormap (λ (neighbor) (= (entity-type (occupant-entity neighbor)) type-block))
          (bot-neighbors bot)))
 
 ;When a strategy @bold{choose}s to @bold{drop} a block, the choice parameter is the direction to a free location.
@@ -38,7 +38,7 @@
  "free location found"
  (let* ([bot1 (entity 101 type-bot (location 1 1))]
         [block (entity 102 type-block (location 1 2))]
-        [bot (bot bot1 #f (list block))]
+        [bot (bot bot1 #f (list (occupant block (location 1 2))))]
         [choice (choose-drop bot)])
    (check-equal? (choice-type choice) request-drop)
    (check-equal? (choice-parameter choice) direction-east)
@@ -52,7 +52,8 @@
  (let* ([bot1 (entity 101 type-bot (location 1 1))]
         [block1 (entity 102 type-block (location 0 0))]
         [block2 (entity 103 type-block (location 2 0))]
-        [choice (choose-drop (bot bot1 #f (list block1 block2)))])
+        [choice (choose-drop (bot bot1 #f (list (occupant block1 (location 0 0))
+                                                (occupant block2 (location 2 0)))))])
    (check-equal? (choice-parameter choice) direction-south)))
 
 ;The direction chosen doesn't move outside the world
@@ -63,7 +64,9 @@
         [edge1 (make-edge (location 50 49))]
         [edge2 (make-edge (location 49 50))]
         [block (entity 102 type-block (location 49 48))]
-        [choice (choose-drop (bot bot1 #f (list edge1 edge2 block)))])
+        [choice (choose-drop (bot bot1 #f (list (occupant edge1 (location 50 49))
+                                                (occupant edge2  (location 49 50))
+                                                (occupant block (location 49 48)))))])
    (check-equal? (choice-parameter choice) direction-west)))
 
 ;The chosen direction is the one to the free location with most adjacent blocks
@@ -77,9 +80,9 @@
             (change-direction bot drop-direction) 5)))
 
 (define (count-adjacent bot location)
-  (define (adjacent-block? entity)
-    (and (= (entity-type entity) type-block)
-         (adjacent? (entity-location entity) location)))
+  (define (adjacent-block? neighbor)
+    (and (= (entity-type (occupant-entity neighbor)) type-block)
+         (adjacent? (occupant-place neighbor) location)))
   (count adjacent-block? (bot-neighbors bot)))
 
 ;@bold{Removeable blocks} are ones that are adjacent to a bot and are not adjacent to two other blocks.
@@ -90,10 +93,12 @@
         [block1 (entity 102 type-block (location 1 2))]
         [block2 (entity 102 type-block (location 2 2))]
         [bot2 (entity 103 type-bot (location 2 1))]
-        [bot (bot bot1 #f (list bot2 block1 block2))]
+        [bot (bot bot1 #f (list (occupant bot2 (location 2 1))
+                                (occupant block1 (location 1 2))
+                                (occupant block2 (location 2 2))))]
         [removable (removable-blocks bot)])
    (check-equal? (length removable) 1)
-   (check-equal? (first removable) block1)))
+   (check-equal? (occupant-entity (first removable)) block1)))
   
 (test-case:
  "block not removable"
@@ -101,17 +106,19 @@
         [block1 (entity 102 type-block (location 1 2))]
         [block2 (entity 102 type-block (location 2 2))]
         [block3 (entity 103 type-block (location 0 2))]
-        [bot (bot bot1 #f (list block1 block2 block3))]
+        [bot (bot bot1 #f (list (occupant block1 (location 1 2))
+                                (occupant block2 (location 2 2))
+                                (occupant block3 (location 0 2))))]
         [removable (removable-blocks bot)])
    (check-equal? (length removable) 0)))
 
 ;We filter the bot's neighbors to find removable blocks
 
 (define (removable-blocks bot)
-  (filter (λ (entity)
-            (and (= (entity-type entity) type-block)
-                 (adjacent? (entity-location entity) (bot-location bot))
-                 (< (count-adjacent bot (entity-location entity)) 2)))
+  (filter (λ (neighbor)
+            (and (= (entity-type (occupant-entity neighbor)) type-block)
+                 (adjacent? (occupant-place neighbor) (bot-location bot))
+                 (< (count-adjacent bot (occupant-place neighbor)) 2)))
           (bot-neighbors bot)))
 
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
@@ -180,7 +187,7 @@
 (test-case:
  "take nearby block"
  (let ([choice (wander-with
-                (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 1 0)))))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)
@@ -192,7 +199,7 @@
  "delay taking nearby block"
  (let ([choice (wander-with
                 #:cargo-delay 1
-                (choose-input #:neighbors (list (entity 102 type-block (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 1 0)))))])
    (check-equal? (choice-type choice) request-move)))
 
 ;If a block is nearby, drop the cargo block, and start a delay.
@@ -200,7 +207,7 @@
 (test-case:
  "drop nearby block"
  (let ([choice (wander-with
-                (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
+                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 2 2)))
                               #:cargo (entity 103 type-block (location 0 0))))])
    (check-equal? (choice-type choice) request-drop)
    (check-equal? (choice-parameter choice) direction-north)
@@ -213,7 +220,7 @@
  "delay dropping nearby block"
  (let ([choice (wander-with
                 #:cargo-delay 1
-                (choose-input #:neighbors (list (entity 102 type-block (location 2 2)))
+                (choose-input #:neighbors (list (occupant (entity 102 type-block #f) (location 2 2)))
                               #:cargo (entity 103 type-block (location 0 0))))])
    (check-equal? (choice-type choice) request-move)))
 

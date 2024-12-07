@@ -39,12 +39,12 @@
  "choose take"
  (let ([choice (choose-take
                 (bot (entity 101 type-bot (location 1 1)) #f #f)
-                (entity 102 type-block (location 1 2)))])
+                (occupant (entity 102 type-block #f) (location 1 2)))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-north)
    (check-equal? (choice-delay choice) 5)))
 
 (define (choose-take bot block)
-  (let ([take-direction (direction-from (bot-location bot) (entity-location block))]) 
-    (choice request-take (entity-id block) take-direction 5)))
+  (let ([take-direction (direction-from (bot-location bot) (occupant-place block))]) 
+    (choice request-take (entity-id (occupant-entity block)) take-direction 5)))
