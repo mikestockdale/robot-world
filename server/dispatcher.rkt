@@ -48,8 +48,11 @@
        (setup-bots engine)))
 
 (define ((make-reply success? entity-id) engine)
-  (let-values ([(entity cargo neighbors) (entity-info engine entity-id)]) 
-    (reply (if success? #t #f) entity (entity-location entity) cargo neighbors)))
+  (let-values ([(occupant cargo neighbors) (entity-info engine entity-id)]) 
+    (reply (if success? #t #f)
+           (occupant-entity occupant)
+           (occupant-place occupant)
+           cargo neighbors)))
   
 ;A list of commands returns bot information for each command.
 

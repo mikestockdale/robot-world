@@ -25,6 +25,6 @@
 ;The bots are added at locations adjacent to the base.
 
 (define (setup-bots engine)
-  (let ([base (add-base-at-random engine)])
-    (for/list ([location (all-directions (entity-location base))])
+  (let ([base-location (add-base-at-random engine)])
+    (for/list ([location (all-directions base-location)])
       (add-entity engine type-bot location))))

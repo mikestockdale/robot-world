@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-grid place-entity remove-entity entity-by-id
+(provide make-grid place-entity remove-entity occupant-by-id
          entity-at is-available? neighbors map-entities random-base)
 
 (require threading "shared.rkt")
@@ -16,18 +16,22 @@
 (struct grid (size hash))
 (define (make-grid size) (grid size (make-hash)))
 
-;The grid can @bold{place} an @bold{entity} in the table and retrieve the @bold{entity by id}.
+;The grid can @bold{place} an @bold{entity} in the table and retrieve the @bold{occupant by id}.
 
 (test-case:
  "place and retrieve"
  (let ([grid (make-grid 5)]
        [block (entity 101 type-block (location 1 2))])
    (place-entity grid block )
-   (check-equal? (entity-by-id grid 101) block)))
+   (check-equal? (occupant-by-id grid 101) (occupant block (location 1 2)))))
 
 ;This is done with basic hash table functions.
 
-(define (entity-by-id grid id) (hash-ref (grid-hash grid) id #f))
+(define (occupant-by-id grid id)
+  (let ([entity (hash-ref (grid-hash grid) id #f)])
+    (if entity
+        (occupant entity (entity-location entity))
+        #f)))
 
 (define (place-entity grid entity)
   (hash-set! (grid-hash grid) (entity-id entity) entity))
@@ -39,7 +43,7 @@
  (let ([grid (make-grid 5)])
    (place-entity grid (entity 101 type-block (location 1 2)))
    (remove-entity grid 101)
-   (check-false (entity-by-id grid 101))))
+   (check-false (occupant-by-id grid 101))))
 
 (define (remove-entity grid id)
   (hash-remove! (grid-hash grid) id))
@@ -136,9 +140,9 @@
  "neighbors include edges"
  (let* ([grid (make-grid 3)]
         [neighbors (neighbors grid (location 0 1))])
-     (check-equal? (length neighbors) 1)
-     (check-equal? (entity-type (occupant-entity (first neighbors))) type-edge)
-     (check-equal? (occupant-place (first neighbors)) (location -1 1))))
+   (check-equal? (length neighbors) 1)
+   (check-equal? (entity-type (occupant-entity (first neighbors))) type-edge)
+   (check-equal? (occupant-place (first neighbors)) (location -1 1))))
 
 (define (neighbors grid location)
   (append
@@ -148,19 +152,20 @@
 
 ;The grid performs a procedure on each entity to @bold{map} the @bold{entities} for a game viewer.
 
-  (test-case:
-   "map all"
-   (let ([grid (make-grid 5)])
-     (place-entity grid (entity 102 type-block (location 3 3)))
-     (place-entity grid (entity 103 type-block (location 2 4)))
-     (check-equal? (map-entities grid (λ (entity) (entity-id entity)))
-                   '(102 103))))
+(test-case:
+ "map all"
+ (let ([grid (make-grid 5)])
+   (place-entity grid (entity 102 type-block (location 3 3)))
+   (place-entity grid (entity 103 type-block (location 2 4)))
+   (check-equal?
+    (map-entities grid (λ (occupant) (entity-id (occupant-entity occupant))))
+    '(102 103))))
 
 ;This is another wrapper on a hash table function.
 
 (define (map-entities grid procedure)
   (hash-map (grid-hash grid)
-            (λ (_ entity) (procedure entity))))
+            (λ (_ entity) (procedure (occupant entity (entity-location entity))))))
 
 ;The grid selects a @bold{random base} location.
 ;The location must have all adjacent locations available.
