@@ -119,7 +119,7 @@
 (define (edges grid location)
   (for/list ([adjacent (all-directions location)]
              #:unless (is-valid? grid adjacent))
-    (make-edge adjacent)))
+    (occupant (make-edge) adjacent)))
 
 ;@bold{Neighbors} of a location are all the nearby entites, plus any edges.
 
@@ -130,20 +130,21 @@
    (place-entity grid (entity 102 type-block (location 3 1)))
    (let ([neighbors (neighbors grid (location 1 1))])
      (check-equal? (length neighbors) 1)
-     (check-equal? (entity-location (first neighbors)) (location 2 2)))))
+     (check-equal? (occupant-place (first neighbors)) (location 2 2)))))
 
 (test-case:
  "neighbors include edges"
  (let* ([grid (make-grid 3)]
         [neighbors (neighbors grid (location 0 1))])
      (check-equal? (length neighbors) 1)
-     (check-equal? (entity-type (first neighbors)) type-edge)
-     (check-equal? (entity-location (first neighbors)) (location -1 1))))
+     (check-equal? (entity-type (occupant-entity (first neighbors))) type-edge)
+     (check-equal? (occupant-place (first neighbors)) (location -1 1))))
 
 (define (neighbors grid location)
   (append
    (edges grid location)
-   (entities-nearby grid location)))
+   (map (λ (entity) (occupant entity (entity-location entity)))
+        (entities-nearby grid location))))
 
 ;The grid performs a procedure on each entity to @bold{map} the @bold{entities} for a game viewer.
 

@@ -62,9 +62,9 @@
 (test-case:
  "free location not outside world"
  (let* ([bot1 (entity 101 type-bot #f)]
-        [edge1 (make-edge (location 50 49))]
-        [edge2 (make-edge (location 49 50))]
-        [block (entity 102 type-block (location 49 48))]
+        [edge1 (make-edge)]
+        [edge2 (make-edge)]
+        [block (entity 102 type-block #f)]
         [choice (choose-drop (bot bot1 (location 49 49) #f
                                   (list (occupant edge1 (location 50 49))
                                         (occupant edge2  (location 49 50))

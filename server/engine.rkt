@@ -215,7 +215,7 @@
   (let-values ([(entity cargo neighbors) (entity-info engine bot1-id)])
     (check-equal? entity bot1)
     (check-equal? cargo block1)
-    (check-equal? neighbors (list block2)))))
+    (check-equal? neighbors (list (occupant block2 (location 1 1)))))))
  
 ;The bot and its neighbors are retrieved from the grid and the cargo from the cargos table.
 
