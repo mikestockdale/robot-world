@@ -16,7 +16,7 @@
 (struct bot (entity location cargo neighbors))
 
 (define (make-bot reply)
-  (bot (reply-entity reply) (entity-location (reply-entity reply)) (reply-cargo reply)
+  (bot (reply-entity reply) (reply-location reply) (reply-cargo reply)
        (reply-neighbors reply)))
 
 ;We include a couple of helper functions, to access the entity id and location data.

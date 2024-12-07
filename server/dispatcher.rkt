@@ -49,7 +49,7 @@
 
 (define ((make-reply success? entity-id) engine)
   (let-values ([(entity cargo neighbors) (entity-info engine entity-id)]) 
-    (reply (if success? #t #f) entity cargo neighbors)))
+    (reply (if success? #t #f) entity (entity-location entity) cargo neighbors)))
   
 ;A list of commands returns bot information for each command.
 
@@ -60,7 +60,7 @@
    (check-equal?
     (execute-request engine
                      (list (request request-move (entity-id bot1) direction-east)))
-    (list (reply #t (entity 101 type-bot (location 2 1)) #f '())))))
+    (list (reply #t (entity 101 type-bot (location 2 1)) (location 2 1) #f '())))))
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.
 
