@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out bot) make-bot bot-id
-         is-free? adjacent-blocks change-direction)
+         is-free? adjacent-entities change-direction)
 
 (require "shared.rkt")
 (module+ test (require rackunit))
@@ -39,7 +39,7 @@
   (not (findf (λ (neighbor) (equal? location (occupant-place neighbor)))
               (bot-neighbors bot))))
 
-;@bold{Adjacent blocks} are ones that are adjacent to a bot.
+;@bold{Adjacent entities} are ones that are adjacent to the bot.
 
 (test-case:
  "adjacent block found"
@@ -51,7 +51,7 @@
                   (list (occupant bot2 (location 2 1))
                         (occupant block1 (location 1 2))
                         (occupant block2 (location 2 2))))]
-        [adjacent (adjacent-blocks bot)])
+        [adjacent (adjacent-entities bot type-block)])
    (check-equal? (length adjacent) 1)
    (check-equal? (first adjacent) (occupant block1 (location 1 2)))))
   
@@ -63,14 +63,14 @@
         [bot (bot bot1 (location 1 1) #f
                   (list (occupant block1 (location 0 2))
                         (occupant block2 (location 2 2))))]
-        [adjacent (adjacent-blocks bot)])
+        [adjacent (adjacent-entities bot type-block)])
    (check-equal? (length adjacent) 0)))
 
-;We filter the bot's neighbors to find adjacent blocks
+;We filter the bot's neighbors to find adjacent entities
 
-(define (adjacent-blocks bot)
+(define (adjacent-entities bot type)
   (filter (λ (neighbor)
-            (and (= (entity-type (occupant-entity neighbor)) type-block)
+            (and (= (entity-type (occupant-entity neighbor)) type)
                  (adjacent? (occupant-place neighbor) (bot-location bot))))
           (bot-neighbors bot)))
 

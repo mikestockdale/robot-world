@@ -23,17 +23,17 @@
 
 (test-case:
  "choose transfer"
- (let ([choice (choose-transfer
-                (bot (entity 101 type-bot) (location 1 1) #f
-                     (list (occupant (entity 102 type-base) (location 1 2)))))])
+ (let* ([base (occupant (entity 102 type-base) (location 1 2))]
+        [choice (choose-transfer
+                 (bot (entity 101 type-bot) (location 1 1) #f (list base))
+                 base)])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)))
 
-(define (choose-transfer bot)
-  (let ([base (findf (λ (item) (equal? (entity-type (occupant-entity item)) type-base)) (bot-neighbors bot))])
-    (choice request-transfer (entity-id (occupant-entity base))
-            (direction-from (occupant-place base) (bot-location bot)) 0)))
+(define (choose-transfer bot base)
+  (choice request-transfer (entity-id (occupant-entity base))
+          (direction-from (occupant-place base) (bot-location bot)) 0))
 
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
 
@@ -112,8 +112,9 @@
 ;Transfer to base
 
 (test-case:
- "transfer at destination"
+ "transfer adjacent to base"
  (let ([choice (gather-with
+                #:destination (location 0 0)
                 (choose-input #:neighbors (list (occupant (entity 103 type-base) (location 0 1)))
                               #:cargo (entity 103 type-block)))])
    (check-equal? (choice-type choice) request-transfer)
@@ -134,10 +135,11 @@
               (if (> (direction-change-chance) (random))
                   (change-direction (action-bot input) old-direction)
                   old-direction)))))
-  (if (and (bot-cargo (action-bot input))
-           (equal? (gathering-destination spec) (bot-location (action-bot input))))
-      (choose-transfer (action-bot input))
-      (let ([blocks (adjacent-blocks (action-bot input))])
-        (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
-            (choose-take (action-bot input) (first blocks))
-            (choose-move (pick-direction) 0)))))
+  (let ([bases (adjacent-entities (action-bot input) type-base)])
+    (if (and (bot-cargo (action-bot input))
+             (> (length bases) 0))
+        (choose-transfer (action-bot input) (first bases))
+        (let ([blocks (adjacent-entities (action-bot input) type-block)])
+          (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
+              (choose-take (action-bot input) (first blocks))
+              (choose-move (pick-direction) 0))))))
