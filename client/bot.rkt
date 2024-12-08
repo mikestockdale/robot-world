@@ -1,7 +1,7 @@
 #lang racket
 
 (provide (struct-out bot) make-bot bot-id
-         is-free? adjacent-entities change-direction)
+         adjacent-entities change-direction)
 
 (require "shared.rkt")
 (module+ test (require rackunit))
@@ -19,7 +19,7 @@
   (bot (reply-entity reply) (reply-location reply) (reply-cargo reply)
        (reply-neighbors reply)))
 
-;We include a couple of helper functions, to access the entity id and location data.
+;We include a helper function, to access the entity id and location data.
 
 (define (bot-id bot) (entity-id (bot-entity bot)))
 
