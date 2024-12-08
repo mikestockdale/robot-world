@@ -88,7 +88,6 @@
                        (occupant-entity old-occupant) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
-;The entity being taken must not have been removed.
 
 (test-case:
  "block is taken"
@@ -97,14 +96,6 @@
   (check-not-false (take-entity engine bot-id block-id))
   (check-equal? (occupant-by-id (engine-grid engine) block-id)
                 (occupant block bot-id))))
-
-(test-case:
- "can not take if block is removed"
- (test-engine
-  ((size 3) (bot 1 1) (block 2 1))
-  (remove-entity (engine-grid engine) block-id)
-  (check-false (take-entity engine bot-id block-id))
-  (check-false (occupant-by-id (engine-grid engine) block-id))))
 
 ;The entity being taken is loaded into the cargos table and removed from the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].

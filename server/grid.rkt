@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-grid place-entity remove-entity occupant-by-id
+(provide make-grid place-entity occupant-by-id
          entity-at is-available? neighbors map-entities random-base)
 
 (require threading "shared.rkt")
@@ -11,7 +11,7 @@
 ;The grid represents the 2D board where all the entities interact in the game.
 ;Its size is the number of rows and columns.
 ;The entities are stored in a hash table.
-;The key is the entity id, the value is the entity.
+;The key is the entity id, the value is an occupant containing the entity.
 
 (struct grid (size hash))
 (define (make-grid size) (grid size (make-hash)))
@@ -33,20 +33,8 @@
 (define (place-entity grid entity location)
   (hash-set! (grid-hash grid) (entity-id entity) (occupant entity location)))
 
-;The grid can also @bold{remove} an @bold{entity} from the table.
-
-(test-case:
- "remove"
- (let ([grid (make-grid 5)])
-   (place-entity grid (entity 101 type-block) (location 1 2))
-   (remove-entity grid 101)
-   (check-false (occupant-by-id grid 101))))
-
-(define (remove-entity grid id)
-  (hash-remove! (grid-hash grid) id))
-
 ;Entities can be retrieved from the grid by location.
-;We can find an @bold{entity at} at a location, and get any the @bold{entities nearby} a location.
+;We can find an @bold{entity at} at a location, and get any the @bold{occupants nearby} a location.
 
 (test-case:
  "retrieve by location"
@@ -68,14 +56,14 @@
 (define (entity-at grid place)
   (let ([match (~>> grid grid-hash hash-values
                     (findf (λ (occupant)
-                             (and (equal? (number? place) (number? (occupant-place occupant)))
+                             (and (equal? (at-location? place) (at-location? (occupant-place occupant)))
                                   (equal? (occupant-place occupant) place)))))])
     (if match (occupant-entity match) #f)))
 
 (define (occupants-nearby grid location)
   (~>> grid grid-hash hash-values
        (filter (λ (other)
-                 (and (not (number? (occupant-place other)))
+                 (and (at-location? (occupant-place other))
                       (nearby? location (occupant-place other)))))))
 
 ;@elemtag["valid"]{A location @bold{is valid} when it is part of the grid.}
@@ -165,12 +153,11 @@
     (map-entities grid (λ (occupant) (entity-id (occupant-entity occupant))))
     '(102 103))))
 
-;This is another wrapper on a hash table function.
+;The procedure is performs on all occupants at locations.
 
 (define (map-entities grid procedure)
   (~>> grid grid-hash hash-values
-       (filter (λ (item) (not (number? (occupant-place item)))))
-       (map procedure)))
+       (filter-map (λ (item) (and (at-location? (occupant-place item)) (procedure item))))))
 
 ;The grid selects a @bold{random base} location.
 ;The location must have all adjacent locations available.
