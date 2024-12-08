@@ -4,7 +4,7 @@
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
-(require "shared.rkt" "cargos.rkt" "grid.rkt" "sequence.rkt")
+(require "shared.rkt" "grid.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
 ;@title{Engine}
