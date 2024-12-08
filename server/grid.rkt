@@ -56,6 +56,7 @@
    (place-entity grid block1 (location 1 2))
    (place-entity grid block2 (location 3 3))
    (place-entity grid (entity 103 type-block) (location 2 4))
+   (check-false (entity-at grid 101))
    (check-equal? (entity-at grid (location 1 2)) block1)
    (check-equal? (occupants-nearby grid (location 2 2))
                  (list (occupant block1 (location 1 2))
@@ -64,14 +65,18 @@
 ;The @racket[hash-values] function returns a list of the values in the table.
 ;We can then find a single instance or filter the list.
 
-(define (entity-at grid location)
+(define (entity-at grid place)
   (let ([match (~>> grid grid-hash hash-values
-                    (findf (λ (occupant) (equal? (occupant-place occupant) location))))])
+                    (findf (λ (occupant)
+                             (and (equal? (number? place) (number? (occupant-place occupant)))
+                                  (equal? (occupant-place occupant) place)))))])
     (if match (occupant-entity match) #f)))
 
 (define (occupants-nearby grid location)
   (~>> grid grid-hash hash-values
-       (filter (λ (other) (nearby? location (occupant-place other))))))
+       (filter (λ (other)
+                 (and (not (number? (occupant-place other)))
+                      (nearby? location (occupant-place other)))))))
 
 ;@elemtag["valid"]{A location @bold{is valid} when it is part of the grid.}
 
@@ -163,8 +168,9 @@
 ;This is another wrapper on a hash table function.
 
 (define (map-entities grid procedure)
-  (hash-map (grid-hash grid)
-            (λ (_ occupant) (procedure occupant))))
+  (~>> grid grid-hash hash-values
+       (filter (λ (item) (not (number? (occupant-place item)))))
+       (map procedure)))
 
 ;The grid selects a @bold{random base} location.
 ;The location must have all adjacent locations available.
