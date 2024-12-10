@@ -17,23 +17,22 @@
 
 ;The @bold{choice} structure is used to return information about what a strategy has chosen for the next action.
 
-(struct choice (type parameter direction delay))
+(struct choice (type parameter direction))
 
-;When a strategy @bold{choose}s to @bold{move} a bot, the delay before taking another block is reduced by one.
+;When a strategy @bold{choose}s to @bold{move} a bot, the choice parameter is the direction.
 
 (test-case:
- "delay reduced"
- (let ([choice (choose-move direction-west 5)])
+ "choose move"
+ (let ([choice (choose-move direction-west)])
    (check-equal? (choice-type choice) request-move)
    (check-equal? (choice-parameter choice) direction-west)
-   (check-equal? (choice-direction choice) direction-west)
-   (check-equal? (choice-delay choice) 4)))
+   (check-equal? (choice-direction choice) direction-west)))
 
-(define (choose-move direction delay)
-  (choice request-move direction direction (max 0 (- delay 1))))
+(define (choose-move direction)
+  (choice request-move direction direction))
 
 ;When a strategy @bold{choose}s to @bold{take} a block, the choice parameter is block id.
-;The next move direction is the direction to the block, and the delay before taking another block is 5 turns.
+;The next move direction is the direction to the block.
 
 (test-case:
  "choose take"
@@ -42,9 +41,8 @@
                 (occupant (entity 102 type-block) (location 1 2)))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
-   (check-equal? (choice-direction choice) direction-north)
-   (check-equal? (choice-delay choice) 5)))
+   (check-equal? (choice-direction choice) direction-north)))
 
 (define (choose-take bot block)
   (let ([take-direction (direction-from (bot-location bot) (occupant-place block))]) 
-    (choice request-take (entity-id (occupant-entity block)) take-direction 5)))
+    (choice request-take (entity-id (occupant-entity block)) take-direction)))

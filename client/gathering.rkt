@@ -19,7 +19,6 @@
 
 ;When a strategy @bold{choose}s to @bold{transfer} a block to a base, the choice parameter is the base id.
 ;The next move direction is away from the base.
-;The delay is not used.
 
 (test-case:
  "choose transfer"
@@ -33,7 +32,7 @@
 
 (define (choose-transfer bot base)
   (choice request-transfer (entity-id (occupant-entity base))
-          (direction-from (occupant-place base) (bot-location bot)) 0))
+          (direction-from (occupant-place base) (bot-location bot))))
 
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
 
@@ -142,4 +141,4 @@
         (let ([blocks (adjacent-entities (action-bot input) type-block)])
           (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
               (choose-take (action-bot input) (first blocks))
-              (choose-move (pick-direction) 0))))))
+              (choose-move (pick-direction)))))))

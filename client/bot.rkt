@@ -19,7 +19,7 @@
   (bot (reply-entity reply) (reply-location reply) (reply-cargo reply)
        (reply-neighbors reply)))
 
-;We include a helper function, to access the entity id and location data.
+;We include a helper function, to access the entity id.
 
 (define (bot-id bot) (entity-id (bot-entity bot)))
 
