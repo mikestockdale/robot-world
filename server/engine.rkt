@@ -4,19 +4,32 @@
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
-(require "shared.rkt" "grid.rkt" "sequence.rkt")
+(require "shared.rkt" "board.rkt" "grid.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
 ;@title{Engine}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/engine.rkt" "engine.rkt"]}
 ;The engine performs the core game actions.
-;It uses a sequence, a grid and a cargos table.
+;It uses a sequence, and a grid.
 ;The sequence provides new ids for adding entities.
 ;The grid keeps track of all the entities.
-;The cargos are the blocks being carried by bots.
 
-(struct engine (sequence grid))
-(define (make-engine size) (engine (make-sequence) (make-grid size)))
+(struct engine (sequence board grid))
+(define (make-engine size) (engine (make-sequence) (board size) (make-grid)))
+
+;@elemtag["available"]{A location @bold{is available} when it is @elemref["valid"]{valid} and there is no entity at that location}.
+
+(test-case:
+ "available locations"
+ (test-engine
+  ((size 3) (block 1 1))
+  (check-false (is-available? engine (location 1 1)))
+  (check-true (is-available? engine (location 2 1)))
+  (check-false (is-available? engine (location 3 1)))))
+
+(define (is-available? engine location)
+  (and (is-valid? (engine-board engine) location)
+       (not (entity-at (engine-grid engine) location))))
 
 ;The engine can @bold{add} an @bold{entity}.
 ;The location must be @elemref["available"]{available}.
@@ -44,7 +57,7 @@
 ;Otherwise @racket[#f] is returned.
 
 (define (add-entity engine type location)
-  (if (is-available? (engine-grid engine) location)
+  (if (is-available? engine location)
       (let ([new-entity (entity ((engine-sequence engine)) type)])
         (place-entity (engine-grid engine) new-entity location)
         new-entity)
@@ -83,7 +96,7 @@
 (define (move-entity engine id direction)
   (let* ([old-occupant (occupant-by-id (engine-grid engine) id)]
          [new-location (move-direction direction (occupant-place old-occupant))])
-    (and (is-available? (engine-grid engine) new-location)
+    (and (is-available? engine new-location)
          (place-entity (engine-grid engine)
                        (occupant-entity old-occupant) new-location))))
 
@@ -131,7 +144,7 @@
 (define (drop-entity engine id direction)
   (let* ([bot (occupant-by-id (engine-grid engine) id)]
          [drop-location (move-direction direction (occupant-place bot))])
-    (and (is-available? (engine-grid engine) drop-location)
+    (and (is-available? engine drop-location)
          (place-entity (engine-grid engine)
                        (entity-at (engine-grid engine) id)
                        drop-location))))
@@ -176,7 +189,8 @@
                 (location 1 1))))
 
 (define (add-base-at-random engine)
-  (let ([location (random-base (engine-grid engine))])
+  (let ([location (random-base (engine-board engine)
+                               (λ (x) (is-available? engine x)))])
     (add-entity engine type-base location)
     location))
 
@@ -203,6 +217,30 @@
              (location-x location)
              (location-y location))))))
                   
+;@bold{Neighbors} of a location are all the nearby entites, plus any edges.
+
+(test-case:
+ "neighbors are nearby"
+ (test-engine
+  ((size 4) (block1 2 2) (block2 3 1))
+  (let ([neighbors (neighbors engine (location 1 1))])
+    (check-equal? (length neighbors) 1)
+    (check-equal? (occupant-place (first neighbors)) (location 2 2)))))
+
+(test-case:
+ "neighbors include edges"
+ (test-engine
+  ((size 3))
+  (let ([neighbors (neighbors engine (location 0 1))])
+    (check-equal? (length neighbors) 1)
+    (check-equal? (entity-type (occupant-entity (first neighbors))) type-edge)
+    (check-equal? (occupant-place (first neighbors)) (location -1 1)))))
+
+(define (neighbors engine location)
+  (append
+   (edges (engine-board engine)location)
+   (occupants-nearby (engine-grid engine) location)))
+
 ;The engine provides @bold{entity info} to be returned to the client.
 
 (test-case:
@@ -222,4 +260,4 @@
     (values
      occupant
      (entity-at (engine-grid engine) entity-id)
-     (neighbors (engine-grid engine) (occupant-place occupant)))))
+     (neighbors engine (occupant-place occupant)))))
