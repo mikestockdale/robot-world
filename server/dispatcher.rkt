@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-dispatcher dispatch-request)
-(require "agent.rkt" "engine.rkt" "grid.rkt" "interval.rkt" "shared.rkt" "setup.rkt" "testing.rkt")
+(require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "setup.rkt")
 (module+ test (require rackunit))
 
 ;@title{Dispatcher}
@@ -16,33 +16,10 @@
 
 (define (execute-request engine request)
   (cond
-    [(equal? request request-draw) (execute-draw engine)]
+    [(equal? request request-draw) (draw-entities (engine-grid engine))]
     [(equal? request request-hello) (execute-hello engine)]
     [else (dispatch-list engine request)]))
 
-;A draw request returns a list of information for drawing entities.
-
-(test-case:
- "entities are drawn"
- (test-engine
-  ((size 3) (bot1 0 2) (block 2 1) (bot2 1 1))
-  (check-equal? (execute-request engine request-draw)
-                (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
-
-;A draw reply is created from a list of all entities from the grid.
-
-(define (execute-draw engine)
-  (map-entities
-   (engine-grid engine)
-   (λ (occupant)
-     (let* ([entity (occupant-entity occupant)]
-            [cargo (entity-at (engine-grid engine) (entity-id entity))]
-            [location (occupant-place occupant)])
-       (list (entity-type entity)
-             (if cargo #t #f)
-             (location-x location)
-             (location-y location))))))
-   
 ;A hello request returns a list of new bots assigned to the client.
 
 (test-case:

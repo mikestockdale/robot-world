@@ -78,4 +78,4 @@
 
 (define (map-entities grid procedure)
   (~>> grid grid-hash hash-values
-       (filter-map (λ (item) (and (at-location? (occupant-place item)) (procedure item))))))
+       (filter-map (λ (item) (procedure item)))))
