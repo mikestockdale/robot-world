@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-dispatcher dispatch-request)
-(require "agent.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "setup.rkt")
+(require "agent.rkt" "engine.rkt" "grid.rkt" "interval.rkt" "shared.rkt" "setup.rkt" "testing.rkt")
 (module+ test (require rackunit))
 
 ;@title{Dispatcher}
@@ -12,24 +12,36 @@
 (struct dispatcher (engine agent interval))
 (define (make-dispatcher engine) (dispatcher engine (make-agent) (make-interval)))
 
-;A draw request returns a list of information for drawing entities.
-
-(test-case:
- "execute draw"
- (let ([engine (make-engine 50)])
-   (check-equal? (execute-request engine request-draw) '()
-                 "nothing to draw")
-   (add-entity engine type-block (location 1 1))
-   (check-equal? (length (execute-request engine request-draw)) 1
-                 "one entity drawn")))
-
-;The engine procedure for drawing is executed.
+;A procedure is executed, based on the request
 
 (define (execute-request engine request)
   (cond
-    [(equal? request request-draw) (draw-entities engine)]
+    [(equal? request request-draw) (execute-draw engine)]
     [(equal? request request-hello) (execute-hello engine)]
     [else (dispatch-list engine request)]))
+
+;A draw request returns a list of information for drawing entities.
+
+(test-case:
+ "entities are drawn"
+ (test-engine
+  ((size 3) (bot1 0 2) (block 2 1) (bot2 1 1))
+  (check-equal? (execute-request engine request-draw)
+                (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
+
+;A draw reply is created from a list of all entities from the grid.
+
+(define (execute-draw engine)
+  (map-entities
+   (engine-grid engine)
+   (λ (occupant)
+     (let* ([entity (occupant-entity occupant)]
+            [cargo (entity-at (engine-grid engine) (entity-id entity))]
+            [location (occupant-place occupant)])
+       (list (entity-type entity)
+             (if cargo #t #f)
+             (location-x location)
+             (location-y location))))))
    
 ;A hello request returns a list of new bots assigned to the client.
 

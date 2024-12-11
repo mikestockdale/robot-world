@@ -1,6 +1,7 @@
 #lang racket
 
-(provide make-engine entity-info draw-entities add-base-at-random
+(provide make-engine engine-grid
+         entity-info add-base-at-random
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
@@ -194,29 +195,6 @@
     (add-entity engine type-base location)
     location))
 
-;The engine can provide the data that a game viewer needs to @bold{draw} the @bold{entities}.
-
-(test-case:
- "entities are drawn"
- (test-engine
-  ((size 3) (bot1 0 2) (block 2 1) (bot2 1 1))
-  (check-equal? (draw-entities engine)
-                (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
-
-;The entities are provided by the grid and the cargo is retrieved from the cargos table.
-
-(define (draw-entities engine)
-  (map-entities
-   (engine-grid engine)
-   (λ (occupant)
-     (let* ([entity (occupant-entity occupant)]
-            [cargo (entity-at (engine-grid engine) (entity-id entity))]
-            [location (occupant-place occupant)])
-       (list (entity-type entity)
-             (if cargo #t #f)
-             (location-x location)
-             (location-y location))))))
-                  
 ;@bold{Neighbors} of a location are all the nearby entites, plus any edges.
 
 (test-case:
