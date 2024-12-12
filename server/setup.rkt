@@ -1,7 +1,7 @@
 #lang racket
 
-(provide setup-blocks setup-bots setup-engine)
-(require "shared.rkt" "engine.rkt")
+(provide setup-server setup-bots setup-engine)
+(require "background.rkt" "shared.rkt" "engine.rkt")
 
 ;@title{Setup}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/setup.rkt" "setup.rkt"]}
@@ -16,9 +16,11 @@
         new-entity
         (add-random-location engine entity-type))))
 
-(define (setup-blocks engine)
+(define (setup-server engine)
+  
   (for ([i 25])
     (add-random-location engine type-block))
+  (thread (λ () (background engine)))
   #t)
 
 ;To set up bots, a base is created in a random location.

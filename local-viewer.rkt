@@ -7,7 +7,7 @@
        [draw-connection (connect-local engine)]
        [action-connection (connect-local engine)]
        [to-do (gathering-actions (action-connection request-hello))])
-  (setup-blocks engine)
+  (setup-server engine)
 
   (define (draw-procedure draw-entity)
     (for ([entity (draw-connection request-draw)])

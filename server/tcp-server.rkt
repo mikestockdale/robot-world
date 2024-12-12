@@ -29,5 +29,5 @@
         (listen)))
     (listen)))
 
-(setup-blocks engine)
+(setup-server engine)
 (run-server)

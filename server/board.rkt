@@ -1,9 +1,13 @@
 #lang racket
 
-(provide board is-valid? edges random-base)
+(provide board is-valid? edges random-location random-base)
 
 (require "shared.rkt")
 (module+ test (require rackunit))
+
+;@title{Board}
+;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/board.rkt" "board.rkt"]}
+;The board is the two-dimesional area representing the robot world.
 
 (struct board (size))
 
@@ -44,8 +48,17 @@
              #:unless (is-valid? board adjacent))
     (occupant (make-edge) adjacent)))
 
-;The board selects a @bold{random base} location.
-;The location must have all adjacent locations available.
+;A @bold{random location} is anywhere on the board.
+
+(test-case:
+ "random location"
+ (let ([board (board 4)])
+ (check-true (is-valid? board (random-location board)))))
+
+(define (random-location board)
+  (location (random (board-size board)) (random (board-size board))))
+
+;A @bold{random base} location must have all adjacent locations available.
 
 (test-case:
  "random base"

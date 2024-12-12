@@ -1,7 +1,7 @@
 #lang racket
 
-(provide make-engine engine-grid
-         entity-info add-base-at-random
+(provide make-engine engine-grid engine-board
+         entity-info is-available? add-base-at-random
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require threading)
