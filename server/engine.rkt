@@ -1,10 +1,9 @@
 #lang racket
 
 (provide make-engine engine-grid engine-board
-         entity-info is-available? add-base-at-random
+         entity-info is-available?
          add-entity move-entity take-entity drop-entity transfer-entity)
 
-(require threading)
 (require "shared.rkt" "board.rkt" "grid.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
@@ -179,21 +178,6 @@
      (place-entity (engine-grid engine)
                    (entity-at (engine-grid engine) from-id)
                    to-id))))
-
-;The engine @bold{add}s a @bold{base at} a @bold{random} location.
-
-(test-case:
- "add base at random"
- (test-engine
-  ((size 3))
-  (check-equal? (add-base-at-random engine)
-                (location 1 1))))
-
-(define (add-base-at-random engine)
-  (let ([location (random-base (engine-board engine)
-                               (λ (x) (is-available? engine x)))])
-    (add-entity engine type-base location)
-    location))
 
 ;@bold{Neighbors} of a location are all the nearby entites, plus any edges.
 

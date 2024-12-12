@@ -1,7 +1,7 @@
 #lang racket
 
 (provide setup-server setup-bots setup-engine)
-(require "background.rkt" "shared.rkt" "engine.rkt")
+(require "background.rkt" "board.rkt" "shared.rkt" "engine.rkt")
 
 ;@title{Setup}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/setup.rkt" "setup.rkt"]}
@@ -11,13 +11,12 @@
   (make-engine 50))
 
 (define (add-random-location engine entity-type)
-  (let ([new-entity (add-entity engine entity-type (location (random 50) (random 50)))])
+  (let ([new-entity (add-entity engine entity-type (random-location (engine-board engine)))])
     (if new-entity
         new-entity
         (add-random-location engine entity-type))))
 
 (define (setup-server engine)
-  
   (for ([i 25])
     (add-random-location engine type-block))
   (thread (λ () (background engine)))
@@ -27,6 +26,8 @@
 ;The bots are added at locations adjacent to the base.
 
 (define (setup-bots engine)
-  (let ([base-location (add-base-at-random engine)])
+  (let ([base-location (random-base (engine-board engine)
+                               (λ (x) (is-available? engine x)))])
+    (add-entity engine type-base base-location)
     (for/list ([location (all-directions base-location)])
       (add-entity engine type-bot location))))
