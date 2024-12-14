@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide location location-x location-y adjacent? nearby? location-offset)
 (require "testing.rkt")

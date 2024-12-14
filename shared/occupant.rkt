@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide (struct-out occupant) at-location? same-place? nearby-place?)
 (require "location.rkt" "testing.rkt")

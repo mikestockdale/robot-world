@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide test-case:)
 (require rackunit)

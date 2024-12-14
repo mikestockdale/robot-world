@@ -65,7 +65,7 @@
                                 (request-id request)
                                 (request-parameter request))])
       (when (and success? (= (request-type request) request-transfer))
-        (add-score agent 1))
+        (add-to-score agent 1))
       (make-reply success? (request-id request))))
   (map (λ (make-reply) (make-reply engine)) (map execute request-list)))
 

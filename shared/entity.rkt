@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide (struct-out entity) make-edge
          type-block type-bot type-edge type-base)

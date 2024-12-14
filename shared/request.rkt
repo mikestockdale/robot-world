@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide (struct-out request) request-draw request-hello
          request-drop request-move request-take request-transfer)

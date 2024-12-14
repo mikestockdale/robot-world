@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide move-direction direction-from
          direction-north direction-east direction-south direction-west
