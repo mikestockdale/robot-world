@@ -1,6 +1,6 @@
-#lang racket
+#lang racket/base
 
-(provide agents make-agent agent-score match-request add-to-score)
+(provide players make-agent agent-score match-request add-to-score)
 (require "shared.rkt")
 (module+ test (require rackunit))
 
@@ -10,11 +10,8 @@
 ;This may be a player client, or a game viewer client.
 
 (struct agent ([type #:mutable] [score #:mutable]))
-(define agents '())
-(define (make-agent)
-  (let ([new-agent (agent 'unassigned 0)])
-    (set! agents (cons new-agent agents))
-    new-agent))
+(define players '())
+(define (make-agent) (agent 'unassigned 0))
 
 ;The first request sent to the agent @bold{set}s its @bold{type}.
 ;A draw request means the agent is a game viewer.
@@ -24,7 +21,7 @@
  "set type"
  (define (check-type request)
    (let ([agent (make-agent)])
-     (set-type! agent request)
+     (assign-agent-type! agent request)
      (agent-type agent)))
  (check-equal? (check-type request-draw) 'viewer)
  (check-equal? (check-type request-hello) 'player))
@@ -32,10 +29,12 @@
 ;If the agent type is unassigned, it means that the type hasn't been set yet.
 ;Once set, the type doesn't change.
  
-(define (set-type! agent request)
+(define (assign-agent-type! agent request)
   (when (equal? (agent-type agent) 'unassigned)
     (cond
-      [(equal? request request-hello) (set-agent-type! agent 'player)]
+      [(equal? request request-hello)
+       (set-agent-type! agent 'player)
+       (set! players (cons agent players))]
       [(equal? request request-draw) (set-agent-type! agent 'viewer)])))
 
 ;An agent checks if a @bold{request is valid}, based on the agent type.
@@ -82,7 +81,7 @@
 
 (define (match-request agent request)
   (let ([valid? (request-is-valid? agent request)])
-    (when valid? (set-type! agent request))
+    (when valid? (assign-agent-type! agent request))
     valid?))    
 
 ;When certain player events occur, an agent can bold{add to} its @bold{score}.

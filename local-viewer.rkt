@@ -5,9 +5,12 @@
 
 (let* ([engine (setup-engine)]
        [draw-connection (connect-local engine)]
-       [action-connection (connect-local engine)]
-       [to-do (gathering-actions (action-connection request-hello))])
+       [action1-connection (connect-local engine)]
+       [to-do1 (gathering-actions (action1-connection request-hello))]
+       [action2-connection (connect-local engine)]
+       [to-do2 (gathering-actions (action2-connection request-hello))])
   (setup-server engine)
   (define (do-actions)
-    (set! to-do (perform-actions action-connection to-do)))
+    (set! to-do1 (perform-actions action1-connection to-do1))
+    (set! to-do2 (perform-actions action2-connection to-do2)))
   (viewer "robots - local" draw-connection do-actions))
