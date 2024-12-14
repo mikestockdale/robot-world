@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-agent match-request)
+(provide agents make-agent agent-score match-request add-to-score)
 (require "shared.rkt")
 (module+ test (require rackunit))
 
@@ -9,8 +9,12 @@
 ;An agent represents a body of code that interacts with the game.
 ;This may be a player client, or a game viewer client.
 
-(struct agent ([type #:mutable]))
-(define (make-agent) (agent 'unassigned))
+(struct agent ([type #:mutable] [score #:mutable]))
+(define agents '())
+(define (make-agent)
+  (let ([new-agent (agent 'unassigned 0)])
+    (set! agents (cons new-agent agents))
+    new-agent))
 
 ;The first request sent to the agent @bold{set}s its @bold{type}.
 ;A draw request means the agent is a game viewer.
@@ -38,15 +42,15 @@
 
 (test-case:
  "valid request"
- (let ([agent (agent 'unassigned)])
+ (let ([agent (agent 'unassigned 0)])
    (check-true (request-is-valid? agent request-draw))
    (check-true (request-is-valid? agent request-hello))
    (check-false (request-is-valid? agent '(#f))))
- (let ([agent (agent 'viewer)])
+ (let ([agent (agent 'viewer 0)])
    (check-true (request-is-valid? agent request-draw))
    (check-false (request-is-valid? agent request-hello))
    (check-false (request-is-valid? agent '(#f))))
- (let ([agent (agent 'player)])
+ (let ([agent (agent 'player 0)])
    (check-false (request-is-valid? agent request-draw))
    (check-false (request-is-valid? agent request-hello))
    (check-true (request-is-valid? agent '(#f)))))
@@ -80,3 +84,14 @@
   (let ([valid? (request-is-valid? agent request)])
     (when valid? (set-type! agent request))
     valid?))    
+
+;When certain player events occur, an agent can bold{add to} its @bold{score}.
+
+(test-case:
+ "add to score"
+ (let ([agent (agent 'player 0)])
+   (add-to-score agent 3)
+   (check-equal? (agent-score agent) 3)))
+
+(define (add-to-score agent amount)
+  (set-agent-score! agent (+ amount (agent-score agent))))

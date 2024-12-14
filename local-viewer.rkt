@@ -8,12 +8,6 @@
        [action-connection (connect-local engine)]
        [to-do (gathering-actions (action-connection request-hello))])
   (setup-server engine)
-
-  (define (draw-procedure draw-entity)
-    (for ([entity (draw-connection request-draw)])
-      (apply draw-entity entity)))
-
   (define (do-actions)
     (set! to-do (perform-actions action-connection to-do)))
-  
-  (viewer "robots - local" draw-procedure do-actions))
+  (viewer "robots - local" draw-connection do-actions))

@@ -42,10 +42,16 @@
 
 ;The animation is displayed.
 
-(define (viewer title draw-procedure action-procedure
+(define (viewer title connection action-procedure
                 #:size [size 50] #:style [style '()] #:run [run #t])
   (define count 0)
+  (define score "")
   (set! run-actions run)
+  (define (draw-procedure draw-entity)
+    (let ([reply (connection request-draw)])
+      (set! score (first reply))
+      (for ([entity (rest reply)])
+        (apply draw-entity entity))))
   (let* ([frame (new frame% [label title] [style style]
                      [width (* 10 size)] [height (+ (* 11 size) 22)])]
          [font (make-font #:face "DejaVu Sans Mono")]
@@ -54,7 +60,7 @@
                [parent frame]
                [paint-callback
                 (λ (canvas dc)
-                  (send dc set-font font )
+                  (send dc set-font font)
                   (define (draw-entity entity-type laden? x y #:color [color "black"])
                     (send dc set-text-foreground color)
                     (send dc draw-text (string (entity-symbol entity-type laden?))
@@ -64,7 +70,7 @@
       (if run-actions
           (begin
             (action-procedure)
-            (send frame set-status-text (number->string count))
+            (send frame set-status-text (~a count "   " score))
             (send canvas refresh-now #:flush? #t)
             (set! count (add1 count)))
           (sleep .001))

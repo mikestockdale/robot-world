@@ -15,6 +15,6 @@
          location location-x location-y adjacent? nearby? location-offset
          (struct-out occupant) at-location? same-place? nearby-place?
          (struct-out request) request-draw request-hello
-         request-drop request-move request-take
+         request-drop request-move request-take request-transfer
          (struct-out reply)
          test-case:)

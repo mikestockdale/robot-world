@@ -14,17 +14,17 @@
 
 ;A procedure is executed, based on the request
 
-(define (execute-request engine request)
+(define (execute-request engine agent request)
   (cond
     [(equal? request request-draw) (draw-entities (engine-grid engine))]
     [(equal? request request-hello) (execute-hello engine)]
-    [else (dispatch-list engine request)]))
+    [else (dispatch-list engine agent request)]))
 
 ;A hello request returns a list of new bots assigned to the client.
 
 (test-case:
  "execute hello"
- (let ([reply (execute-request (make-engine 50) request-hello)])
+ (let ([reply (execute-request (make-engine 50) (make-agent) request-hello)])
    (check-true (andmap
                 (λ (item) (equal? (entity-type (reply-entity item)) type-bot))
                 reply)
@@ -50,7 +50,7 @@
  (let* ([engine (make-engine 50)]
         [bot1 (add-entity engine type-bot (location 1 1))])
    (check-equal?
-    (execute-request engine
+    (execute-request engine (make-agent)
                      (list (request request-move (entity-id bot1) direction-east)))
     (list (reply #t (entity 101 type-bot) (location 2 1) #f '())))))
 
@@ -58,13 +58,15 @@
 
 (define player-procedures (vector drop-entity move-entity take-entity transfer-entity))
 
-(define (dispatch-list engine request-list)
+(define (dispatch-list engine agent request-list)
   (define (execute request)
     (let* ([procedure (vector-ref player-procedures (request-type request))]
-           [response (procedure engine
+           [success? (procedure engine
                                 (request-id request)
                                 (request-parameter request))])
-      (make-reply response (request-id request))))
+      (when (and success? (= (request-type request) request-transfer))
+        (add-score agent 1))
+      (make-reply success? (request-id request))))
   (map (λ (make-reply) (make-reply engine)) (map execute request-list)))
 
 ;When the dispatcher @bold{dispatch}es a @bold{request}, an invalid request returns an error message.
@@ -81,5 +83,5 @@
 (define (dispatch-request dispatcher request)
   ((dispatcher-interval dispatcher))
   (if (match-request (dispatcher-agent dispatcher) request)
-      (execute-request (dispatcher-engine dispatcher) request)
+      (execute-request (dispatcher-engine dispatcher)  (dispatcher-agent dispatcher) request)
       "invalid request"))

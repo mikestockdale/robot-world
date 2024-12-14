@@ -2,7 +2,7 @@
 
 (provide draw-entities)
 
-(require "engine.rkt" "grid.rkt" "shared.rkt" "testing.rkt")
+(require "agent.rkt" "engine.rkt" "grid.rkt" "shared.rkt" "testing.rkt")
 (module+ test (require rackunit))
 
 ;@title{Draw}
@@ -14,20 +14,23 @@
  "entities are drawn"
  (test-engine
   ((size 3) (bot1 0 2) (block 2 1) (bot2 1 1))
+  (add-to-score (make-agent) 123)
   (check-equal? (draw-entities (engine-grid engine))
-                (list (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
+                (list 123 (list type-bot #f 0 2) (list type-block #f 2 1) (list type-bot #f 1 1)))))
 
 ;A draw reply is created from a list of all entities from the grid.
 
 (define (draw-entities grid)
-  (map-entities
-   grid
-   (λ (occupant)
-     (let ([entity (occupant-entity occupant)]
+  (cons
+   (if (empty? agents) 0 (agent-score (first agents)))
+   (map-entities
+    grid
+    (λ (occupant)
+      (let ([entity (occupant-entity occupant)]
             [location (occupant-place occupant)])
-       (and (at-location? location) 
-            (list (entity-type entity)
-                  (if (entity-at grid (entity-id entity)) #t #f)
-                  (location-x location)
-                  (location-y location)))))))
+        (and (at-location? location) 
+             (list (entity-type entity)
+                   (if (entity-at grid (entity-id entity)) #t #f)
+                   (location-x location)
+                   (location-y location))))))))
    
