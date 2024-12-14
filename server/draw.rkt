@@ -14,7 +14,7 @@
 (test-case:
  "entities are drawn"
  (test-engine
-  ((size 3) (bot1 0 2) (block 2 1) (bot2 1 1))
+  ((size 3 4) (bot1 0 2) (block 2 1) (bot2 1 1))
   (let ([player (make-agent)])
     (match-request player request-hello)
     (add-to-score player 123)

@@ -43,7 +43,7 @@
 ;The animation is displayed.
 
 (define (viewer title connection action-procedure
-                #:size [size 50] #:style [style '()] #:run [run #t])
+                #:width [width 80] #:height [height 45] #:style [style '()] #:run [run #t])
   (define count 0)
   (define score "")
   (set! run-actions run)
@@ -53,7 +53,7 @@
       (for ([entity (rest reply)])
         (apply draw-entity entity))))
   (let* ([frame (new frame% [label title] [style style]
-                     [width (* 10 size)] [height (+ (* 11 size) 22)])]
+                     [width (* 10 width)] [height (+ (* 11 height) 22)])]
          [font (make-font #:face "DejaVu Sans Mono")]
          [canvas
           (new my-canvas%

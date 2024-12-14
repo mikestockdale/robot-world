@@ -31,7 +31,7 @@
 
   (test-case
    "list of moves"
-   (let* ([engine (make-engine 50)]
+   (let* ([engine (make-engine 40 50)]
           [connection (prepare-connection engine)]
           [bot (add-entity  engine type-bot (location 1 2))]
           [requests
@@ -44,7 +44,7 @@
 
   (test-case
    "take block remote"
-   (let* ([engine (make-engine 50)]
+   (let* ([engine (make-engine 40 50)]
           [connection (prepare-connection engine)]
           [bot (add-entity engine type-bot (location 1 2))]
           [block (add-entity engine type-block (location 2 2))]
@@ -58,7 +58,7 @@
   
   (test-case
    "drop block remote"
-   (let* ([engine (make-engine 50)]
+   (let* ([engine (make-engine 40 50)]
           [connection (prepare-connection engine)]
           [bot (add-entity engine type-bot (location 1 2))]
           [block (add-entity engine type-block (location 2 2))]
@@ -74,7 +74,7 @@
   
   (test-case
    "neighbors added to server response"
-   (let* ([engine (make-engine 50)]
+   (let* ([engine (make-engine 40 50)]
           [connection (prepare-connection engine)]
           [bot (add-entity engine type-bot (location 0 1))])
      (add-entity engine type-block (location 2 1))

@@ -8,7 +8,7 @@
 ;Setup creates an engine and populates it with blocks, and creates bots for a player.
 
 (define (setup-engine)
-  (make-engine 50))
+  (make-engine 80 45))
 
 (define (add-random-location engine entity-type)
   (let ([new-entity (add-entity engine entity-type (random-location (engine-board engine)))])

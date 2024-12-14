@@ -24,7 +24,7 @@
 
 (test-case:
  "execute hello"
- (let ([reply (execute-request (make-engine 50) (make-agent) request-hello)])
+ (let ([reply (execute-request (make-engine 40 50) (make-agent) request-hello)])
    (check-true (andmap
                 (λ (item) (equal? (entity-type (reply-entity item)) type-bot))
                 reply)
@@ -47,7 +47,7 @@
 
 (test-case:
  "requests from player"
- (let* ([engine (make-engine 50)]
+ (let* ([engine (make-engine 4 5)]
         [bot1 (add-entity engine type-bot (location 1 1))])
    (check-equal?
     (execute-request engine (make-agent)
@@ -73,7 +73,7 @@
 
 (test-case:
  "invalid request"
- (check-equal? (dispatch-request (make-dispatcher (make-engine 5)) '(#f))
+ (check-equal? (dispatch-request (make-dispatcher (make-engine 4 5)) '(#f))
                "invalid request"))
 
 ;The dispatcher delays execution to limit the rate of execution for each client.

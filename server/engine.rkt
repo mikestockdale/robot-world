@@ -15,14 +15,14 @@
 ;The grid keeps track of all the entities.
 
 (struct engine (sequence board grid))
-(define (make-engine size) (engine (make-sequence) (board size) (make-grid)))
+(define (make-engine width height) (engine (make-sequence) (board width height) (make-grid)))
 
 ;@elemtag["available"]{A location @bold{is available} when it is @elemref["valid"]{valid} and there is no entity at that location}.
 
 (test-case:
  "available locations"
  (test-engine
-  ((size 3) (block 1 1))
+  ((size 3 2) (block 1 1))
   (check-false (is-available? engine (location 1 1)))
   (check-true (is-available? engine (location 2 1)))
   (check-false (is-available? engine (location 3 1)))))
@@ -37,7 +37,7 @@
 
 (test-case:
  "entity is added at location"
- (let* ([engine (make-engine 10)]
+ (let* ([engine (make-engine 9 10)]
         [block (add-entity engine type-block (location 1 2))])
    (check-equal? (entity-type block) type-block)  
    (check-equal? (occupant-by-id (engine-grid engine) (entity-id block))
@@ -45,11 +45,11 @@
 
 (test-case:
  "entity is not added at invalid location"
- (check-false (add-entity (make-engine 10) type-bot (location -1 2))))
+ (check-false (add-entity (make-engine 10 9) type-bot (location -1 2))))
 
 (test-case:
  "entity is created with new id"
- (let ([engine (make-engine 10)])
+ (let ([engine (make-engine 9 10)])
    (check-not-equal? (entity-id (add-entity engine type-bot (location 3 4)))
                      (entity-id (add-entity engine type-bot (location 5 6))))))
 
@@ -70,7 +70,7 @@
 (test-case:
  "move bot changes location"
  (test-engine
-  ((size 10) (bot 5 6))
+  ((size 9 10) (bot 5 6))
   (move-entity engine bot-id direction-north)
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
                 (location 5 7))))
@@ -78,7 +78,7 @@
 (test-case:
  "invalid move leaves bot location unchanged"
  (test-engine
-  ((size 10) (bot 9 9))
+  ((size 11 10) (bot 9 9))
   (check-false (move-entity engine bot-id direction-north))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
                 (location 9 9)))) 
@@ -86,7 +86,7 @@
 (test-case:
  "can not move to occupied location"
  (test-engine
-  ((size 3) (bot 1 1) (block 1 2))
+  ((size 4 3) (bot 1 1) (block 1 2))
   (check-false (move-entity engine bot-id direction-north))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
                 (location 1 1))))
@@ -105,7 +105,7 @@
 (test-case:
  "block is taken"
  (test-engine
-  ((size 3) (bot 1 1) (block 2 1))
+  ((size 3 4) (bot 1 1) (block 2 1))
   (check-not-false (take-entity engine bot-id block-id))
   (check-equal? (occupant-by-id (engine-grid engine) block-id)
                 (occupant block bot-id))))
@@ -125,7 +125,7 @@
 (test-case:
  "block is dropped"
  (test-engine
-  ((size 3) (block 2 1) (bot 1 1))
+  ((size 3 4) (block 2 1) (bot 1 1))
   (take-entity engine (entity-id bot) block-id)
   (check-not-false (drop-entity engine bot-id direction-north))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
@@ -133,7 +133,7 @@
 (test-case:
  "can not drop in occupied location"
  (test-engine
-  ((size 3) (block1 2 1) (bot 1 1) (block2 0 1))
+  ((size 3 4) (block1 2 1) (bot 1 1) (block2 0 1))
   (take-entity engine bot-id block1-id)
   (check-false (drop-entity engine bot-id direction-west))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block1-id)) bot-id)))
@@ -155,7 +155,7 @@
 (test-case:
  "transfer"
  (test-engine
-  ((size 3) (bot 1 1) (base 1 2) (block 2 1))
+  ((size 3 4) (bot 1 1) (base 1 2) (block 2 1))
   (take-entity engine bot-id block-id)
   (transfer-entity engine bot-id base-id)
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block-id)) base-id)))
@@ -163,7 +163,7 @@
 (test-case:
  "must be adjacent"
  (test-engine
-  ((size 3) (bot 1 1) (base 2 2) (block 2 1))
+  ((size 3 4) (bot 1 1) (base 2 2) (block 2 1))
   (take-entity engine bot-id block-id)
   (check-false (transfer-entity engine bot-id base-id))))
 
@@ -184,7 +184,7 @@
 (test-case:
  "neighbors are nearby"
  (test-engine
-  ((size 4) (block1 2 2) (block2 3 1))
+  ((size 4 3) (block1 2 2) (block2 3 1))
   (let ([neighbors (neighbors engine (location 1 1))])
     (check-equal? (length neighbors) 1)
     (check-equal? (occupant-place (first neighbors)) (location 2 2)))))
@@ -192,7 +192,7 @@
 (test-case:
  "neighbors include edges"
  (test-engine
-  ((size 3))
+  ((size 3 4))
   (let ([neighbors (neighbors engine (location 0 1))])
     (check-equal? (length neighbors) 1)
     (check-equal? (entity-type (occupant-entity (first neighbors))) type-edge)
@@ -208,7 +208,7 @@
 (test-case:
  "entity info"
  (test-engine
-  ((size 4) (bot1 2 2) (block1 2 3) (block2 1 1))
+  ((size 5 4) (bot1 2 2) (block1 2 3) (block2 1 1))
   (take-entity engine bot1-id block1-id)
   (let-values ([(bot-occupant cargo neighbors) (entity-info engine bot1-id)])
     (check-equal? bot-occupant (occupant bot1 (location 2 2)))

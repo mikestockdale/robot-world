@@ -18,7 +18,7 @@
          [keyword (syntax-e (first items))])
     (cond
       [(equal? keyword 'size)
-       (list (list 'engine (list 'make-engine (second items))))]
+       (list (list 'engine (list 'make-engine (second items) (third items))))]
       [(string-contains? (symbol->string keyword) "bot")
        (add-entity 'type-bot items)]
       [(string-contains? (symbol->string keyword) "block")

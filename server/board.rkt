@@ -9,36 +9,36 @@
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/board.rkt" "board.rkt"]}
 ;The board is the two-dimesional area representing the robot world.
 
-(struct board (size))
+(struct board (width height))
 
 ;@elemtag["valid"]{A location @bold{is valid} when it is part of the board.}
 
 (test-case:
  "valid locations"
- (check-true (is-valid? (board 1) (location 0 0)))
- (check-true (is-valid? (board 10) (location 9 9)))
- (check-false (is-valid? (board 1) (location 0 -1)))
- (check-false (is-valid? (board 1) (location -1 0)))
- (check-false (is-valid? (board 10) (location 10 9)))
- (check-false (is-valid? (board 10) (location 9 10))))
+ (check-true (is-valid? (board 1 1) (location 0 0)))
+ (check-true (is-valid? (board 10 10) (location 9 9)))
+ (check-false (is-valid? (board 1 2) (location 0 -1)))
+ (check-false (is-valid? (board 1 2) (location -1 0)))
+ (check-false (is-valid? (board 10 11) (location 10 9)))
+ (check-false (is-valid? (board 11 10) (location 9 10))))
 
 ;The location's x and y coordinates are checked using the size of the board.
 
 (define (is-valid? board location)
-  (define (in-range? n) (and (>= n 0) (< n (board-size board))))
-  (and (in-range? (location-x location))
-       (in-range? (location-y location))))
+  (define (in-range? max n) (and (>= n 0) (< n max)))
+  (and (in-range? (board-width board) (location-x location))
+       (in-range? (board-height board) (location-y location))))
 
 ;@bold{Edges} are entities outside the board.
 ;They are @elemref["adjacent"]{adjacent} to locations at the boundaries of the board.
 
 (test-case:
  "no edges in middle"
- (check-equal? (length (edges (board 3) (location 1 1))) 0))
+ (check-equal? (length (edges (board 3 3) (location 1 1))) 0))
 
 (test-case:
  "edges at limits"
- (check-equal? (length (edges (board 1) (location 0 0))) 4))
+ (check-equal? (length (edges (board 1 1) (location 0 0))) 4))
 
 ;We check in all directions from the
 ;given location and return an edge if the @elemref["adjacent"]{adjacent} location is not @elemref["valid"]{valid}.
@@ -52,23 +52,23 @@
 
 (test-case:
  "random location"
- (let ([board (board 4)])
- (check-true (is-valid? board (random-location board)))))
+ (let ([board (board 3 4)])
+   (check-true (is-valid? board (random-location board)))))
 
 (define (random-location board)
-  (location (random (board-size board)) (random (board-size board))))
+  (location (random (board-width board)) (random (board-height board))))
 
 ;A @bold{random base} location must have all adjacent locations available.
 
 (test-case:
  "random base"
- (let ([board (board 4)])
+ (let ([board (board 4 5)])
    (define (empty location) (not (= (location-x location) 0)))
    (check-equal? (location-x (random-base board empty)) 2)))
 
 (define (random-base board empty?)
-  (let* ([top (sub1 (board-size board))]
-         [location (location (random 1 top) (random 1 top))])
+  (let ([location (location (random 1 (sub1 (board-width board)))
+                            (random 1 (sub1 (board-height board))))])
     (if (andmap empty? (all-directions location))
         location
         (random-base board empty?))))
