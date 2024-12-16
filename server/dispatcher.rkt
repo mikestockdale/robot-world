@@ -58,7 +58,7 @@
         [bot1 (add-entity engine type-bot (location 1 1))])
    (check-equal?
     (execute-request engine (make-agent)
-                     (list (request request-move (entity-id bot1) direction-east)))
+                     (list (request request-move (entity-id bot1) (location 2 1))))
     (list (reply #t (entity 101 type-bot) (location 2 1) #f '())))))
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.

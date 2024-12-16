@@ -1,9 +1,10 @@
-#lang racket
+#lang racket/base
 
 (provide make-engine engine-grid engine-board
          entity-info is-available?
          add-entity move-entity take-entity drop-entity transfer-entity)
 
+(require racket/list)
 (require "shared.rkt" "board.rkt" "grid.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
@@ -63,42 +64,36 @@
         new-entity)
       #f))
 
-;The engine can @bold{move} an @bold{entity} in a direction.
-;The destination of the move must be @elemref["available"]{available}.
+;The engine can @bold{move} an @bold{entity} to a new location.
+;The destination of the move must be @elemref["adjacent"] and @elemref["available"]{available}.
 ;Otherwise, the entity remains in its original location.
 
 (test-case:
  "move bot changes location"
  (test-engine
   ((size 9 10) (bot 5 6))
-  (move-entity engine bot-id direction-north)
+  (move-entity engine bot-id (location 5 7))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
                 (location 5 7))))
 
 (test-case:
  "invalid move leaves bot location unchanged"
  (test-engine
-  ((size 11 10) (bot 9 9))
-  (check-false (move-entity engine bot-id direction-north))
+  ((size 11 10) (bot 9 9) (block 8 9))
+  (check-false (move-entity engine bot-id (location 9 10)) "invalid location")
+  (check-false (move-entity engine bot-id (location 8 9)) "not available")
+  (check-false (move-entity engine bot-id (location 8 8)) "not adjacent")
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
                 (location 9 9)))) 
 
-(test-case:
- "can not move to occupied location"
- (test-engine
-  ((size 4 3) (bot 1 1) (block 1 2))
-  (check-false (move-entity engine bot-id direction-north))
-  (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
-                (location 1 1))))
-
 ;The result is not false if successful, otherwise it is @racket[#f].
 
-(define (move-entity engine id direction)
-  (let* ([old-occupant (occupant-by-id (engine-grid engine) id)]
-         [new-location (move-direction direction (occupant-place old-occupant))])
-    (and (is-available? engine new-location)
+(define (move-entity engine id new-location)
+  (let ([occupant (occupant-by-id (engine-grid engine) id)])
+    (and (adjacent? new-location (occupant-place occupant))
+         (is-available? engine new-location)
          (place-entity (engine-grid engine)
-                       (occupant-entity old-occupant) new-location))))
+                       (occupant-entity occupant) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
 

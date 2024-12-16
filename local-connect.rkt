@@ -1,6 +1,7 @@
-#lang racket
+#lang racket/base
 
 (provide connect-local)
+(require racket/list racket/port)
 (require "server/dispatcher.rkt")
 
 (define (connect-local engine) (local-call (make-dispatcher engine)))
@@ -36,8 +37,8 @@
           [bot (add-entity  engine type-bot (location 1 2))]
           [requests
            (list
-            (request request-move (entity-id bot) direction-east)
-            (request request-move (entity-id bot) direction-south))]
+            (request request-move (entity-id bot) (location 2 2))
+            (request request-move (entity-id bot) (location 2 1)))]
           [processes (list process-bot process-bot)]
           [bots (send-requests connection requests processes)])
      (check-equal? (bot-location (second bots)) (location 2 1))))
@@ -80,7 +81,7 @@
      (add-entity engine type-block (location 2 1))
      (let ([neighbor
             (~> (send-requests connection
-                               (list (request request-move (entity-id bot) direction-east))
+                               (list (request request-move (entity-id bot) (location 1 1)))
                                (list process-bot))
                 first bot-neighbors first)])
        (check-equal? (entity-type (occupant-entity neighbor)) type-block)

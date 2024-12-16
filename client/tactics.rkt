@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide (struct-out choice) direction-change-chance
          choose-move choose-take)
@@ -19,17 +19,17 @@
 
 (struct choice (type parameter direction))
 
-;When a strategy @bold{choose}s to @bold{move} a bot, the choice parameter is the direction.
+;When a strategy @bold{choose}s to @bold{move} a bot, the choice parameter is the destination.
 
 (test-case:
  "choose move"
- (let ([choice (choose-move direction-west)])
+ (let ([choice (choose-move (location 1 1) direction-west)])
    (check-equal? (choice-type choice) request-move)
-   (check-equal? (choice-parameter choice) direction-west)
+   (check-equal? (choice-parameter choice) (location 1 1))
    (check-equal? (choice-direction choice) direction-west)))
 
-(define (choose-move direction)
-  (choice request-move direction direction))
+(define (choose-move destination direction)
+  (choice request-move destination direction))
 
 ;When a strategy @bold{choose}s to @bold{take} a block, the choice parameter is block id.
 ;The next move direction is the direction to the block.

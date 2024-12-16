@@ -1,7 +1,8 @@
-#lang racket
+#lang racket/base
 
 (provide gathering-actions)
 
+(require racket/list)
 (require "shared.rkt" "action.rkt" "bot.rkt" "tactics.rkt")
 (module+ test (require rackunit))
 
@@ -80,7 +81,7 @@
  "move in current direction"
  (let ([choice (gather-with (choose-input))])
    (check-equal? (choice-type choice) request-move)
-   (check-equal? (choice-parameter choice) direction-east)))
+   (check-equal? (choice-parameter choice) (location 2 1))))
   
 ;Randomly change direction
 
@@ -88,7 +89,7 @@
  "move in random direction"
  (let ([choice (gather-with #:chance 1 (choose-input))])
    (check-equal? (choice-type choice) request-move)
-   (check-not-equal? (choice-parameter choice) direction-east)))
+   (check-not-equal? (choice-parameter choice) (location 2 1))))
   
 ;If the current movement is stopped, change direction.
 
@@ -96,7 +97,7 @@
  "change direction if can't move"
  (let ([choice (gather-with (choose-input #:success #f #:command request-move))])
    (check-equal? (choice-type choice) request-move)
-   (check-not-equal? (choice-parameter choice) direction-east)))
+   (check-not-equal? (choice-parameter choice) (location 2 1))))
   
 ;If a block is nearby, take it.
 
@@ -141,4 +142,7 @@
         (let ([blocks (adjacent-entities (action-bot input) type-block)])
           (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
               (choose-take (action-bot input) (first blocks))
-              (choose-move (pick-direction)))))))
+              (let ([pick (pick-direction)])
+                (choose-move
+                 (move-direction pick (bot-location (action-bot input)))
+                 pick)))))))
