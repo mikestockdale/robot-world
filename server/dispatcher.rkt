@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide make-dispatcher dispatch-request)
 (require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "setup.rkt")
@@ -16,25 +16,32 @@
 
 (define (execute-request engine agent request)
   (cond
-    [(equal? request request-draw) (draw-entities (engine-grid engine))]
-    [(equal? request request-hello) (execute-hello engine)]
+    [(equal? request request-draw) (draw-entities players (engine-grid engine))]
+    [(equal? request request-hello) (execute-hello engine agent)]
     [else (dispatch-list engine agent request)]))
 
 ;A hello request returns a list of new bots assigned to the client.
 
 (test-case:
  "execute hello"
- (let ([reply (execute-request (make-engine 40 50) (make-agent) request-hello)])
+ (let* ([agent (make-agent)]
+        [reply (execute-request (make-engine 40 50) agent request-hello)])
    (check-true (andmap
-                (λ (item) (equal? (entity-type (reply-entity item)) type-bot))
+                (λ (item)
+                  (let ([bot (reply-entity item)])
+                    (and
+                     (equal? (entity-type bot) type-bot)
+                     (equal? (find-agent (list agent) (entity-id bot)) 0))))
                 reply)
                "returns new bots")))
 
 ;A hello request executes a procedure to set up bots.
 
-(define (execute-hello engine)
-  (map (λ (entity) ((make-reply #t (entity-id entity)) engine))
-       (setup-bots engine)))
+(define (execute-hello engine agent)
+  (let ([bots (setup-bots engine)])
+    (assign-bots! agent (map entity-id bots))
+    (map (λ (entity) ((make-reply #t (entity-id entity)) engine))
+         bots)))
 
 (define ((make-reply success? entity-id) engine)
   (let-values ([(occupant cargo neighbors) (entity-info engine entity-id)]) 

@@ -1,8 +1,8 @@
-#lang racket
+#lang racket/base
 
 (provide viewer)
 (require "shared.rkt")
-(require racket/gui/base)
+(require racket/class racket/format racket/list racket/gui/base)
 (module+ test (require rackunit))
 
 ;@title{Viewer}
@@ -46,6 +46,7 @@
                 #:width [width 80] #:height [height 45] #:style [style '()] #:run [run #t])
   (define count 0)
   (define score "")
+  (define colors (vector "Dark Blue" "Dark Red"))
   (set! run-actions run)
   (define (draw-procedure draw-entity)
     (let ([reply (connection request-draw)])
@@ -61,8 +62,8 @@
                [paint-callback
                 (λ (canvas dc)
                   (send dc set-font font)
-                  (define (draw-entity entity-type laden? x y #:color [color "black"])
-                    (send dc set-text-foreground color)
+                  (define (draw-entity entity-type team laden? x y #:color [color "black"])
+                    (send dc set-text-foreground (if team (vector-ref colors team) color))
                     (send dc draw-text (string (entity-symbol entity-type laden?))
                           (* 10 x) (- (* 11 y) 6)))
                   (draw-procedure draw-entity))])])

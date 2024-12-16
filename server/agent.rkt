@@ -1,6 +1,7 @@
 #lang racket/base
 
-(provide players make-agent agent-score match-request add-to-score)
+(provide players make-agent agent-score match-request assign-bots! add-to-score find-agent)
+(require racket/list)
 (require "shared.rkt")
 (module+ test (require rackunit))
 
@@ -9,11 +10,28 @@
 ;An agent represents a body of code that interacts with the game.
 ;This may be a player client, or a game viewer client.
 
-(struct agent ([type #:mutable] [score #:mutable]))
+(struct agent ([type #:mutable] [score #:mutable] [bots #:mutable]))
 (define players '())
-(define (make-agent) (agent 'unassigned 0))
+(define (make-agent) (agent 'unassigned 0 '()))
 
-;The first request sent to the agent @bold{set}s its @bold{type}.
+;When new bots are created for a player, we @bold{assign} the @bold{bots} to the agent.
+;We can them @bold{find} the @bold{agent} that owns a bot.
+
+(test-case:
+ "assign bots"
+ (let ([agent (make-agent)])
+   (assign-bots! agent (list 101 102))
+   (check-equal? 1 (find-agent (list (make-agent) agent) 102))
+   (check-false (find-agent (list (make-agent) agent) 103))))
+
+(define (assign-bots! agent bots)
+  (set-agent-bots! agent bots))
+
+(define (find-agent agents bot-id)
+  (index-where agents
+               (λ (agent) (member bot-id (agent-bots agent)))))
+
+;The first request sent to the agent @bold{assign}s its @bold{agent type}.
 ;A draw request means the agent is a game viewer.
 ;A hello request means the agent is a game player.
 
@@ -41,15 +59,15 @@
 
 (test-case:
  "valid request"
- (let ([agent (agent 'unassigned 0)])
+ (let ([agent (agent 'unassigned 0 '())])
    (check-true (request-is-valid? agent request-draw))
    (check-true (request-is-valid? agent request-hello))
    (check-false (request-is-valid? agent '(#f))))
- (let ([agent (agent 'viewer 0)])
+ (let ([agent (agent 'viewer 0 '())])
    (check-true (request-is-valid? agent request-draw))
    (check-false (request-is-valid? agent request-hello))
    (check-false (request-is-valid? agent '(#f))))
- (let ([agent (agent 'player 0)])
+ (let ([agent (agent 'player 0 '())])
    (check-false (request-is-valid? agent request-draw))
    (check-false (request-is-valid? agent request-hello))
    (check-true (request-is-valid? agent '(#f)))))
@@ -88,7 +106,7 @@
 
 (test-case:
  "add to score"
- (let ([agent (agent 'player 0)])
+ (let ([agent (agent 'player 0 '())])
    (add-to-score agent 3)
    (check-equal? (agent-score agent) 3)))
 
