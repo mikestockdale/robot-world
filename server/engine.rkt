@@ -65,14 +65,14 @@
       #f))
 
 ;The engine can @bold{move} an @bold{entity} to a new location.
-;The destination of the move must be @elemref["adjacent"] and @elemref["available"]{available}.
+;The destination of the move must be @elemref["adjacent"]{adjacent} and @elemref["available"]{available}.
 ;Otherwise, the entity remains in its original location.
 
 (test-case:
  "move bot changes location"
  (test-engine
   ((size 9 10) (bot 5 6))
-  (move-entity engine bot-id (location 5 7))
+  (check-not-false (move-entity engine bot-id (location 5 7)))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
                 (location 5 7))))
 
@@ -89,11 +89,11 @@
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (move-entity engine id new-location)
-  (let ([occupant (occupant-by-id (engine-grid engine) id)])
-    (and (adjacent? new-location (occupant-place occupant))
+  (let ([bot (occupant-by-id (engine-grid engine) id)])
+    (and (adjacent? new-location (occupant-place bot))
          (is-available? engine new-location)
          (place-entity (engine-grid engine)
-                       (occupant-entity occupant) new-location))))
+                       (occupant-entity bot) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
 
@@ -114,7 +114,7 @@
          (place-entity (engine-grid engine) (occupant-entity cargo) id)))) 
 
 ;The engine can @bold{drop} an @bold{entity} that is the cargo for a bot.
-;The destination of the drop must be @elemref["available"]{available}.
+;The destination of the drop must be @elemref["adjacent"]{adjacent} and @elemref["available"]{available}.
 ;Otherwise, the entity remains as cargo.
 
 (test-case:
@@ -122,24 +122,26 @@
  (test-engine
   ((size 3 4) (block 2 1) (bot 1 1))
   (take-entity engine (entity-id bot) block-id)
-  (check-not-false (drop-entity engine bot-id direction-north))
+  (check-not-false (drop-entity engine bot-id (location 1 2)))
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
 
 (test-case:
- "can not drop in occupied location"
+ "can not drop in location"
  (test-engine
   ((size 3 4) (block1 2 1) (bot 1 1) (block2 0 1))
   (take-entity engine bot-id block1-id)
-  (check-false (drop-entity engine bot-id direction-west))
+  (check-false (drop-entity engine bot-id (location 3 1)) "invalid")
+  (check-false (drop-entity engine bot-id (location 0 1)) "not available")
+  (check-false (drop-entity engine bot-id (location 2 2)) "not adjacent")
   (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block1-id)) bot-id)))
 
 ;The entity being dropped is unloaded from the cargos table and placed in the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
 
-(define (drop-entity engine id direction)
-  (let* ([bot (occupant-by-id (engine-grid engine) id)]
-         [drop-location (move-direction direction (occupant-place bot))])
-    (and (is-available? engine drop-location)
+(define (drop-entity engine id drop-location)
+  (let ([bot (occupant-by-id (engine-grid engine) id)])
+    (and (adjacent? drop-location (occupant-place bot))
+         (is-available? engine drop-location)
          (place-entity (engine-grid engine)
                        (entity-at (engine-grid engine) id)
                        drop-location))))

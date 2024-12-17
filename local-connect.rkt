@@ -69,7 +69,7 @@
                           (list process-bot))]
           [bots-2
            (send-requests connection
-                          (list (request request-drop (entity-id bot) direction-west))
+                          (list (request request-drop (entity-id bot) (location 0 2)))
                           (list process-bot))])
      (check-false (bot-cargo (first bots-2)))))
   
