@@ -114,12 +114,11 @@
 (test-case:
  "transfer adjacent to base"
  (let ([choice (gather-with
-                #:destination (location 0 0)
                 (choose-input #:neighbors (list (occupant (entity 103 type-base) (location 0 1)))
                               #:cargo (entity 103 type-block)))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 103)
-   (check-equal? (choice-type choice) direction-west)))
+   (check-equal? (choice-direction choice) direction-east)))
 
 ;The strategy makes a choice.
 

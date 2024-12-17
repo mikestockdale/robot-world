@@ -9,13 +9,19 @@
 
 ;@title{Direction}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/direction.rkt" "direction.rkt"]}
-;A direction indicates one of the four @elemref["adjacent"]{adjacent} locations that a bot can move to from its current location.
+;A direction performs a move to one of the four @elemref["adjacent"]{adjacent} locations that a bot can move to from its current location.
 ;Directions are named after the primary compass points.
+;We define a procedure @racket[move] to create the new location.
+;The four directions are partially-applied instances of this procedure.
 
-(define direction-north 0)
-(define direction-east 1)
-(define direction-south 2)
-(define direction-west 3)
+(define ((move delta-x delta-y) from)
+  (location (+ (location-x from) delta-x)
+            (+ (location-y from) delta-y)))
+
+(define direction-north (move 0 1))
+(define direction-east (move 1 0))
+(define direction-south (move 0 -1))
+(define direction-west (move -1 0))
 
 ;A bot can @bold{move} in a @bold{direction} to a new location.
 ;Here are the results of all the possible moves from a location.
@@ -27,18 +33,10 @@
  (check-equal? (move-direction direction-east (location 5 6)) (location 6 6))
  (check-equal? (move-direction direction-west (location 5 6)) (location 4 6)))
 
-;We define a procedure @racket[move] to create the new location.
-;The @racket[movement] vector has partially-applied instances of this procedure for the four directions.
-;The @racket[move-direction] procedure accesses an instance from the vector and applies the third argument.
-
-(define ((move delta-x delta-y) from)
-  (location (+ (location-x from) delta-x)
-            (+ (location-y from) delta-y)))
-
-(define movement (vector (move 0 1) (move 1 0) (move 0 -1) (move -1 0)))
+;The direction procedure is performed to create the new location.
 
 (define (move-direction direction from)
-  ((vector-ref movement direction) from))
+  (direction from))
 
 ;We can list the locations in @bold{all directions} from a source location.
 ;The @racket[#:except] keyword excludes a direction.
@@ -52,8 +50,10 @@
 
 ;Each item is a movement from the source location.
 
+(define directions (list direction-north direction-east direction-south direction-west))
+
 (define (all-directions source #:except [except -1])
-  (for/list ([direction 4] #:when (not (= direction except)))
+  (for/list ([direction directions] #:when (not (equal? direction except)))
     (move-direction direction source)))
 
 ;The @bold{direction from} one location to another is a direction that will move a bot closer to a destination.

@@ -1,8 +1,9 @@
-#lang racket
+#lang racket/base
 
 (provide (struct-out bot) make-bot bot-id
          adjacent-entities change-direction)
 
+(require racket/list)
 (require "shared.rkt")
 (module+ test (require rackunit))
 
@@ -82,8 +83,8 @@
         [block (entity 102 type-block)]
         [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))]
         [new (change-direction bot direction-west)])
-   (check-true (or (= new direction-east) (= new direction-south)))
-   (check-false (and (= new direction-north) (= new direction-west)))))
+   (check-true (or (equal? new direction-east) (equal? new direction-south)))
+   (check-false (and (equal? new direction-north) (equal? new direction-west)))))
 
 ;A new direction is chosen at random from the valid candidates.
 ;If there are no candidates, the direction is unchanged.
