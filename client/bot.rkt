@@ -14,15 +14,11 @@
 ;This is stored in the @racket[cargo] field.
 ;It also has a list of @elemref["nearby"]{nearby} entities that it can see, in the @racket[neighbors] field.
 
-(struct bot (entity location cargo neighbors))
+(struct bot (id location cargo neighbors))
 
 (define (make-bot reply)
-  (bot (reply-entity reply) (reply-location reply) (reply-cargo reply)
+  (bot (entity-id (reply-entity reply)) (reply-location reply) (reply-cargo reply)
        (reply-neighbors reply)))
-
-;We include a helper function, to access the entity id.
-
-(define (bot-id bot) (entity-id (bot-entity bot)))
 
 ;A location @bold{is free} if there are no entities at the location.
 

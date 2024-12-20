@@ -18,24 +18,22 @@
 (test-case:
  "actions are performed"
  (define (go-north input-action)
-   (struct-copy action input-action [strategy go-east]
-                [request-type request-move] [parameter direction-north]))
+   (values go-east (request request-move (bot-id (action-bot input-action)) direction-north)))
  (define (go-east input-action)
-   (struct-copy action input-action [strategy go-north]
-                [request-type request-move] [parameter direction-east]))
+   (values go-north (request request-move (bot-id (action-bot input-action)) direction-east)))
  (define actions
    (list
-    (action go-north #f #f #f (bot (entity 101 type-bot) #f #f '()))
-    (action go-east #f #f #f (bot (entity 102 type-bot) #f #f '()))))
+    (action go-north #f #f #f (bot 101 #f #f '()))
+    (action go-east #f #f #f (bot 102 #f #f '()))))
  (define (fake-connection requests)
    (map (λ (request)
           (reply #t (entity (request-id request) type-bot) (location 1 1) #f '())) requests))
  (let* ([action-list (perform-actions fake-connection actions)])
    (check-true (~> action-list first action-success?))
-   (check-equal? (~> action-list first action-bot bot-entity entity-id) 101)
+   (check-equal? (~> action-list first action-bot bot-id) 101)
    (check-equal? (~> action-list first action-strategy) go-east)
    (check-true (~> action-list second action-success?))
-   (check-equal? (~> action-list second action-bot bot-entity entity-id) 102)
+   (check-equal? (~> action-list second action-bot bot-id) 102)
    (check-equal? (~> action-list second action-strategy) go-north)))
 
 ;The actions are performed in these steps:
@@ -46,17 +44,16 @@
 ;@item{the actions are copied with the reply information updated}] 
 
 (define (perform-actions connection action-list)
-  (define (perform-strategy action)
-    ((action-strategy action) action))
-  (define (make-request action)
-    (request
-     (action-request-type action)
-     (bot-id (action-bot action))
-     (action-parameter action)))
-  (define (copy-action reply input-action)
-    (struct-copy action input-action
-                 [success? (reply-success? reply)] [bot (make-bot reply)]))
-  (let ([actions (map perform-strategy action-list)])
-    (map copy-action 
-         (connection (map make-request actions))
-         actions)))
+  (define (make-action strategy request reply)
+    (action strategy
+            (request-type request)
+            (request-parameter request)
+            (reply-success? reply)
+            (make-bot reply)))
+  (let-values
+      ([(strategies requests)
+        (for/lists (l1 l2) ([action action-list]) ((action-strategy action) action))])
+    (map make-action
+         strategies
+         requests
+         (connection requests))))

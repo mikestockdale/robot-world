@@ -10,7 +10,7 @@
 
 (provide all-directions move-direction direction-from
          direction-north direction-east direction-south direction-west
-         (struct-out entity) make-edge
+         (struct-out entity)
          type-block type-bot type-base type-edge
          location adjacent?
          (struct-out occupant)

@@ -48,13 +48,13 @@
 
 (define ((gather spec) input-action)
   (let ([choice (choose spec input-action)])
-    (struct-copy
-     action input-action
-     [request-type (choice-type choice)]
-     [parameter (choice-parameter choice)]
-     [strategy (gather (struct-copy
-                        gathering spec
-                        [direction (choice-direction choice)]))])))
+    (values
+     (gather (struct-copy
+              gathering spec
+              [direction (choice-direction choice)]))
+     (request (choice-type choice)
+              (bot-id (action-bot input-action))
+              (choice-parameter choice)))))
 
 ;A couple of helper methods for testing
 
