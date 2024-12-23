@@ -141,7 +141,7 @@
         (let ([blocks (adjacent-entities (action-bot input) type-block)])
           (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
               (choose-take (action-bot input) (first blocks))
-              (let ([pick (pick-direction)])
+              (let ([direction (pick-direction)])
                 (choose-move
-                 (move-direction pick (bot-location (action-bot input)))
-                 pick)))))))
+                 (direction (bot-location (action-bot input)))
+                 direction)))))))

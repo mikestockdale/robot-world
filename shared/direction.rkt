@@ -1,8 +1,7 @@
 #lang racket/base
 
-(provide move-direction direction-from
-         direction-north direction-east direction-south direction-west
-         all-directions)
+(provide all-directions direction-from
+         direction-north direction-east direction-south direction-west)
 
 (require "location.rkt" "testing.rkt")
 (module+ test (require rackunit))
@@ -11,6 +10,15 @@
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/direction.rkt" "direction.rkt"]}
 ;A direction performs a move to one of the four @elemref["adjacent"]{adjacent} locations that a bot can move to from its current location.
 ;Directions are named after the primary compass points.
+;Here are the results of all the possible moves from a location.
+
+(test-case:
+ "moves in all directions"
+ (check-equal? (direction-north (location 5 6)) (location 5 7))
+ (check-equal? (direction-south (location 5 6)) (location 5 5))
+ (check-equal? (direction-east (location 5 6)) (location 6 6))
+ (check-equal? (direction-west (location 5 6)) (location 4 6)))
+
 ;We define a procedure @racket[move] to create the new location.
 ;The four directions are partially-applied instances of this procedure.
 
@@ -22,21 +30,6 @@
 (define direction-east (move 1 0))
 (define direction-south (move 0 -1))
 (define direction-west (move -1 0))
-
-;A bot can @bold{move} in a @bold{direction} to a new location.
-;Here are the results of all the possible moves from a location.
-
-(test-case:
- "moves in all directions"
- (check-equal? (move-direction direction-north (location 5 6)) (location 5 7))
- (check-equal? (move-direction direction-south (location 5 6)) (location 5 5))
- (check-equal? (move-direction direction-east (location 5 6)) (location 6 6))
- (check-equal? (move-direction direction-west (location 5 6)) (location 4 6)))
-
-;The direction procedure is performed to create the new location.
-
-(define (move-direction direction from)
-  (direction from))
 
 ;We can list the locations in @bold{all directions} from a source location.
 ;The @racket[#:except] keyword excludes a direction.
@@ -54,7 +47,7 @@
 
 (define (all-directions source #:except [except -1])
   (for/list ([direction directions] #:when (not (equal? direction except)))
-    (move-direction direction source)))
+    (direction source)))
 
 ;The @bold{direction from} one location to another is a direction that will move a bot closer to a destination.
 

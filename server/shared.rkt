@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (require "../shared/direction.rkt"
          "../shared/entity.rkt"
@@ -8,7 +8,7 @@
          "../shared/reply.rkt"
          "../shared/testing.rkt")
 
-(provide all-directions move-direction
+(provide all-directions
          direction-north direction-east direction-south direction-west
          (struct-out entity) make-edge
          type-block type-bot type-edge type-base
