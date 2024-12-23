@@ -1,31 +1,47 @@
 #lang racket/base
 
-(provide make-dispatcher dispatch-request)
+(provide make-dispatcher)
 (require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "setup.rkt")
 (module+ test (require rackunit))
 
 ;@title{Dispatcher}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/dispatcher.rkt" "dispatcher.rkt"]}
 ;The dispatcher takes requests from clients and executes the appropriate procedures on the server.
-;It uses an agent to validate the requests, an engine to perform the requested actions and an interval to schedule their execution.
+;It uses an agent to validate the requests, and an engine to perform the requested actions.
 
-(struct dispatcher (engine agent interval))
-(define (make-dispatcher engine) (dispatcher engine (make-agent) (make-interval)))
+;The dispatcher uses an interval delays execution to limit the rate of execution for each client.
 
-;A procedure is executed, based on the request
+(define (make-dispatcher)
+  (let ([agent (make-agent)]
+        [interval (make-interval)])
+    (λ (engine request)
+      (interval)
+      (dispatch-request engine agent request))))
 
-(define (execute-request engine agent request)
-  (cond
-    [(equal? request request-draw) (draw-entities players (engine-grid engine))]
-    [(equal? request request-hello) (execute-hello engine agent)]
-    [else (dispatch-list engine agent request)]))
+;An invalid request returns an error message.
+
+(test-case:
+ "invalid request"
+ (check-equal? (dispatch-request (make-engine 4 5) (make-agent) '(#f))
+               "invalid request"))
+
+;If the agent matches the request, a procedure is executed, based on the request
+;Otherwise, a message is returned.
+
+(define (dispatch-request engine agent request)
+  (if (match-request agent request)
+      (cond
+        [(equal? request request-draw) (draw-entities players (engine-grid engine))]
+        [(equal? request request-hello) (execute-hello engine agent)]
+        [else (dispatch-list engine agent request)])
+      "invalid request"))
 
 ;A hello request returns a list of new bots assigned to the client.
 
 (test-case:
  "execute hello"
  (let* ([agent (make-agent)]
-        [reply (execute-request (make-engine 40 50) agent request-hello)])
+        [reply (dispatch-request (make-engine 40 50) agent request-hello)])
    (check-true (andmap
                 (λ (item)
                   (let ([bot (reply-entity item)])
@@ -55,10 +71,12 @@
 (test-case:
  "requests from player"
  (let* ([engine (make-engine 4 5)]
-        [bot1 (add-entity engine type-bot (location 1 1))])
+        [bot1 (add-entity engine type-bot (location 1 1))]
+        [agent (make-agent)])
+   (match-request agent request-hello)
    (check-equal?
-    (execute-request engine (make-agent)
-                     (list (request request-move (entity-id bot1) (location 2 1))))
+    (dispatch-request engine agent
+                      (list (request request-move (entity-id bot1) (location 2 1))))
     (list (reply #t (entity 101 type-bot) (location 2 1) #f '())))))
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.
@@ -75,20 +93,3 @@
         (add-to-score agent 1))
       (make-reply success? (request-id request))))
   (map (λ (make-reply) (make-reply engine)) (map execute request-list)))
-
-;When the dispatcher @bold{dispatch}es a @bold{request}, an invalid request returns an error message.
-
-(test-case:
- "invalid request"
- (check-equal? (dispatch-request (make-dispatcher (make-engine 4 5)) '(#f))
-               "invalid request"))
-
-;The dispatcher delays execution to limit the rate of execution for each client.
-;If the agent matches the request, it is executed.
-;Otherwise, a message is returned.
-
-(define (dispatch-request dispatcher request)
-  ((dispatcher-interval dispatcher))
-  (if (match-request (dispatcher-agent dispatcher) request)
-      (execute-request (dispatcher-engine dispatcher)  (dispatcher-agent dispatcher) request)
-      "invalid request"))

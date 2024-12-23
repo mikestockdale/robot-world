@@ -12,7 +12,7 @@
 (define (process-client-request in out dispatcher)
   (let ([request (read in)])
     (unless (equal? request eof)
-      (write (dispatch-request dispatcher request) out)
+      (write (dispatcher engine request) out)
       (flush-output out)
       (process-client-request in out dispatcher))))
 

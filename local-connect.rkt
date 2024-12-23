@@ -4,13 +4,13 @@
 (require racket/list racket/port)
 (require "server/dispatcher.rkt")
 
-(define (connect-local engine) (local-call (make-dispatcher engine)))
+(define (connect-local engine) (local-call (make-dispatcher) engine))
 
-(define ((local-call dispatcher) request-list)
+(define ((local-call dispatcher engine) request-list)
   (define (fake-network item)
     (with-input-from-string
         (with-output-to-string (λ () (write item))) read))
-  (fake-network (dispatch-request dispatcher (fake-network request-list))))
+  (fake-network (dispatcher engine (fake-network request-list))))
 
 (module+ test
   (require rackunit threading
