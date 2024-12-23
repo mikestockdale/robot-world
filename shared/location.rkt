@@ -36,15 +36,7 @@
   (values (offset location-x to from)
           (offset location-y to from)))
 
-;@tabular[
-; (list
-;  (list
-;   @para{We can define some useful relationships between locations.
-;  @elemtag["adjacent"]{Two locations are @bold{adjacent} when they are next to each other, horizontally or vertically.}
-;  In the picture on the right, the location in the center has four adjacent locations, indicated by the gray squares.}
-;   @centered{@image["adjacent.png" #:scale 1.2] @linebreak{} @smaller{adjacent}}))]
-
-;Here are some examples of adjacent and non-adjacent locations:
+;Two locations may be @elemref["adjacent"]{adjacent} to each other. Here are some examples of adjacent and non-adjacent locations:
 
 (test-case:
  "adjacent locations"
@@ -61,14 +53,8 @@
   (= 1 (+ (difference location-x a b)
           (difference location-y a b))))
 
-;@tabular[
-; (list
-;  (list
-;   @para{@elemtag["nearby"]{Two locations are @bold{nearby} when they are next to each other, horizontally, vertically, or diagonally.}
-;  In the picture on the right, the location in the center has eight nearby locations, indicated by the gray squares.}
-;   @centered{@image["nearby.png" #:scale 1.2] @linebreak{} @smaller{nearby}}))]
 
-;Here are some examples of nearby locations:
+;Two locations may be @elemref["nearby"]{nearby}. Here are some examples:
 
 (test-case:
  "nearby locations"
