@@ -1,9 +1,9 @@
 #lang racket/base
 
 (provide (struct-out choice) direction-change-chance
-         choose-move choose-take)
+         choose-move choose-take choose-transfer)
 
-(require "shared.rkt" "bot.rkt")
+(require "action.rkt" "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
 
 ;@title{Tactics}
@@ -23,13 +23,20 @@
 
 (test-case:
  "choose move"
- (let ([choice (choose-move (location 1 1) direction-west)])
+ (let ([choice (choose-move direction-west direction-east
+                            (action #f request-move #f #t (bot #f (location 2 1) #f #f)))])
    (check-equal? (choice-type choice) request-move)
    (check-equal? (choice-parameter choice) (location 1 1))
    (check-equal? (choice-direction choice) direction-west)))
 
-(define (choose-move destination direction)
-  (choice request-move destination direction))
+(define (choose-move chosen-direction current-direction input)
+  (let ([direction
+         (if (move-failed? input) 
+             (change-direction (action-bot input) current-direction)
+             chosen-direction)])
+    (choice request-move
+            (direction (bot-location (action-bot input)))
+            direction)))
 
 ;When a strategy @bold{choose}s to @bold{take} a block, the choice parameter is block id.
 ;The next move direction is the direction to the block.
@@ -46,3 +53,20 @@
 (define (choose-take bot block)
   (let ([take-direction (direction-from (bot-location bot) (occupant-place block))]) 
     (choice request-take (entity-id (occupant-entity block)) take-direction)))
+
+;When a strategy @bold{choose}s to @bold{transfer} a block to a base, the choice parameter is the base id.
+;The next move direction is away from the base.
+
+(test-case:
+ "choose transfer"
+ (let* ([base (occupant (entity 102 type-base) (location 1 2))]
+        [choice (choose-transfer
+                 (bot (entity 101 type-bot) (location 1 1) #f (list base))
+                 base)])
+   (check-equal? (choice-type choice) request-transfer)
+   (check-equal? (choice-parameter choice) 102)
+   (check-equal? (choice-direction choice) direction-south)))
+
+(define (choose-transfer bot base)
+  (choice request-transfer (entity-id (occupant-entity base))
+          (direction-from (occupant-place base) (bot-location bot))))

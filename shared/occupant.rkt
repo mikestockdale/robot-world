@@ -10,7 +10,8 @@
 
 (struct occupant (entity place) #:prefab)
 
-;The place can be @bold{at} a @bold{location} on the game board, or else as cargo for another entity.
+;The place can be @bold{at} a @bold{location} on the game board.
+;Otherwise, the place is the id of another entity that is carying the entity as cargo.
 
 (test-case:
  "place types"

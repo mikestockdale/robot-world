@@ -18,23 +18,6 @@
 
 (struct gathering (direction destination))
 
-;When a strategy @bold{choose}s to @bold{transfer} a block to a base, the choice parameter is the base id.
-;The next move direction is away from the base.
-
-(test-case:
- "choose transfer"
- (let* ([base (occupant (entity 102 type-base) (location 1 2))]
-        [choice (choose-transfer
-                 (bot (entity 101 type-bot) (location 1 1) #f (list base))
-                 base)])
-   (check-equal? (choice-type choice) request-transfer)
-   (check-equal? (choice-parameter choice) 102)
-   (check-equal? (choice-direction choice) direction-south)))
-
-(define (choose-transfer bot base)
-  (choice request-transfer (entity-id (occupant-entity base))
-          (direction-from (occupant-place base) (bot-location bot))))
-
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
 
 (define (gathering-actions replies)
@@ -123,25 +106,26 @@
 ;The strategy makes a choice.
 
 (define (choose spec input)
+  (if (bot-cargo (action-bot input))
+      (return-to-base spec input)
+      (look-for-blocks spec input)))
+
+(define (return-to-base spec input)
   (define (pick-direction)
-    (if (and (equal? (action-request-type input) request-move)
-             (not (action-success? input))) 
-        (change-direction (action-bot input) (gathering-direction spec))
-        (if (bot-cargo (action-bot input))
-            (direction-from
-             (bot-location (action-bot input)) (gathering-destination spec))
-            (let ([old-direction (gathering-direction spec)])
-              (if (> (direction-change-chance) (random))
-                  (change-direction (action-bot input) old-direction)
-                  old-direction)))))
+    (direction-from
+     (bot-location (action-bot input)) (gathering-destination spec)))
   (let ([bases (adjacent-entities (action-bot input) type-base)])
-    (if (and (bot-cargo (action-bot input))
-             (> (length bases) 0))
+    (if (> (length bases) 0)
         (choose-transfer (action-bot input) (first bases))
-        (let ([blocks (adjacent-entities (action-bot input) type-block)])
-          (if (and (> (length blocks) 0) (not (bot-cargo (action-bot input))))
-              (choose-take (action-bot input) (first blocks))
-              (let ([direction (pick-direction)])
-                (choose-move
-                 (direction (bot-location (action-bot input)))
-                 direction)))))))
+        (choose-move (pick-direction) (gathering-direction spec) input))))
+
+(define (look-for-blocks spec input)
+  (define (pick-direction)
+    (let ([old-direction (gathering-direction spec)])
+      (if (> (direction-change-chance) (random))
+          (change-direction (action-bot input) old-direction)
+          old-direction)))
+  (let ([blocks (adjacent-entities (action-bot input) type-block)])
+    (if (> (length blocks) 0)
+        (choose-take (action-bot input) (first blocks))
+        (choose-move (pick-direction) (gathering-direction spec) input))))

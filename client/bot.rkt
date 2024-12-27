@@ -20,23 +20,7 @@
   (bot (entity-id (reply-entity reply)) (reply-location reply) (reply-cargo reply)
        (reply-neighbors reply)))
 
-;A location @bold{is free} if there are no entities at the location.
-
-(test-case:
- "free location checked"
- (let* ([bot1 (entity 101 type-bot)]
-        [block (entity 102 type-block)]
-        [bot (bot bot1 (location 1 1) #f (list (occupant block (location 1 2))))])
-   (check-true (is-free? bot (location 2 1)))
-   (check-false (is-free? bot (location 1 2)))))
-
-;We check the locations of bot's neighbors.
-
-(define (is-free? bot location)
-  (not (findf (λ (neighbor) (equal? location (occupant-place neighbor)))
-              (bot-neighbors bot))))
-
-;@bold{Adjacent entities} are ones that are adjacent to the bot.
+;@bold{Adjacent entities} are ones at locations adjacent to the bot's location.
 
 (test-case:
  "adjacent block found"
@@ -63,7 +47,7 @@
         [adjacent (adjacent-entities bot type-block)])
    (check-equal? (length adjacent) 0)))
 
-;We filter the bot's neighbors to find adjacent entities
+;We filter the bot's neighbors to find adjacent entities of a requested type.
 
 (define (adjacent-entities bot type)
   (filter (λ (neighbor)
@@ -86,8 +70,11 @@
 ;If there are no candidates, the direction is unchanged.
 
 (define (change-direction bot old-direction)
-  (define (valid-change? new-location) (is-free? bot new-location))
-  (let* ([candidates (filter valid-change? (all-directions (bot-location bot) #:except old-direction))]
+  (define (valid-change? location)
+    (not (findf (λ (neighbor) (equal? location (occupant-place neighbor)))
+                (bot-neighbors bot))))
+  (let* ([candidates
+          (filter valid-change? (all-directions (bot-location bot) #:except old-direction))]
          [count (length candidates)])
     (if (= count 0)
         old-direction

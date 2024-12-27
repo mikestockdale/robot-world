@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out action) perform-actions)
+(provide (struct-out action) perform-actions move-failed?)
 (require threading "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
 
@@ -11,6 +11,10 @@
 ;The result of the operation is its success status and the bot after the operation.
 
 (struct action (strategy request-type parameter success? bot))
+
+(define (move-failed? action)
+  (and (equal? (action-request-type action) request-move)
+                  (not (action-success? action))))
 
 ;To @bold{perform actions}, the strategy functions set the request types and parameters, and new strategies for subsequent actions.
 ;The requests are sent to the server, and the replies are saved.
