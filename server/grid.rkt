@@ -47,8 +47,8 @@
    (check-false (entity-at grid 101))
    (check-equal? (entity-at grid (location 1 2)) block1)
    (check-equal? (occupants-nearby grid (location 2 2))
-                 (list (occupant block1 (location 1 2))
-                       (occupant block2 (location 3 3))))))
+                 (list (neighbor block1 (location 1 2))
+                       (neighbor block2 (location 3 3))))))
 
 ;The @racket[hash-values] function returns a list of the values in the table.
 ;We can then find a single instance or filter the list.
@@ -61,7 +61,8 @@
 
 (define (occupants-nearby grid location)
   (~>> grid grid-hash hash-values
-       (filter (λ (occupant) (nearby-place? (occupant-place occupant) location)))))
+       (filter (λ (occupant) (nearby-place? (occupant-place occupant) location)))
+       (map (λ (occupant) (neighbor (occupant-entity occupant) (occupant-place occupant))))))
 
 ;The grid performs a procedure on each entity to @bold{map} the @bold{entities} for a game viewer.
 

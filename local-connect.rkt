@@ -84,5 +84,5 @@
                                (list (request request-move (entity-id bot) (location 1 1)))
                                (list process-bot))
                 first bot-neighbors first)])
-       (check-equal? (entity-type (occupant-entity neighbor)) type-block)
-       (check-equal? (occupant-place neighbor) (location 2 1))))))
+       (check-equal? (entity-type (neighbor-entity neighbor)) type-block)
+       (check-equal? (neighbor-location neighbor) (location 2 1))))))

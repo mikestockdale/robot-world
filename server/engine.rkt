@@ -184,7 +184,7 @@
   ((size 4 3) (block1 2 2) (block2 3 1))
   (let ([neighbors (neighbors engine (location 1 1))])
     (check-equal? (length neighbors) 1)
-    (check-equal? (occupant-place (first neighbors)) (location 2 2)))))
+    (check-equal? (neighbor-location (first neighbors)) (location 2 2)))))
 
 (test-case:
  "neighbors include edges"
@@ -192,8 +192,8 @@
   ((size 3 4))
   (let ([neighbors (neighbors engine (location 0 1))])
     (check-equal? (length neighbors) 1)
-    (check-equal? (entity-type (occupant-entity (first neighbors))) type-edge)
-    (check-equal? (occupant-place (first neighbors)) (location -1 1)))))
+    (check-equal? (entity-type (neighbor-entity (first neighbors))) type-edge)
+    (check-equal? (neighbor-location (first neighbors)) (location -1 1)))))
 
 (define (neighbors engine location)
   (append
@@ -210,7 +210,7 @@
   (let-values ([(bot-occupant cargo neighbors) (entity-info engine bot1-id)])
     (check-equal? bot-occupant (occupant bot1 (location 2 2)))
     (check-equal? cargo block1)
-    (check-equal? neighbors (list (occupant block2 (location 1 1)))))))
+    (check-equal? neighbors (list (neighbor block2 (location 1 1)))))))
  
 ;The bot and its neighbors are retrieved from the grid and the cargo from the cargos table.
 
