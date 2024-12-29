@@ -1,14 +1,14 @@
 #lang racket/base
 
 (provide (struct-out occupant) at-location? same-place? nearby-place?)
-(require "location.rkt" "testing.rkt")
+(require "shared.rkt")
 (module+ test (require rackunit))
 
 ;@title{Occupant}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/occupant.rkt" "occupant.rkt"]}
 ;Each entity occupies a place in the game.
 
-(struct occupant (entity place) #:prefab)
+(struct occupant (entity place) #:transparent)
 
 ;The place can be @bold{at} a @bold{location} on the game board.
 ;Otherwise, the place is the id of another entity that is carying the entity as cargo.

@@ -2,7 +2,7 @@
 
 (provide background)
 
-(require "board.rkt" "engine.rkt" "grid.rkt" "shared.rkt")
+(require "board.rkt" "engine.rkt" "grid.rkt" "occupant.rkt" "shared.rkt")
 
 ;@title{Background}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/background.rkt" "background.rkt"]}

@@ -3,7 +3,7 @@
 (provide make-grid place-entity occupant-by-id
          entity-at occupants-nearby map-entities)
 
-(require threading "shared.rkt" "board.rkt")
+(require threading "shared.rkt" "board.rkt" "occupant.rkt")
 (module+ test (require rackunit))
 
 ;@title{Grid}

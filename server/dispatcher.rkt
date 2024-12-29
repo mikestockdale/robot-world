@@ -1,7 +1,7 @@
 #lang racket/base
 
 (provide make-dispatcher)
-(require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "setup.rkt")
+(require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "occupant.rkt" "shared.rkt" "setup.rkt")
 (module+ test (require rackunit))
 
 ;@title{Dispatcher}

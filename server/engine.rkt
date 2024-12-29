@@ -5,7 +5,7 @@
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require racket/list)
-(require "shared.rkt" "board.rkt" "grid.rkt" "sequence.rkt")
+(require "shared.rkt" "board.rkt" "grid.rkt" "occupant.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
 ;@title{Engine}

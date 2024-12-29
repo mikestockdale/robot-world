@@ -3,7 +3,7 @@
 (provide draw-entities)
 
 (require racket/list racket/string)
-(require "agent.rkt" "engine.rkt" "grid.rkt" "shared.rkt" "testing.rkt")
+(require "agent.rkt" "engine.rkt" "grid.rkt" "occupant.rkt" "shared.rkt" "testing.rkt")
 (module+ test (require rackunit))
 
 ;@title{Draw}
