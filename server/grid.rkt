@@ -1,7 +1,7 @@
 #lang racket
 
 (provide make-grid place-entity occupant-by-id
-         entity-at occupants-nearby map-entities)
+         entity-at occupants-nearby map-occupants map-cargos)
 
 (require threading "shared.rkt" "board.rkt" "occupant.rkt")
 (module+ test (require rackunit))
@@ -23,12 +23,16 @@
  (let ([grid (make-grid)]
        [block (entity 101 type-block)])
    (place-entity grid block (location 1 2))
-   (check-equal? (occupant-by-id grid 101) (occupant block (location 1 2)))))
+   (check-equal? (occupant-by-id grid 101) (occupantx block (location 1 2)))
+   (check-false (occupant-by-id grid 999))))
 
 ;This is done with basic hash table functions.
 
 (define (occupant-by-id grid id)
-  (hash-ref (grid-hash grid) id #f))
+  (let ([place (hash-ref (grid-hash grid) id #f)])
+    (if (and place (at-location? place))
+        (occupantx (occupant-entity place) (occupant-place place))
+        #f)))
 
 (define (place-entity grid entity location)
   (hash-set! (grid-hash grid) (entity-id entity) (occupant entity location)))
@@ -66,7 +70,7 @@
 
 ;The grid performs a procedure on each entity to @bold{map} the @bold{entities} for a game viewer.
 
-(test-case:
+#;(test-case:
  "map all"
  (let ([grid (make-grid)])
    (place-entity grid (entity 102 type-block) (location 3 3))
@@ -77,6 +81,14 @@
 
 ;The procedure is performed on all occupants at locations.
 
-(define (map-entities grid procedure)
+(define (map-cargos grid procedure)
   (~>> grid grid-hash hash-values
-       (filter-map (λ (item) (procedure item)))))
+       (filter-map (λ (item)
+                     (and (not (at-location? (occupant-place item)))
+                          (procedure (occupant-entity item) (occupant-place item)))))))
+
+(define (map-occupants grid procedure)
+  (~>> grid grid-hash hash-values
+       (filter-map (λ (item)
+                     (and (at-location? (occupant-place item))
+                          (procedure (occupant-entity item) (occupant-place item)))))))

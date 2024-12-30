@@ -2,17 +2,16 @@
 
 (provide background)
 
-(require "board.rkt" "engine.rkt" "grid.rkt" "occupant.rkt" "shared.rkt")
+(require "board.rkt" "engine.rkt" "grid.rkt" "shared.rkt")
 
 ;@title{Background}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/background.rkt" "background.rkt"]}
 
 (define (blocks-in-bases grid)
-  (flatten
-   (map-entities
-    grid (λ (occupant)
-           (and (equal? (entity-type (occupant-entity occupant)) type-base)
-                (entity-at grid (entity-id (occupant-entity occupant))))))))
+   (map-cargos
+    grid (λ (entity container-id)
+           (and (equal? (occupantx-type (occupant-by-id grid container-id)) type-base)
+                entity))))
 
 (define (background engine)
   (sleep 10)

@@ -1,7 +1,7 @@
 #lang racket/base
 
 (provide make-dispatcher)
-(require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "occupant.rkt" "shared.rkt" "setup.rkt")
+(require "agent.rkt" "draw.rkt" "engine.rkt" "interval.rkt" "shared.rkt" "setup.rkt")
 (module+ test (require rackunit))
 
 ;@title{Dispatcher}
@@ -62,8 +62,8 @@
 (define ((make-reply success? entity-id) engine)
   (let-values ([(occupant cargo neighbors) (entity-info engine entity-id)]) 
     (reply (if success? #t #f)
-           (occupant-entity occupant)
-           (occupant-place occupant)
+           (occupantx-entity occupant)
+           (occupantx-location occupant)
            cargo neighbors)))
   
 ;A list of commands returns bot information for each command.

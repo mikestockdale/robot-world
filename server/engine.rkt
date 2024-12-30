@@ -5,7 +5,7 @@
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require racket/list)
-(require "shared.rkt" "board.rkt" "grid.rkt" "occupant.rkt" "sequence.rkt")
+(require "shared.rkt" "board.rkt" "grid.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
 ;@title{Engine}
@@ -42,7 +42,7 @@
         [block (add-entity engine type-block (location 1 2))])
    (check-equal? (entity-type block) type-block)  
    (check-equal? (occupant-by-id (engine-grid engine) (entity-id block))
-                 (occupant block (location 1 2)))))  
+                 (occupantx block (location 1 2)))))  
 
 (test-case:
  "entity is not added at invalid location"
@@ -73,7 +73,7 @@
  (test-engine
   ((size 9 10) (bot 5 6))
   (check-not-false (move-entity engine bot-id (location 5 7)))
-  (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
+  (check-equal? (occupantx-location (occupant-by-id (engine-grid engine) bot-id))
                 (location 5 7))))
 
 (test-case:
@@ -83,17 +83,17 @@
   (check-false (move-entity engine bot-id (location 9 10)) "invalid location")
   (check-false (move-entity engine bot-id (location 8 9)) "not available")
   (check-false (move-entity engine bot-id (location 8 8)) "not adjacent")
-  (check-equal? (occupant-place (occupant-by-id (engine-grid engine) bot-id))
+  (check-equal? (occupantx-location (occupant-by-id (engine-grid engine) bot-id))
                 (location 9 9)))) 
 
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (move-entity engine id new-location)
   (let ([bot (occupant-by-id (engine-grid engine) id)])
-    (and (adjacent? new-location (occupant-place bot))
+    (and (adjacent? new-location (occupantx-location bot))
          (is-available? engine new-location)
          (place-entity (engine-grid engine)
-                       (occupant-entity bot) new-location))))
+                       (occupantx-entity bot) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
 
@@ -102,8 +102,8 @@
  (test-engine
   ((size 3 4) (bot 1 1) (block 2 1))
   (check-not-false (take-entity engine bot-id block-id))
-  (check-equal? (occupant-by-id (engine-grid engine) block-id)
-                (occupant block bot-id))))
+  (check-equal? (entity-at (engine-grid engine) bot-id)
+                block)))
 
 ;The entity being taken is loaded into the cargos table and removed from the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
@@ -111,7 +111,7 @@
 (define (take-entity engine id cargo-id)
   (let ([cargo (occupant-by-id (engine-grid engine) cargo-id)])
     (and cargo
-         (place-entity (engine-grid engine) (occupant-entity cargo) id)))) 
+         (place-entity (engine-grid engine) (occupantx-entity cargo) id)))) 
 
 ;The engine can @bold{drop} an @bold{entity} that is the cargo for a bot.
 ;The destination of the drop must be @elemref["adjacent"]{adjacent} and @elemref["available"]{available}.
@@ -123,7 +123,7 @@
   ((size 3 4) (block 2 1) (bot 1 1))
   (take-entity engine (entity-id bot) block-id)
   (check-not-false (drop-entity engine bot-id (location 1 2)))
-  (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
+  (check-equal? (occupantx-location (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
 
 (test-case:
  "can not drop in location"
@@ -133,14 +133,14 @@
   (check-false (drop-entity engine bot-id (location 3 1)) "invalid")
   (check-false (drop-entity engine bot-id (location 0 1)) "not available")
   (check-false (drop-entity engine bot-id (location 2 2)) "not adjacent")
-  (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block1-id)) bot-id)))
+  (check-equal? (entity-at (engine-grid engine) bot-id) block1)))
 
 ;The entity being dropped is unloaded from the cargos table and placed in the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (drop-entity engine id drop-location)
   (let ([bot (occupant-by-id (engine-grid engine) id)])
-    (and (adjacent? drop-location (occupant-place bot))
+    (and (adjacent? drop-location (occupantx-location bot))
          (is-available? engine drop-location)
          (place-entity (engine-grid engine)
                        (entity-at (engine-grid engine) id)
@@ -155,7 +155,7 @@
   ((size 3 4) (bot 1 1) (base 1 2) (block 2 1))
   (take-entity engine bot-id block-id)
   (transfer-entity engine bot-id base-id)
-  (check-equal? (occupant-place (occupant-by-id (engine-grid engine) block-id)) base-id)))
+  (check-equal? (entity-at (engine-grid engine) base-id) block)))
 
 (test-case:
  "must be adjacent"
@@ -171,7 +171,7 @@
   (let ([from-entity (occupant-by-id (engine-grid engine) from-id)]
         [to-entity (occupant-by-id (engine-grid engine) to-id)])
     (and
-     (adjacent? (occupant-place from-entity) (occupant-place to-entity))
+     (adjacent? (occupantx-location from-entity) (occupantx-location to-entity))
      (place-entity (engine-grid engine)
                    (entity-at (engine-grid engine) from-id)
                    to-id))))
@@ -208,7 +208,7 @@
   ((size 5 4) (bot1 2 2) (block1 2 3) (block2 1 1))
   (take-entity engine bot1-id block1-id)
   (let-values ([(bot-occupant cargo neighbors) (entity-info engine bot1-id)])
-    (check-equal? bot-occupant (occupant bot1 (location 2 2)))
+    (check-equal? bot-occupant (occupantx bot1 (location 2 2)))
     (check-equal? cargo block1)
     (check-equal? neighbors (list (occupantx block2 (location 1 1)))))))
  
@@ -219,4 +219,4 @@
     (values
      occupant
      (entity-at (engine-grid engine) entity-id)
-     (neighbors engine (occupant-place occupant)))))
+     (neighbors engine (occupantx-location occupant)))))
