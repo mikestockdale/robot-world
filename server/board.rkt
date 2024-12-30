@@ -46,7 +46,7 @@
 (define (edges board location)
   (for/list ([adjacent (all-directions location)]
              #:unless (is-valid? board adjacent))
-    (neighbor (make-edge) adjacent)))
+    (occupantx (make-edge) adjacent)))
 
 ;A @bold{random location} is anywhere on the board.
 

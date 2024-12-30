@@ -45,21 +45,21 @@
  "choose take"
  (let ([choice (choose-take
                 (bot (entity 101 type-bot) (location 1 1) #f #f)
-                (neighbor (entity 102 type-block) (location 1 2)))])
+                (occupantx (entity 102 type-block) (location 1 2)))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-north)))
 
 (define (choose-take bot block)
-  (let ([take-direction (direction-from (bot-location bot) (neighbor-location block))]) 
-    (choice request-take (entity-id (neighbor-entity block)) take-direction)))
+  (let ([take-direction (direction-from (bot-location bot) (occupantx-location block))]) 
+    (choice request-take (occupantx-id block) take-direction)))
 
 ;When a strategy @bold{choose}s to @bold{transfer} a block to a base, the choice parameter is the base id.
 ;The next move direction is away from the base.
 
 (test-case:
  "choose transfer"
- (let* ([base (neighbor (entity 102 type-base) (location 1 2))]
+ (let* ([base (occupantx (entity 102 type-base) (location 1 2))]
         [choice (choose-transfer
                  (bot (entity 101 type-bot) (location 1 1) #f (list base))
                  base)])
@@ -68,5 +68,5 @@
    (check-equal? (choice-direction choice) direction-south)))
 
 (define (choose-transfer bot base)
-  (choice request-transfer (entity-id (neighbor-entity base))
-          (direction-from (neighbor-location base) (bot-location bot))))
+  (choice request-transfer (occupantx-id base)
+          (direction-from (occupantx-location base) (bot-location bot))))

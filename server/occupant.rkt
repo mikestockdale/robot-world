@@ -5,7 +5,7 @@
 (module+ test (require rackunit))
 
 ;@title{Occupant}
-;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/occupant.rkt" "occupant.rkt"]}
+;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/occupant.rkt" "occupant.rkt"]}
 ;Each entity occupies a place in the game.
 
 (struct occupant (entity place) #:transparent)

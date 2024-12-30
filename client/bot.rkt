@@ -29,12 +29,12 @@
         [block2 (entity 102 type-block)]
         [bot2 (entity 103 type-bot)]
         [bot (bot bot1 (location 1 1) #f
-                  (list (neighbor bot2 (location 2 1))
-                        (neighbor block1 (location 1 2))
-                        (neighbor block2 (location 2 2))))]
+                  (list (occupantx bot2 (location 2 1))
+                        (occupantx block1 (location 1 2))
+                        (occupantx block2 (location 2 2))))]
         [adjacent (adjacent-entities bot type-block)])
    (check-equal? (length adjacent) 1)
-   (check-equal? (first adjacent) (neighbor block1 (location 1 2)))))
+   (check-equal? (first adjacent) (occupantx block1 (location 1 2)))))
   
 (test-case:
  "block not adjacent"
@@ -42,8 +42,8 @@
         [block1 (entity 102 type-block)]
         [block2 (entity 102 type-block)]
         [bot (bot bot1 (location 1 1) #f
-                  (list (neighbor block1 (location 0 2))
-                        (neighbor block2 (location 2 2))))]
+                  (list (occupantx block1 (location 0 2))
+                        (occupantx block2 (location 2 2))))]
         [adjacent (adjacent-entities bot type-block)])
    (check-equal? (length adjacent) 0)))
 
@@ -51,8 +51,8 @@
 
 (define (adjacent-entities bot type)
   (filter (λ (neighbor)
-            (and (= (entity-type (neighbor-entity neighbor)) type)
-                 (adjacent? (neighbor-location neighbor) (bot-location bot))))
+            (and (= (occupantx-type neighbor) type)
+                 (adjacent? (occupantx-location neighbor) (bot-location bot))))
           (bot-neighbors bot)))
 
 ;A bot can @bold{change direction}.
@@ -61,7 +61,7 @@
  "new direction is different"
  (let* ([bot1 (entity 101 type-bot)]
         [block (entity 102 type-block)]
-        [bot (bot bot1 (location 1 1) #f (list (neighbor block (location 1 2))))]
+        [bot (bot bot1 (location 1 1) #f (list (occupantx block (location 1 2))))]
         [new (change-direction bot direction-west)])
    (check-true (or (equal? new direction-east) (equal? new direction-south)))
    (check-false (and (equal? new direction-north) (equal? new direction-west)))))
@@ -71,7 +71,7 @@
 
 (define (change-direction bot old-direction)
   (define (valid-change? location)
-    (not (findf (λ (neighbor) (equal? location (neighbor-location neighbor)))
+    (not (findf (λ (neighbor) (equal? location (occupantx-location neighbor)))
                 (bot-neighbors bot))))
   (let* ([candidates
           (filter valid-change? (all-directions (bot-location bot) #:except old-direction))]
