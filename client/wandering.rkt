@@ -1,13 +1,13 @@
 #lang racket/base
 
-(provide gathering-actions)
+(provide wandering-actions)
 
 (require racket/list)
 (require "shared.rkt" "action.rkt" "bot.rkt" "tactics.rkt")
 (module+ test (require rackunit))
 
-;@title{Gathering}
-;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/client/gathering.rkt" "gathering.rkt"]}
+;@title{Wandering}
+;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/client/wandering.rkt" "wandering.rkt"]}
 ;Gathering is a modification of the wandering strategy.
 ;The bots start adjacent to a base.
 ;The bots still wander randomly, taking blocks when they find them, but they bring them to their starting location to transfer them to the base.
@@ -16,24 +16,24 @@
 ;The strategy keeps track of the current direction each bot is facing.
 ;It has a destination location, where the blocks are transfered.
 
-(struct gathering (direction destination))
+(struct wandering (direction destination))
 
 ;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
 
-(define (gathering-actions replies)
+(define (wandering-actions replies)
   (map (λ (reply)
          (let ([bot (make-bot reply)])
-           (action (gather (gathering direction-east (bot-location bot)))
+           (action (wander (wandering direction-east (bot-location bot)))
                    #f #f #t bot)))
        replies))
 
 ;At each turn, a choice is made for each bot and the action is updated. 
 
-(define ((gather spec) input-action)
+(define ((wander spec) input-action)
   (let ([choice (choose spec input-action)])
     (values
-     (gather (struct-copy
-              gathering spec
+     (wander (struct-copy
+              wandering spec
               [direction (choice-direction choice)]))
      (request (choice-type choice)
               (bot-id (action-bot input-action))
@@ -56,7 +56,7 @@
            #:destination [destination (location 1 1)]
            input)
     (parameterize ([direction-change-chance chance])
-      (choose (gathering direction-east destination) input))))
+      (choose (wandering direction-east destination) input))))
 
 ;If there's nothing nearby, keep moving in the same direction
 
@@ -113,19 +113,19 @@
 (define (return-to-base spec input)
   (define (pick-direction)
     (direction-from
-     (bot-location (action-bot input)) (gathering-destination spec)))
+     (bot-location (action-bot input)) (wandering-destination spec)))
   (let ([bases (adjacent-entities (action-bot input) type-base)])
     (if (> (length bases) 0)
         (choose-transfer (action-bot input) (first bases))
-        (choose-move (pick-direction) (gathering-direction spec) input))))
+        (choose-move (pick-direction) (wandering-direction spec) input))))
 
 (define (look-for-blocks spec input)
   (define (pick-direction)
-    (let ([old-direction (gathering-direction spec)])
+    (let ([old-direction (wandering-direction spec)])
       (if (> (direction-change-chance) (random))
           (change-direction (action-bot input) old-direction)
           old-direction)))
   (let ([blocks (adjacent-entities (action-bot input) type-block)])
     (if (> (length blocks) 0)
         (choose-take (action-bot input) (first blocks))
-        (choose-move (pick-direction) (gathering-direction spec) input))))
+        (choose-move (pick-direction) (wandering-direction spec) input))))

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "shared.rkt" "action.rkt" "connection.rkt" "gathering.rkt")
+(require "shared.rkt" "action.rkt" "connection.rkt" "wandering.rkt")
 
 ;@title{TCP Client}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/client/tcp-client.rkt" "tcp-client.rkt"]}
@@ -11,6 +11,6 @@
   (let* ([connection (connect-remote "localhost" 8080)])
     (define (iterate actions)
       (iterate (perform-actions connection actions)))
-    (iterate (gathering-actions (connection request-hello)))))
+    (iterate (wandering-actions (connection request-hello)))))
 
 (run)
