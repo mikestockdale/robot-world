@@ -87,7 +87,7 @@
 (test-case:
  "take nearby block"
  (let ([choice (gather-with
-                (choose-input #:neighbors (list (occupantx (entity 102 type-block) (location 1 0)))))])
+                (choose-input #:neighbors (list (occupant (entity 102 type-block) (location 1 0)))))])
    (check-equal? (choice-type choice) request-take)
    (check-equal? (choice-parameter choice) 102)
    (check-equal? (choice-direction choice) direction-south)))
@@ -97,7 +97,7 @@
 (test-case:
  "transfer adjacent to base"
  (let ([choice (gather-with
-                (choose-input #:neighbors (list (occupantx (entity 103 type-base) (location 0 1)))
+                (choose-input #:neighbors (list (occupant (entity 103 type-base) (location 0 1)))
                               #:cargo (entity 103 type-block)))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 103)

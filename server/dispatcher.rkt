@@ -62,8 +62,8 @@
 (define ((make-reply success? entity-id) engine)
   (let-values ([(occupant cargo neighbors) (entity-info engine entity-id)]) 
     (reply (if success? #t #f)
-           (occupantx-entity occupant)
-           (occupantx-location occupant)
+           (occupant-entity occupant)
+           (occupant-location occupant)
            cargo neighbors)))
   
 ;A list of commands returns bot information for each command.

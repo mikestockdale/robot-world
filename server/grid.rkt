@@ -48,7 +48,7 @@
  (let ([grid (make-grid)]
        [block (entity 101 type-block)])
    (place-entity grid block (location 1 2))
-   (check-equal? (occupant-by-id grid 101) (occupantx block (location 1 2)))
+   (check-equal? (occupant-by-id grid 101) (occupant block (location 1 2)))
    (place-entity grid block 123)
    (check-false (occupant-by-id grid 101))
    (check-false (occupant-by-id grid 999))))
@@ -58,7 +58,7 @@
 (define (occupant-by-id grid id)
   (let ([placement (hash-ref (grid-hash grid) id #f)])
     (and placement (at-location? (placement-place placement))
-        (occupantx (placement-entity placement) (placement-place placement)))))
+        (occupant (placement-entity placement) (placement-place placement)))))
 
 (define (place-entity grid entity location)
   (hash-set! (grid-hash grid) (entity-id entity) (placement entity location)))
@@ -77,8 +77,8 @@
    (check-false (entity-at grid 101))
    (check-equal? (entity-at grid (location 1 2)) block1)
    (check-equal? (occupants-nearby grid (location 2 2))
-                 (list (occupantx block1 (location 1 2))
-                       (occupantx block2 (location 3 3))))))
+                 (list (occupant block1 (location 1 2))
+                       (occupant block2 (location 3 3))))))
 
 ;The @racket[hash-values] function returns a list of the values in the table.
 ;We can then find a single instance or filter the list.
@@ -124,5 +124,5 @@
    grid
    (λ (entity location)
      (and (nearby? location bot-location)
-          (occupantx entity location)))))
+          (occupant entity location)))))
      

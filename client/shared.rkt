@@ -13,7 +13,7 @@
          (struct-out entity)
          type-block type-bot type-base type-edge
          location adjacent?
-         (struct-out occupantx) occupantx-id occupantx-type
+         (struct-out occupant) occupant-id occupant-type
          (struct-out request) request-draw request-hello
          request-drop request-move request-take request-transfer
          (struct-out reply)

@@ -42,7 +42,7 @@
         [block (add-entity engine type-block (location 1 2))])
    (check-equal? (entity-type block) type-block)  
    (check-equal? (occupant-by-id (engine-grid engine) (entity-id block))
-                 (occupantx block (location 1 2)))))  
+                 (occupant block (location 1 2)))))  
 
 (test-case:
  "entity is not added at invalid location"
@@ -73,7 +73,7 @@
  (test-engine
   ((size 9 10) (bot 5 6))
   (check-not-false (move-entity engine bot-id (location 5 7)))
-  (check-equal? (occupantx-location (occupant-by-id (engine-grid engine) bot-id))
+  (check-equal? (occupant-location (occupant-by-id (engine-grid engine) bot-id))
                 (location 5 7))))
 
 (test-case:
@@ -83,17 +83,17 @@
   (check-false (move-entity engine bot-id (location 9 10)) "invalid location")
   (check-false (move-entity engine bot-id (location 8 9)) "not available")
   (check-false (move-entity engine bot-id (location 8 8)) "not adjacent")
-  (check-equal? (occupantx-location (occupant-by-id (engine-grid engine) bot-id))
+  (check-equal? (occupant-location (occupant-by-id (engine-grid engine) bot-id))
                 (location 9 9)))) 
 
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (move-entity engine id new-location)
   (let ([bot (occupant-by-id (engine-grid engine) id)])
-    (and (adjacent? new-location (occupantx-location bot))
+    (and (adjacent? new-location (occupant-location bot))
          (is-available? engine new-location)
          (place-entity (engine-grid engine)
-                       (occupantx-entity bot) new-location))))
+                       (occupant-entity bot) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
 
@@ -111,7 +111,7 @@
 (define (take-entity engine id cargo-id)
   (let ([cargo (occupant-by-id (engine-grid engine) cargo-id)])
     (and cargo
-         (place-entity (engine-grid engine) (occupantx-entity cargo) id)))) 
+         (place-entity (engine-grid engine) (occupant-entity cargo) id)))) 
 
 ;The engine can @bold{drop} an @bold{entity} that is the cargo for a bot.
 ;The destination of the drop must be @elemref["adjacent"]{adjacent} and @elemref["available"]{available}.
@@ -123,7 +123,7 @@
   ((size 3 4) (block 2 1) (bot 1 1))
   (take-entity engine (entity-id bot) block-id)
   (check-not-false (drop-entity engine bot-id (location 1 2)))
-  (check-equal? (occupantx-location (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
+  (check-equal? (occupant-location (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
 
 (test-case:
  "can not drop in location"
@@ -140,7 +140,7 @@
 
 (define (drop-entity engine id drop-location)
   (let ([bot (occupant-by-id (engine-grid engine) id)])
-    (and (adjacent? drop-location (occupantx-location bot))
+    (and (adjacent? drop-location (occupant-location bot))
          (is-available? engine drop-location)
          (place-entity (engine-grid engine)
                        (entity-at (engine-grid engine) id)
@@ -171,7 +171,7 @@
   (let ([from-entity (occupant-by-id (engine-grid engine) from-id)]
         [to-entity (occupant-by-id (engine-grid engine) to-id)])
     (and
-     (adjacent? (occupantx-location from-entity) (occupantx-location to-entity))
+     (adjacent? (occupant-location from-entity) (occupant-location to-entity))
      (place-entity (engine-grid engine)
                    (entity-at (engine-grid engine) from-id)
                    to-id))))
@@ -184,7 +184,7 @@
   ((size 4 3) (block1 2 2) (block2 3 1))
   (let ([neighbors (neighbors engine (location 1 1))])
     (check-equal? (length neighbors) 1)
-    (check-equal? (occupantx-location (first neighbors)) (location 2 2)))))
+    (check-equal? (occupant-location (first neighbors)) (location 2 2)))))
 
 (test-case:
  "neighbors include edges"
@@ -192,8 +192,8 @@
   ((size 3 4))
   (let ([neighbors (neighbors engine (location 0 1))])
     (check-equal? (length neighbors) 1)
-    (check-equal? (occupantx-type (first neighbors)) type-edge)
-    (check-equal? (occupantx-location (first neighbors)) (location -1 1)))))
+    (check-equal? (occupant-type (first neighbors)) type-edge)
+    (check-equal? (occupant-location (first neighbors)) (location -1 1)))))
 
 (define (neighbors engine location)
   (append
@@ -208,9 +208,9 @@
   ((size 5 4) (bot1 2 2) (block1 2 3) (block2 1 1))
   (take-entity engine bot1-id block1-id)
   (let-values ([(bot-occupant cargo neighbors) (entity-info engine bot1-id)])
-    (check-equal? bot-occupant (occupantx bot1 (location 2 2)))
+    (check-equal? bot-occupant (occupant bot1 (location 2 2)))
     (check-equal? cargo block1)
-    (check-equal? neighbors (list (occupantx block2 (location 1 1)))))))
+    (check-equal? neighbors (list (occupant block2 (location 1 1)))))))
  
 ;The bot and its neighbors are retrieved from the grid and the cargo from the cargos table.
 
@@ -219,4 +219,4 @@
     (values
      occupant
      (entity-at (engine-grid engine) entity-id)
-     (neighbors engine (occupantx-location occupant)))))
+     (neighbors engine (occupant-location occupant)))))

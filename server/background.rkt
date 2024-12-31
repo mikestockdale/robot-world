@@ -10,7 +10,7 @@
 (define (blocks-in-bases grid)
    (map-cargos
     grid (λ (entity container-id)
-           (and (equal? (occupantx-type (occupant-by-id grid container-id)) type-base)
+           (and (equal? (occupant-type (occupant-by-id grid container-id)) type-base)
                 entity))))
 
 (define (background engine)
