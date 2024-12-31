@@ -31,7 +31,7 @@
 (define (dispatch-request engine agent request)
   (if (match-request agent request)
       (cond
-        [(equal? request request-draw) (draw-entities players (engine-grid engine))]
+        [(equal? request request-draw) (draw-entities players (engine-places engine))]
         [(equal? request request-hello) (execute-hello engine agent)]
         [else (dispatch-list engine agent request)])
       "invalid request"))

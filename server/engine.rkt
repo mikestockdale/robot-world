@@ -1,11 +1,11 @@
 #lang racket/base
 
-(provide make-engine engine-grid engine-board
+(provide make-engine engine-places engine-board
          entity-info is-available?
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require racket/list)
-(require "shared.rkt" "board.rkt" "grid.rkt" "sequence.rkt")
+(require "shared.rkt" "board.rkt" "places.rkt" "sequence.rkt")
 (module+ test (require rackunit "testing.rkt"))
 
 ;@title{Engine}
@@ -15,8 +15,8 @@
 ;The sequence provides new ids for adding entities.
 ;The grid keeps track of all the entities.
 
-(struct engine (sequence board grid))
-(define (make-engine width height) (engine (make-sequence) (board width height) (make-grid)))
+(struct engine (sequence board places))
+(define (make-engine width height) (engine (make-sequence) (board width height) (make-places)))
 
 ;@elemtag["available"]{A location @bold{is available} when it is @elemref["valid"]{valid} and there is no entity at that location}.
 
@@ -30,7 +30,7 @@
 
 (define (is-available? engine location)
   (and (is-valid? (engine-board engine) location)
-       (not (entity-at (engine-grid engine) location))))
+       (not (entity-at (engine-places engine) location))))
 
 ;The engine can @bold{add} an @bold{entity}.
 ;The location must be @elemref["available"]{available}.
@@ -41,7 +41,7 @@
  (let* ([engine (make-engine 9 10)]
         [block (add-entity engine type-block (location 1 2))])
    (check-equal? (entity-type block) type-block)  
-   (check-equal? (occupant-by-id (engine-grid engine) (entity-id block))
+   (check-equal? (occupant-by-id (engine-places engine) (entity-id block))
                  (occupant block (location 1 2)))))  
 
 (test-case:
@@ -60,7 +60,7 @@
 (define (add-entity engine type location)
   (if (is-available? engine location)
       (let ([new-entity (entity ((engine-sequence engine)) type)])
-        (place-entity (engine-grid engine) new-entity location)
+        (place-entity (engine-places engine) new-entity location)
         new-entity)
       #f))
 
@@ -73,7 +73,7 @@
  (test-engine
   ((size 9 10) (bot 5 6))
   (check-not-false (move-entity engine bot-id (location 5 7)))
-  (check-equal? (occupant-location (occupant-by-id (engine-grid engine) bot-id))
+  (check-equal? (occupant-location (occupant-by-id (engine-places engine) bot-id))
                 (location 5 7))))
 
 (test-case:
@@ -83,16 +83,16 @@
   (check-false (move-entity engine bot-id (location 9 10)) "invalid location")
   (check-false (move-entity engine bot-id (location 8 9)) "not available")
   (check-false (move-entity engine bot-id (location 8 8)) "not adjacent")
-  (check-equal? (occupant-location (occupant-by-id (engine-grid engine) bot-id))
+  (check-equal? (occupant-location (occupant-by-id (engine-places engine) bot-id))
                 (location 9 9)))) 
 
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (move-entity engine id new-location)
-  (let ([bot (occupant-by-id (engine-grid engine) id)])
+  (let ([bot (occupant-by-id (engine-places engine) id)])
     (and (adjacent? new-location (occupant-location bot))
          (is-available? engine new-location)
-         (place-entity (engine-grid engine)
+         (place-entity (engine-places engine)
                        (occupant-entity bot) new-location))))
 
 ;The engine can @bold{take} an @bold{entity} as cargo.
@@ -102,16 +102,16 @@
  (test-engine
   ((size 3 4) (bot 1 1) (block 2 1))
   (check-not-false (take-entity engine bot-id block-id))
-  (check-equal? (entity-at (engine-grid engine) bot-id)
+  (check-equal? (entity-at (engine-places engine) bot-id)
                 block)))
 
 ;The entity being taken is loaded into the cargos table and removed from the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (take-entity engine id cargo-id)
-  (let ([cargo (occupant-by-id (engine-grid engine) cargo-id)])
+  (let ([cargo (occupant-by-id (engine-places engine) cargo-id)])
     (and cargo
-         (place-entity (engine-grid engine) (occupant-entity cargo) id)))) 
+         (place-entity (engine-places engine) (occupant-entity cargo) id)))) 
 
 ;The engine can @bold{drop} an @bold{entity} that is the cargo for a bot.
 ;The destination of the drop must be @elemref["adjacent"]{adjacent} and @elemref["available"]{available}.
@@ -123,7 +123,7 @@
   ((size 3 4) (block 2 1) (bot 1 1))
   (take-entity engine (entity-id bot) block-id)
   (check-not-false (drop-entity engine bot-id (location 1 2)))
-  (check-equal? (occupant-location (occupant-by-id (engine-grid engine) block-id)) (location 1 2))))
+  (check-equal? (occupant-location (occupant-by-id (engine-places engine) block-id)) (location 1 2))))
 
 (test-case:
  "can not drop in location"
@@ -133,17 +133,17 @@
   (check-false (drop-entity engine bot-id (location 3 1)) "invalid")
   (check-false (drop-entity engine bot-id (location 0 1)) "not available")
   (check-false (drop-entity engine bot-id (location 2 2)) "not adjacent")
-  (check-equal? (entity-at (engine-grid engine) bot-id) block1)))
+  (check-equal? (entity-at (engine-places engine) bot-id) block1)))
 
 ;The entity being dropped is unloaded from the cargos table and placed in the grid.
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (drop-entity engine id drop-location)
-  (let ([bot (occupant-by-id (engine-grid engine) id)])
+  (let ([bot (occupant-by-id (engine-places engine) id)])
     (and (adjacent? drop-location (occupant-location bot))
          (is-available? engine drop-location)
-         (place-entity (engine-grid engine)
-                       (entity-at (engine-grid engine) id)
+         (place-entity (engine-places engine)
+                       (entity-at (engine-places engine) id)
                        drop-location))))
 
 ;The engine can @bold{transfer} an @bold{entity} from a bot to a base.
@@ -155,7 +155,7 @@
   ((size 3 4) (bot 1 1) (base 1 2) (block 2 1))
   (take-entity engine bot-id block-id)
   (transfer-entity engine bot-id base-id)
-  (check-equal? (entity-at (engine-grid engine) base-id) block)))
+  (check-equal? (entity-at (engine-places engine) base-id) block)))
 
 (test-case:
  "must be adjacent"
@@ -168,12 +168,12 @@
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (transfer-entity engine from-id to-id)
-  (let ([from-entity (occupant-by-id (engine-grid engine) from-id)]
-        [to-entity (occupant-by-id (engine-grid engine) to-id)])
+  (let ([from-entity (occupant-by-id (engine-places engine) from-id)]
+        [to-entity (occupant-by-id (engine-places engine) to-id)])
     (and
      (adjacent? (occupant-location from-entity) (occupant-location to-entity))
-     (place-entity (engine-grid engine)
-                   (entity-at (engine-grid engine) from-id)
+     (place-entity (engine-places engine)
+                   (entity-at (engine-places engine) from-id)
                    to-id))))
 
 ;@bold{Neighbors} of a location are all the nearby entites, plus any edges.
@@ -198,7 +198,7 @@
 (define (neighbors engine location)
   (append
    (edges (engine-board engine)location)
-   (occupants-nearby (engine-grid engine) location)))
+   (occupants-nearby (engine-places engine) location)))
 
 ;The engine provides @bold{entity info} to be returned to the client.
 
@@ -215,8 +215,8 @@
 ;The bot and its neighbors are retrieved from the grid and the cargo from the cargos table.
 
 (define (entity-info engine entity-id)
-  (let ([occupant (occupant-by-id (engine-grid engine) entity-id)])
+  (let ([occupant (occupant-by-id (engine-places engine) entity-id)])
     (values
      occupant
-     (entity-at (engine-grid engine) entity-id)
+     (entity-at (engine-places engine) entity-id)
      (neighbors engine (occupant-location occupant)))))
