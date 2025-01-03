@@ -11,11 +11,9 @@
 
 (struct location (x y) #:prefab)
 
-;This defines a structure called @racket[location] with fields @racket[x] and @racket[y].
-;The @racket[#:prefab]  option makes the structure serializable, so we can send over the network between client and server.
-
 ;The @elemtag["location-offset"]{@bold{location offset}} from one location to another is the differences between their x-coordinates and between their y-coordinates.
 ;Here's a test that shows a couple of examples:
+;@margin-note{@racket[test-case:] is a macro that makes it easier to interleave test and production code: source at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/testing.rkt" "testing.rkt"]}
 
 (test-case:
  "location offset"

@@ -8,7 +8,7 @@
 
 ;@title{Direction}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/shared/direction.rkt" "direction.rkt"]}
-;A direction performs a move to one of the four @elemref["adjacent"]{adjacent} locations that a bot can move to from its current location.
+;A @bold{direction} is a procedure that returns one of the four @elemref["adjacent"]{adjacent} locations that a bot can move to from its current location.
 ;Directions are named after the primary compass points.
 ;Here are the results of all the possible moves from a location.
 
@@ -41,7 +41,7 @@
  (check-equal? (all-directions (location 1 2) #:except direction-east)
                (list (location 1 3) (location 1 1) (location 0 2))))
 
-;Each item is a movement from the source location.
+;Each item is the result of a movement from the source location.
 
 (define directions (list direction-north direction-east direction-south direction-west))
 
