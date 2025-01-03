@@ -31,7 +31,7 @@
     (action go-east #f #f #f (bot 102 #f #f '()))))
  (define (fake-connection requests)
    (map (λ (request)
-          (reply #t (entity (request-id request) type-bot) (location 1 1) #f '())) requests))
+          (reply #t (request-id request) (location 1 1) #f '())) requests))
  (let* ([action-list (perform-actions fake-connection actions)])
    (check-true (~> action-list first action-success?))
    (check-equal? (~> action-list first action-bot bot-id) 101)

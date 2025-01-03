@@ -17,7 +17,7 @@
 (struct bot (id location cargo neighbors))
 
 (define (make-bot reply)
-  (bot (entity-id (reply-entity reply)) (reply-location reply) (reply-cargo reply)
+  (bot (reply-id reply) (reply-location reply) (reply-cargo reply)
        (reply-neighbors reply)))
 
 ;@bold{Adjacent entities} are ones at locations adjacent to the bot's location.

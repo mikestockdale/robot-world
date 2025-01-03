@@ -42,14 +42,10 @@
  "execute hello"
  (let* ([agent (make-agent)]
         [reply (dispatch-request (make-engine 40 50) agent request-hello)])
-   (check-true (andmap
-                (λ (item)
-                  (let ([bot (reply-entity item)])
-                    (and
-                     (equal? (entity-type bot) type-bot)
-                     (equal? (find-agent (list agent) (entity-id bot)) 0))))
-                reply)
-               "returns new bots")))
+   (check-true
+    (andmap (λ (item) (equal? (find-agent (list agent) (reply-id item)) 0))
+            reply)
+    "returns new bots")))
 
 ;A hello request executes a procedure to set up bots.
 
@@ -62,7 +58,7 @@
 (define ((make-reply success? entity-id) engine)
   (let-values ([(occupant cargo neighbors) (entity-info engine entity-id)]) 
     (reply (if success? #t #f)
-           (occupant-entity occupant)
+           (occupant-id occupant)
            (occupant-location occupant)
            cargo neighbors)))
   
@@ -77,7 +73,7 @@
    (check-equal?
     (dispatch-request engine agent
                       (list (request request-move (entity-id bot1) (location 2 1))))
-    (list (reply #t (entity 101 type-bot) (location 2 1) #f '())))))
+    (list (reply #t 101 (location 2 1) #f '())))))
 
 ;The engine procedure to be executed is accessed from a vector, based on the request type.
 
