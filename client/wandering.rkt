@@ -8,35 +8,35 @@
 
 ;@title{Wandering}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/client/wandering.rkt" "wandering.rkt"]}
-;Gathering is a modification of the wandering strategy.
+;The @bold{wandering} strategy is a very simple way to find bots.
 ;The bots start adjacent to a base.
-;The bots still wander randomly, taking blocks when they find them, but they bring them to their starting location to transfer them to the base.
-;It's the first strategy to accomplish a basic goal.
+;The bots wander randomly, taking blocks when they find them, and then bringing them back to their starting location to transfer them to the base.
 
 ;The strategy keeps track of the current direction each bot is facing.
-;It has a destination location, where the blocks are transfered.
+;It has an origin location, where the blocks are returned to be transfered.
 
-(struct wandering (direction destination))
+(struct strategy (direction origin))
 
 ;At the start of the game, a list of steps is generated from the list of bots assigned to the client.
 
 (define (wandering-steps replies)
   (map (λ (reply)
          (let ([bot (make-bot reply)])
-           (step (wander (wandering direction-east (bot-location bot)))
+           (step (wander (strategy direction-east (bot-location bot)))
                    #f #f #t bot)))
        replies))
 
-;At each turn, a choice is made for each bot and the action is updated. 
+;At each turn, a choice is made for each bot.
+;Two values are returned: the strategy function for the next turn, and the server request for this turn. 
 
-(define ((wander spec) input-step)
-  (let ([choice (choose spec input-step)])
+(define ((wander spec) step)
+  (let ([choice (choose spec step)])
     (values
      (wander (struct-copy
-              wandering spec
+              strategy spec
               [direction (choice-direction choice)]))
      (request (choice-type choice)
-              (bot-id (step-bot input-step))
+              (step-id step)
               (choice-parameter choice)))))
 
 ;A couple of helper methods for testing
@@ -56,7 +56,7 @@
            #:destination [destination (location 1 1)]
            input)
     (parameterize ([direction-change-chance chance])
-      (choose (wandering direction-east destination) input))))
+      (choose (strategy direction-east destination) input))))
 
 ;If there's nothing nearby, keep moving in the same direction
 
@@ -98,34 +98,34 @@
  "transfer adjacent to base"
  (let ([choice (gather-with
                 (choose-input #:neighbors (list (occupant (entity 103 type-base) (location 0 1)))
-                              #:cargo (entity 103 type-block)))])
+                              #:cargo (entity 102 type-block)))])
    (check-equal? (choice-type choice) request-transfer)
    (check-equal? (choice-parameter choice) 103)
    (check-equal? (choice-direction choice) direction-east)))
 
 ;The strategy makes a choice.
 
-(define (choose spec input)
-  (if (bot-cargo (step-bot input))
-      (return-to-base spec input)
-      (look-for-blocks spec input)))
+(define (choose strategy step)
+  (if (bot-cargo (step-bot step))
+      (return-to-base strategy step)
+      (look-for-blocks strategy step)))
 
-(define (return-to-base spec input)
-  (define (pick-direction)
+(define (return-to-base strategy step)
+  (define (return-direction)
     (direction-from
-     (bot-location (step-bot input)) (wandering-destination spec)))
-  (let ([bases (adjacent-entities (step-bot input) type-base)])
+     (step-location step) (strategy-origin strategy)))
+  (let ([bases (adjacent-entities (step-bot step) type-base)])
     (if (> (length bases) 0)
-        (choose-transfer (step-bot input) (first bases))
-        (choose-move (pick-direction) (wandering-direction spec) input))))
+        (choose-transfer (step-bot step) (first bases))
+        (choose-move (return-direction) (strategy-direction strategy) step))))
 
-(define (look-for-blocks spec input)
+(define (look-for-blocks strategy step)
   (define (pick-direction)
-    (let ([old-direction (wandering-direction spec)])
+    (let ([old-direction (strategy-direction strategy)])
       (if (> (direction-change-chance) (random))
-          (change-direction (step-bot input) old-direction)
+          (change-direction (step-bot step) old-direction)
           old-direction)))
-  (let ([blocks (adjacent-entities (step-bot input) type-block)])
+  (let ([blocks (adjacent-entities (step-bot step) type-block)])
     (if (> (length blocks) 0)
-        (choose-take (step-bot input) (first blocks))
-        (choose-move (pick-direction) (wandering-direction spec) input))))
+        (choose-take (step-bot step) (first blocks))
+        (choose-move (pick-direction) (strategy-direction strategy) step))))

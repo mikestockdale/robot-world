@@ -33,13 +33,13 @@
   (and (equal? (step-request-type step) request-move)
                   (not (step-success? step))))
 
-(define (choose-move chosen-direction current-direction input)
+(define (choose-move chosen-direction current-direction step)
   (let ([direction
-         (if (move-failed? input) 
-             (change-direction (step-bot input) current-direction)
+         (if (move-failed? step) 
+             (change-direction (step-bot step) current-direction)
              chosen-direction)])
     (choice request-move
-            (direction (bot-location (step-bot input)))
+            (direction (step-location step))
             direction)))
 
 ;When a strategy @bold{choose}s to @bold{take} a block, the choice parameter is block id.

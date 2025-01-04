@@ -1,6 +1,6 @@
 #lang racket
 
-(provide (struct-out step) perform-steps)
+(provide (struct-out step) perform-steps step-id step-location)
 (require threading "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
 
@@ -13,16 +13,18 @@
 (struct step (strategy request-type parameter success? bot))
 
 (define (perform-strategy step) ((step-strategy step) step))
+(define (step-id step) (bot-id (step-bot step)))
+(define (step-location step) (bot-location (step-bot step)))
 
 ;To @bold{perform steps}, the strategy functions return two values: a strategy for the next step, and a request to send to the server for this step.
 ;The requests are sent to the server, and the replies are saved.
 
 (test-case:
  "actions are performed"
- (define (go-north input-action)
-   (values go-east (request request-move (bot-id (step-bot input-action)) direction-north)))
- (define (go-east input-action)
-   (values go-north (request request-move (bot-id (step-bot input-action)) direction-east)))
+ (define (go-north step)
+   (values go-east (request request-move (step-id step) direction-north)))
+ (define (go-east step)
+   (values go-north (request request-move (step-id step) direction-east)))
  (define steps
    (list
     (step go-north #f #f #f (bot 101 #f #f '()))
@@ -32,10 +34,10 @@
           (reply #t (request-id request) (location 1 1) #f '())) requests))
  (let* ([step-list (perform-steps fake-connection steps)])
    (check-true (~> step-list first step-success?))
-   (check-equal? (~> step-list first step-bot bot-id) 101)
+   (check-equal? (~> step-list first step-id) 101)
    (check-equal? (~> step-list first step-strategy) go-east)
    (check-true (~> step-list second step-success?))
-   (check-equal? (~> step-list second step-bot bot-id) 102)
+   (check-equal? (~> step-list second step-id) 102)
    (check-equal? (~> step-list second step-strategy) go-north)))
 
 ;The strategy functions are performed for each step in the step list.
