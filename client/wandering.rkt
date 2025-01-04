@@ -1,9 +1,9 @@
 #lang racket/base
 
-(provide wandering-actions)
+(provide wandering-steps)
 
 (require racket/list)
-(require "shared.rkt" "action.rkt" "bot.rkt" "tactics.rkt")
+(require "shared.rkt" "step.rkt" "bot.rkt" "tactics.rkt")
 (module+ test (require rackunit))
 
 ;@title{Wandering}
@@ -18,25 +18,25 @@
 
 (struct wandering (direction destination))
 
-;At the start of the game, a list of actions is generated from the list of bots assigned to the client.
+;At the start of the game, a list of steps is generated from the list of bots assigned to the client.
 
-(define (wandering-actions replies)
+(define (wandering-steps replies)
   (map (λ (reply)
          (let ([bot (make-bot reply)])
-           (action (wander (wandering direction-east (bot-location bot)))
+           (step (wander (wandering direction-east (bot-location bot)))
                    #f #f #t bot)))
        replies))
 
 ;At each turn, a choice is made for each bot and the action is updated. 
 
-(define ((wander spec) input-action)
-  (let ([choice (choose spec input-action)])
+(define ((wander spec) input-step)
+  (let ([choice (choose spec input-step)])
     (values
      (wander (struct-copy
               wandering spec
               [direction (choice-direction choice)]))
      (request (choice-type choice)
-              (bot-id (action-bot input-action))
+              (bot-id (step-bot input-step))
               (choice-parameter choice)))))
 
 ;A couple of helper methods for testing
@@ -47,7 +47,7 @@
            #:cargo [cargo #f]
            #:command [command #f]
            #:neighbors [neighbors '()])
-    (action #f command #f success
+    (step #f command #f success
             (bot (entity 101 type-bot) (location 1 1) cargo neighbors))))
 
 (module+ test
@@ -106,26 +106,26 @@
 ;The strategy makes a choice.
 
 (define (choose spec input)
-  (if (bot-cargo (action-bot input))
+  (if (bot-cargo (step-bot input))
       (return-to-base spec input)
       (look-for-blocks spec input)))
 
 (define (return-to-base spec input)
   (define (pick-direction)
     (direction-from
-     (bot-location (action-bot input)) (wandering-destination spec)))
-  (let ([bases (adjacent-entities (action-bot input) type-base)])
+     (bot-location (step-bot input)) (wandering-destination spec)))
+  (let ([bases (adjacent-entities (step-bot input) type-base)])
     (if (> (length bases) 0)
-        (choose-transfer (action-bot input) (first bases))
+        (choose-transfer (step-bot input) (first bases))
         (choose-move (pick-direction) (wandering-direction spec) input))))
 
 (define (look-for-blocks spec input)
   (define (pick-direction)
     (let ([old-direction (wandering-direction spec)])
       (if (> (direction-change-chance) (random))
-          (change-direction (action-bot input) old-direction)
+          (change-direction (step-bot input) old-direction)
           old-direction)))
-  (let ([blocks (adjacent-entities (action-bot input) type-block)])
+  (let ([blocks (adjacent-entities (step-bot input) type-block)])
     (if (> (length blocks) 0)
-        (choose-take (action-bot input) (first blocks))
+        (choose-take (step-bot input) (first blocks))
         (choose-move (pick-direction) (wandering-direction spec) input))))

@@ -3,7 +3,7 @@
 (provide (struct-out choice) direction-change-chance
          choose-move choose-take choose-transfer)
 
-(require "action.rkt" "shared.rkt" "bot.rkt")
+(require "step.rkt" "shared.rkt" "bot.rkt")
 (module+ test (require rackunit))
 
 ;@title{Tactics}
@@ -24,18 +24,22 @@
 (test-case:
  "choose move"
  (let ([choice (choose-move direction-west direction-east
-                            (action #f request-move #f #t (bot #f (location 2 1) #f #f)))])
+                            (step #f request-move #f #t (bot #f (location 2 1) #f #f)))])
    (check-equal? (choice-type choice) request-move)
    (check-equal? (choice-parameter choice) (location 1 1))
    (check-equal? (choice-direction choice) direction-west)))
 
+(define (move-failed? step)
+  (and (equal? (step-request-type step) request-move)
+                  (not (step-success? step))))
+
 (define (choose-move chosen-direction current-direction input)
   (let ([direction
          (if (move-failed? input) 
-             (change-direction (action-bot input) current-direction)
+             (change-direction (step-bot input) current-direction)
              chosen-direction)])
     (choice request-move
-            (direction (bot-location (action-bot input)))
+            (direction (bot-location (step-bot input)))
             direction)))
 
 ;When a strategy @bold{choose}s to @bold{take} a block, the choice parameter is block id.
