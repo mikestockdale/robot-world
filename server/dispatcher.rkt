@@ -9,7 +9,7 @@
 ;The dispatcher takes requests from clients and executes the appropriate procedures on the server.
 ;It uses an agent to validate the requests, and an engine to perform the requested actions.
 
-;The dispatcher uses an interval delays execution to limit the rate of execution for each client.
+;The dispatcher uses an interval to delay requests to limit the rate of execution for each client.
 
 (define (make-dispatcher)
   (let ([agent (make-agent)]
@@ -25,7 +25,7 @@
  (check-equal? (dispatch-request (make-engine 4 5) (make-agent) '(#f))
                "invalid request"))
 
-;If the agent matches the request, a procedure is executed, based on the request
+;If the agent matches the request, a procedure is executed, based on the request.
 ;Otherwise, a message is returned.
 
 (define (dispatch-request engine agent request)

@@ -102,7 +102,7 @@
     (when valid? (assign-agent-type! agent request))
     valid?))    
 
-;When certain player events occur, an agent can bold{add to} its @bold{score}.
+;When certain player events occur, an agent can @bold{add to} its @bold{score}.
 
 (test-case:
  "add to score"

@@ -6,7 +6,7 @@
 
 ;@title{Sequence}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/sequence.rkt" "sequence.rkt"]}
-;The sequence is a generator for integers.
+;The @bold{sequence} is a generator for integers.
 
 (define (make-sequence)
   (let-values ([(_ get-next) (sequence-generate (in-naturals 101))])

@@ -6,9 +6,11 @@
 
 ;@title{Background}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/background.rkt" "background.rkt"]}
+;A @bold{background} task is running to randomly place blocks on the board.
+;The blocks are randomly chosen from ones that have been transferred to bases.
 
 (define (blocks-in-bases places)
-   (map-cargos
+   (filter-map-cargos
     places (λ (entity container-id)
            (and (equal? (occupant-type (occupant-by-id places container-id)) type-base)
                 entity))))

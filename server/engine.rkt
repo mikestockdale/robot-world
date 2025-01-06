@@ -11,14 +11,17 @@
 ;@title{Engine}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/engine.rkt" "engine.rkt"]}
 ;The engine performs the core game actions.
-;It uses a sequence, and a grid.
+;It uses a sequence, a board, and a table of places.
 ;The sequence provides new ids for adding entities.
-;The grid keeps track of all the entities.
+;The board manages the size of the game area.
+;The places table keeps track of all the entities.
 
 (struct engine (sequence board places))
-(define (make-engine width height) (engine (make-sequence) (board width height) (make-places)))
+(define (make-engine width height)
+  (engine (make-sequence) (board width height) (make-places)))
 
 ;@elemtag["available"]{A location @bold{is available} when it is @elemref["valid"]{valid} and there is no entity at that location}.
+;@margin-note{@racket[test-engine] is a macro to set up test data in an engine: source at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/testing.rkt" "testing.rkt"]}
 
 (test-case:
  "available locations"
@@ -176,7 +179,7 @@
                    (entity-at (engine-places engine) from-id)
                    to-id))))
 
-;@bold{Neighbors} of a location are all the nearby entites, plus any edges.
+;@bold{Neighbors} of a location are all the nearby entities, plus any edges.
 
 (test-case:
  "neighbors are nearby"
@@ -195,10 +198,13 @@
     (check-equal? (occupant-type (first neighbors)) type-edge)
     (check-equal? (occupant-location (first neighbors)) (location -1 1)))))
 
-(define (neighbors engine location)
+(define (neighbors engine bot-location)
+  (define (nearby entity location)
+    (and (nearby? location bot-location)
+         (occupant entity location)))
   (append
-   (edges (engine-board engine)location)
-   (occupants-nearby (engine-places engine) location)))
+   (edges (engine-board engine) bot-location)
+   (filter-map-occupants (engine-places engine) nearby)))
 
 ;The engine provides @bold{entity info} to be returned to the client.
 
@@ -212,7 +218,7 @@
     (check-equal? cargo block1)
     (check-equal? neighbors (list (occupant block2 (location 1 1)))))))
  
-;The bot and its neighbors are retrieved from the grid and the cargo from the cargos table.
+;The bot, its cargo, and its neighbors are retrieved from the places table.
 
 (define (entity-info engine entity-id)
   (let ([occupant (occupant-by-id (engine-places engine) entity-id)])

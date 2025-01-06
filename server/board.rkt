@@ -7,7 +7,7 @@
 
 ;@title{Board}
 ;@margin-note{Source code at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/board.rkt" "board.rkt"]}
-;The board is the two-dimesional area representing the robot world.
+;The @bold{board} is the two-dimesional area representing the robot world.
 
 (struct board (width height))
 

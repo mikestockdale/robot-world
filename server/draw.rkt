@@ -32,7 +32,7 @@
        0
        (string-join
         (map (λ (agent) (number->string (agent-score agent))) players)))
-   (map-occupants
+   (filter-map-occupants
     places
     (λ (entity location)
       (list (entity-type entity)

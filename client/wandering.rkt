@@ -23,7 +23,7 @@
   (map (λ (reply)
          (let ([bot (make-bot reply)])
            (step (wander (strategy direction-east (bot-location bot)))
-                   #f #f #t bot)))
+                 #f #f #t bot)))
        replies))
 
 ;At each turn, a choice is made for each bot.
@@ -48,7 +48,7 @@
            #:command [command #f]
            #:neighbors [neighbors '()])
     (step #f command #f success
-            (bot (entity 101 type-bot) (location 1 1) cargo neighbors))))
+          (bot (entity 101 type-bot) (location 1 1) cargo neighbors))))
 
 (module+ test
   (define (gather-with
@@ -115,9 +115,9 @@
     (direction-from
      (step-location step) (strategy-origin strategy)))
   (let ([bases (adjacent-entities (step-bot step) type-base)])
-    (if (> (length bases) 0)
-        (choose-transfer (step-bot step) (first bases))
-        (choose-move (return-direction) (strategy-direction strategy) step))))
+    (if (null? bases)
+        (choose-move (return-direction) (strategy-direction strategy) step)
+        (choose-transfer (step-bot step) (first bases)))))
 
 (define (look-for-blocks strategy step)
   (define (pick-direction)
@@ -126,6 +126,6 @@
           (change-direction (step-bot step) old-direction)
           old-direction)))
   (let ([blocks (adjacent-entities (step-bot step) type-block)])
-    (if (> (length blocks) 0)
-        (choose-take (step-bot step) (first blocks))
-        (choose-move (pick-direction) (strategy-direction strategy) step))))
+    (if (null? blocks)
+        (choose-move (pick-direction) (strategy-direction strategy) step)
+        (choose-take (step-bot step) (first blocks)))))
