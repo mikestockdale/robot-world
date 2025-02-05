@@ -1,7 +1,7 @@
 #lang racket/base
 
 (provide make-engine engine-places engine-board
-         entity-info is-available?
+         entity-info available?
          add-entity move-entity take-entity drop-entity transfer-entity)
 
 (require racket/list)
@@ -20,18 +20,18 @@
 (define (make-engine width height)
   (engine (make-sequence) (board width height) (make-places)))
 
-;@elemtag["available"]{A location @bold{is available} when it is @elemref["valid"]{valid} and there is no entity at that location}.
+;@elemtag["available"]{A location is @bold{available} when it is @elemref["valid"]{valid} and there is no entity at that location}.
 ;@margin-note{@racket[test-engine] is a macro to set up test data in an engine: source at @hyperlink["https://github.com/mikestockdale/robot-world/blob/main/server/testing.rkt" "testing.rkt"]}
 
 (test-case:
  "available locations"
  (test-engine
   ((size 3 2) (block 1 1))
-  (check-false (is-available? engine (location 1 1)))
-  (check-true (is-available? engine (location 2 1)))
-  (check-false (is-available? engine (location 3 1)))))
+  (check-false (available? engine (location 1 1)))
+  (check-true (available? engine (location 2 1)))
+  (check-false (available? engine (location 3 1)))))
 
-(define (is-available? engine location)
+(define (available? engine location)
   (and (is-valid? (engine-board engine) location)
        (not (entity-at (engine-places engine) location))))
 
@@ -61,11 +61,10 @@
 ;Otherwise @racket[#f] is returned.
 
 (define (add-entity engine type location)
-  (if (is-available? engine location)
-      (let ([new-entity (entity ((engine-sequence engine)) type)])
-        (place-entity (engine-places engine) new-entity location)
-        new-entity)
-      #f))
+  (and (available? engine location)
+       (let ([new-entity (entity ((engine-sequence engine)) type)])
+         (place-entity (engine-places engine) new-entity location)
+         new-entity)))
 
 ;The engine can @bold{move} an @bold{entity} to a new location.
 ;The destination of the move must be @elemref["adjacent"]{adjacent} and @elemref["available"]{available}.
@@ -76,7 +75,7 @@
  (test-engine
   ((size 9 10) (bot 5 6))
   (check-not-false (move-entity engine bot-id (location 5 7)))
-  (check-equal? (occupant-location (occupant-by-id (engine-places engine) bot-id))
+  (check-equal? (place-by-id (engine-places engine) bot-id)
                 (location 5 7))))
 
 (test-case:
@@ -86,7 +85,7 @@
   (check-false (move-entity engine bot-id (location 9 10)) "invalid location")
   (check-false (move-entity engine bot-id (location 8 9)) "not available")
   (check-false (move-entity engine bot-id (location 8 8)) "not adjacent")
-  (check-equal? (occupant-location (occupant-by-id (engine-places engine) bot-id))
+  (check-equal? (place-by-id (engine-places engine) bot-id)
                 (location 9 9)))) 
 
 ;The result is not false if successful, otherwise it is @racket[#f].
@@ -94,7 +93,7 @@
 (define (move-entity engine id new-location)
   (let ([bot (occupant-by-id (engine-places engine) id)])
     (and (adjacent? new-location (occupant-location bot))
-         (is-available? engine new-location)
+         (available? engine new-location)
          (place-entity (engine-places engine)
                        (occupant-entity bot) new-location))))
 
@@ -105,10 +104,10 @@
  (test-engine
   ((size 3 4) (bot 1 1) (block 2 1))
   (check-not-false (take-entity engine bot-id block-id))
-  (check-equal? (entity-at (engine-places engine) bot-id)
-                block)))
+  (check-equal? (place-by-id (engine-places engine) block-id)
+                bot-id)))
 
-;The entity being taken is loaded into the cargos table and removed from the grid.
+;The entity being taken is placed in the bot, as cargo.
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (take-entity engine id cargo-id)
@@ -126,7 +125,7 @@
   ((size 3 4) (block 2 1) (bot 1 1))
   (take-entity engine (entity-id bot) block-id)
   (check-not-false (drop-entity engine bot-id (location 1 2)))
-  (check-equal? (occupant-location (occupant-by-id (engine-places engine) block-id)) (location 1 2))))
+  (check-equal? (place-by-id (engine-places engine) block-id) (location 1 2))))
 
 (test-case:
  "can not drop in location"
@@ -138,13 +137,13 @@
   (check-false (drop-entity engine bot-id (location 2 2)) "not adjacent")
   (check-equal? (entity-at (engine-places engine) bot-id) block1)))
 
-;The entity being dropped is unloaded from the cargos table and placed in the grid.
+;The entity being dropped is placed at a location.
 ;The result is not false if successful, otherwise it is @racket[#f].
 
 (define (drop-entity engine id drop-location)
   (let ([bot (occupant-by-id (engine-places engine) id)])
     (and (adjacent? drop-location (occupant-location bot))
-         (is-available? engine drop-location)
+         (available? engine drop-location)
          (place-entity (engine-places engine)
                        (entity-at (engine-places engine) id)
                        drop-location))))
@@ -158,7 +157,7 @@
   ((size 3 4) (bot 1 1) (base 1 2) (block 2 1))
   (take-entity engine bot-id block-id)
   (transfer-entity engine bot-id base-id)
-  (check-equal? (entity-at (engine-places engine) base-id) block)))
+  (check-equal? (place-by-id (engine-places engine) block-id) base-id)))
 
 (test-case:
  "must be adjacent"

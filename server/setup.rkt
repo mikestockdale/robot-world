@@ -27,7 +27,7 @@
 
 (define (setup-bots engine)
   (let ([base-location (random-base (engine-board engine)
-                               (λ (x) (is-available? engine x)))])
+                               (λ (x) (available? engine x)))])
     (add-entity engine type-base base-location)
     (for/list ([location (all-directions base-location)])
       (add-entity engine type-bot location))))

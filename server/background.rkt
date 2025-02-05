@@ -21,6 +21,6 @@
          [blocks (blocks-in-bases places)])
     (unless (empty? blocks)
       (let ([random (random-location (engine-board engine))])
-        (when (is-available? engine random)
+        (when (available? engine random)
           (place-entity places (first blocks) random)))))
   (background engine))

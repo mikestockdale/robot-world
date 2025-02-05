@@ -1,6 +1,6 @@
 #lang racket
 
-(provide make-places place-entity occupant-by-id
+(provide make-places place-entity occupant-by-id place-by-id
          entity-at filter-map-occupants filter-map-cargos)
 
 (require threading "shared.rkt")
@@ -61,6 +61,10 @@
 
 (define (place-entity places entity place)
   (hash-set! (places-hash places) (entity-id entity) (placement entity place)))
+
+(define (place-by-id places id)
+  (let ([placement (hash-ref (places-hash places) id #f)])
+    (and placement (placement-place placement))))
 
 ;We can apply a procedure to all values in the table to @bold{filter} and @bold{map occupants} of locations.
 ;This can also be done to @bold{filter} and @bold{map cargos}.
